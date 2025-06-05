@@ -28,7 +28,7 @@ if vin and tier:
             st.subheader(f"{int(term)}-Month Term")
 
             options = matches[matches["TERM"] == term]
-            best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
+            best = options.loc[options["RESIDUAL"].astype(float).idxmax()]
 
             msrp = float(best["MSRP"])
             lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
