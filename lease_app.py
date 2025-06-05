@@ -32,7 +32,7 @@ if vin and tier:
             msrp = float(best["MSRP"])
             lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
             base_mf = float(best["MONEY FACTOR"])
-            residual_pct = float(best["RESIDUAL"])
+            base_residual_pct = float(best["RESIDUAL"])
             term_months = int(term)
 
             col1, col2 = st.columns(2)
@@ -43,16 +43,22 @@ if vin and tier:
             mf = base_mf if include_markup else base_mf - 0.0004
             rebate = lease_cash if include_lease_cash else 0.0
 
-            residual = msrp * (residual_pct / 100)
-            cap_cost = msrp - rebate - money_down
-            rent = (cap_cost + residual) * mf * term_months
-            depreciation = cap_cost - residual
-            base_monthly = (depreciation + rent) / term_months
-            tax = base_monthly * county_tax
-            total_monthly = base_monthly + tax
+            mileage_options = {
+                "10K": base_residual_pct + 1 if 33 <= term_months <= 48 else base_residual_pct,
+                "12K": base_residual_pct,
+                "15K": base_residual_pct - 2
+            }
 
-            with col1:
-                st.markdown(f"<h2 style='color:#2e86de;'>${total_monthly:.2f} / month</h2>", unsafe_allow_html=True)
-                st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
+            for mileage, residual_pct in mileage_options.items():
+                residual = msrp * (residual_pct / 100)
+                cap_cost = msrp - rebate - money_down
+                rent = (cap_cost + residual) * mf * term_months
+                depreciation = cap_cost - residual
+                base_monthly = (depreciation + rent) / term_months
+                tax = base_monthly * county_tax
+                total_monthly = base_monthly + tax
+
+                st.markdown(f"<h4 style='color:#2e86de;'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
