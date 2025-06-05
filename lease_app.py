@@ -17,38 +17,41 @@ money_down = st.number_input("Money Down ($)", value=0.0)
 
 if vin and tier:
     all_payments = []
-    matches = data[(data["VIN"].str.lower() == vin) & (data["TIER"] == tier)]
+    matches = data[data["VIN"].str.lower() == vin]
+    matches = matches[~matches[tier].isnull()]
 
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
-        available_terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
+        available_terms = sorted(matches["Term"].dropna().unique(), key=lambda x: int(x))
 
         for term in available_terms:
             st.subheader(f"{int(term)}-Month Term")
 
-            options = matches[matches["TERM"] == term]
-            options = options.copy()
-            options["RESIDUAL"] = options["RESIDUAL"].astype(float)
+            options = matches[matches["Term"] == term].copy()
+            options["Residual"] = options["Residual"].astype(float)
             best = options.iloc[0]
 
             msrp = float(best["MSRP"])
-            lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
-            base_mf = float(best["MONEY FACTOR"])
-            base_residual_pct = float(best["RESIDUAL"])
+            lease_cash = float(best["LeaseCash"]) if best["LeaseCash"] else 0.0
+            base_mf = float(best[tier])
+            base_residual_pct = float(best["Residual"]) * 100  # convert to percent
             term_months = int(term)
 
             col1, col2, col3 = st.columns([1, 2, 2])
             with col2:
                 include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
             toggle_color = '#ff4d4d' if include_markup else '#cccccc'
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <style>
                     div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
                         background-color: {toggle_color} !important;
                     }}
                 </style>
-            """, unsafe_allow_html=True)
+                """,
+                unsafe_allow_html=True
+            )
             with col3:
                 include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
@@ -64,7 +67,7 @@ if vin and tier:
 
                 if mileage == "12K":
                     residual_pct = base_residual_pct
-                elif mileage == "10K" and 33 <= term_months <= 48:
+                elif mileage == "10K":
                     residual_pct = base_residual_pct + 1
                 elif mileage == "15K":
                     residual_pct = base_residual_pct - 2
@@ -83,9 +86,8 @@ if vin and tier:
 
             mile_min_payment = min([amt for _, amt, na in mile_data if amt is not None])
             all_payments.extend([amt for _, amt, na in mile_data if amt is not None])
-            
+
             mileage_cols = st.columns(3)
-            term_min = min([amt for _, amt, na in mile_data if amt is not None])
             for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
                 with mileage_cols[i]:
                     if not_available:
@@ -93,11 +95,11 @@ if vin and tier:
                         continue
 
                     if total_monthly == min(all_payments) and total_monthly == mile_min_payment:
-                        highlight = "font-weight:bold; color:#27ae60;"  # Green for lowest overall
+                        highlight = "font-weight:bold; color:#27ae60;"  # green
                     elif total_monthly == mile_min_payment:
-                        highlight = "font-weight:bold; color:#f1c40f;"  # Yellow for lowest in term
+                        highlight = "font-weight:bold; color:#f1c40f;"  # yellow
                     else:
-                        highlight = "color:#2e86de;"
+                        highlight = "color:#2e86de;"  # blue
 
                     label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min(all_payments) else ""
                     st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
