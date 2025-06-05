@@ -38,7 +38,7 @@ if vin and tier:
             col1, col2 = st.columns(2)
             with col2:
                 include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
-                include_lease_cash = st.toggle("Include Lease Cash", value=False, key=f"rebate_{term}")
+                include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.2f})", value=False, key=f"rebate_{term}")
 
             mf = base_mf if include_markup else base_mf - 0.0004
             rebate = lease_cash if include_lease_cash else 0.0
