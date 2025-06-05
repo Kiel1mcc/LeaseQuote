@@ -54,4 +54,9 @@ if vin:
             rent = (cap_cost + residual) * mf * term_months
             depreciation = cap_cost - residual
             base_monthly = (depreciation + rent) / term_months
-            tax = base_monthly * (county_tax / 10_*_
+            tax = base_monthly * (county_tax / 100)
+            total_monthly = base_monthly + tax
+
+            # Display result
+            st.write(f"**Estimated Payment:** ${total_monthly:.2f}/mo")
+            st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
