@@ -16,6 +16,7 @@ county_tax = st.number_input("County Tax Rate (%)", value=7.25) / 100
 money_down = st.number_input("Money Down ($)", value=0.0)
 
 if vin and tier:
+    all_payments = []
     matches = data[(data["VIN"].str.lower() == vin) & (data["TIER"] == tier)]
 
     if matches.empty:
@@ -76,15 +77,23 @@ if vin and tier:
                 mile_data.append((mileage, total_monthly, False))
 
             min_payment = min([amt for _, amt, na in mile_data if amt is not None])
+all_payments.append(min_payment)
 
             mileage_cols = st.columns(3)
+            term_min = min([amt for _, amt, na in mile_data if amt is not None])
             for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
                 with mileage_cols[i]:
                     if not_available:
                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    highlight = "font-weight:bold; color:#27ae60;" if total_monthly == min_payment else "color:#2e86de;"
+                    if total_monthly == term_min and total_monthly == min(all_payments):
+                        highlight = "font-weight:bold; color:#27ae60;"  # Green for lowest overall
+                    elif total_monthly == term_min:
+                        highlight = "font-weight:bold; color:#f1c40f;"  # Yellow for lowest in term
+                    else:
+                        highlight = "color:#2e86de;"
+
                     st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
                     st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
