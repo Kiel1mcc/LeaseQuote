@@ -76,7 +76,8 @@ if vin and tier:
 
                 mile_data.append((mileage, total_monthly, False))
 
-            min_payment = min([amt for _, amt, na in mile_data if amt is not None])
+            mile_min_payment = min([amt for _, amt, na in mile_data if amt is not None])
+            all_payments.extend([amt for _, amt, na in mile_data if amt is not None])
             all_payments.append(min_payment)
 
             mileage_cols = st.columns(3)
@@ -87,9 +88,9 @@ if vin and tier:
                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    if total_monthly == min(all_payments):
+                    if total_monthly == min(all_payments) and total_monthly == mile_min_payment:
                         highlight = "font-weight:bold; color:#27ae60;"  # Green for lowest overall
-                    elif False:
+                    elif total_monthly == mile_min_payment:
                         highlight = "font-weight:bold; color:#f1c40f;"  # Yellow for lowest in term
                     else:
                         highlight = "color:#2e86de;"
