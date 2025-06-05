@@ -1,14 +1,12 @@
 import streamlit as st
 import pandas as pd
 
-# Load data
 @st.cache_data
 def load_data():
     return pd.read_csv("All_Lease_Programs_Database.csv")
 
 df = load_data()
 
-# UI
 st.title("Lease Calculator")
 
 vin = st.text_input("Enter VIN").strip().upper()
@@ -27,26 +25,36 @@ if vin:
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
-        st.subheader(f"Estimated Payments for {tier}:")
+        st.subheader(f"Payment Options for {tier}")
         for term in sorted(matches["TERM"].unique(), key=lambda x: int(x)):
-            options = matches[matches["TERM"] == term]
-            best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
+            term_rows = matches[matches["TERM"] == term]
+            best = term_rows.loc[term_rows["LEASE CASH"].astype(float).idxmax()]
 
-            try:
-                msrp = float(best["MSRP"])
-                lease_cash = float(best["LEASE CASH"])
-                mf = float(best["MONEY FACTOR"])
-                residual_pct = float(best["RESIDUAL"])
-                term_months = int(best["TERM"])
+            msrp = float(best["MSRP"])
+            lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
+            mf = float(best["MONEY FACTOR"])
+            residual_pct = float(best["RESIDUAL"])
+            term_months = int(term)
 
-                residual = msrp * (residual_pct / 100)
-                cap_cost = msrp - lease_cash - money_down
-                rent = (cap_cost + residual) * mf * term_months
-                depreciation = cap_cost - residual
-                base_monthly = (depreciation + rent) / term_months
-                tax = base_monthly * (county_tax / 100)
-                total_monthly = base_monthly + tax
+            col1, col2 = st.columns(2)
+            with col1:
+                include_markup = st.checkbox(f"{term} mo - Markup MF", value=True, key=f"markup_{term}")
+            with col2:
+                include_lease_cash = st.checkbox(f"{term} mo - Use Rebate", value=True, key=f"rebate_{term}")
 
-                st.markdown(f"**{term_months} months:** ${total_monthly:.2f}/mo (Residual: {residual_pct}%)")
-            except Exception as e:
-                st.error(f"{term} months: Calculation error — {e}")
+            # Apply toggles
+            applied_mf = mf if include_markup else mf - 0.0004
+            applied_rebate = lease_cash if include_lease_cash else 0.0
+
+            residual = msrp * (residual_pct / 100)
+            cap_cost = msrp - applied_rebate - money_down
+            rent = (cap_cost + residual) * applied_mf * term_months
+            depreciation = cap_cost - residual
+            base_monthly = (depreciation + rent) / term_months
+            tax = base_monthly * (county_tax / 100)
+            total_monthly = base_monthly + tax
+
+            st.markdown(
+                f"**{term_months} months:** ${total_monthly:.2f}/mo "
+                f"(Residual: {residual_pct}%, MF: {applied_mf:.5f})"
+            )
