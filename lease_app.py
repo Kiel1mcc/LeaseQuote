@@ -99,10 +99,10 @@ def main():
                     cap_cost -= lease_cash
 
                 # Taxes
-                doc_tax = doc_fee * county_tax
-                acq_tax = acq_fee * county_tax
-                rebate_tax = lease_cash * county_tax if include_lease_cash else 0
-                cap_reduction_tax = money_down * county_tax
+                doc_tax = round(doc_fee * county_tax, 2)
+                acq_tax = round(acq_fee * county_tax, 2)
+                rebate_tax = round(lease_cash * county_tax, 2) if include_lease_cash else 0
+                cap_reduction_tax = round(money_down * county_tax, 2)
                 total_upfront_tax = doc_tax + acq_tax + rebate_tax + cap_reduction_tax
 
                 mileage_cols = st.columns(3)
@@ -118,12 +118,12 @@ def main():
                     elif mileage == "15K":
                         residual_pct -= 2
 
-                    residual_value = msrp * (residual_pct / 100)
-                    depreciation = cap_cost - residual_value
-                    rent = (cap_cost + residual_value) * mf * term_months
-                    base_monthly = (depreciation + rent) / term_months
-                    monthly_tax = base_monthly * county_tax
-                    final_monthly = base_monthly + monthly_tax
+                    residual_value = round(msrp * (residual_pct / 100), 2)
+                    depreciation = round(cap_cost - residual_value, 2)
+                    rent = round((cap_cost + residual_value) * mf * term_months, 2)
+                    base_monthly = round((depreciation + rent) / term_months, 2)
+                    monthly_tax = round(base_monthly * county_tax, 2)
+                    final_monthly = round(base_monthly + monthly_tax, 2)
 
                     with mileage_cols[i]:
                         st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
