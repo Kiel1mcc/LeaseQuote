@@ -62,11 +62,14 @@ if vin and tier:
                     mile_data.append((mileage, None, True))
                     continue
 
-                residual_pct = base_residual_pct
-                if mileage == "10K" and 33 <= term_months <= 48:
-                    residual_pct += 1
+                if mileage == "12K":
+                    residual_pct = base_residual_pct
+                elif mileage == "10K" and 33 <= term_months <= 48:
+                    residual_pct = base_residual_pct + 1
                 elif mileage == "15K":
-                    residual_pct -= 2
+                    residual_pct = base_residual_pct - 2
+                else:
+                    residual_pct = None
 
                 residual = msrp * (residual_pct / 100)
                 cap_cost = msrp - rebate - money_down
