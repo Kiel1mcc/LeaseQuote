@@ -1,3 +1,18 @@
+import streamlit as st
+import pandas as pd
+
+# Load data
+lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
+locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+locator_data.columns = locator_data.columns.str.strip().str.title()
+locator_data["Vin"] = locator_data["Vin"].astype(str).str.strip().str.lower()
+
+
+def is_ev_phev(row: pd.Series) -> bool:
+    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
+    return any(k in desc for k in ["electric", "plug", "phev", "fuel cell"])
+
+
 def main():
     st.title("Lease Quote Calculator")
 
@@ -19,15 +34,12 @@ def main():
                 st.error("VIN not found in locator file.")
                 return
 
-            model_number = msrp_row["Model"].iloc[0]
-
+            model_number = msrp_row["ModelNumber"].iloc[0]
             if model_number not in lease_data["ModelNumber"].values:
-                st.error(f"No lease entries found for model number {model_number}")
+                st.error("No lease entries found for this vehicle.")
                 return
 
             msrp = float(msrp_row["Msrp"].iloc[0])
-            st.info(f"✔ VIN matched: Model {model_number}, MSRP ${msrp:,.2f}")
-
             matches = lease_data[lease_data["ModelNumber"] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
@@ -38,7 +50,6 @@ def main():
 
             for term in available_terms:
                 st.subheader(f"{int(term)}-Month Term")
-
                 options = matches[matches["Term"] == term].copy()
                 options["Residual"] = options["Residual"].astype(float)
                 best = options.iloc[0]
@@ -51,8 +62,8 @@ def main():
                 try:
                     base_mf = float(best[tier])
                     base_residual_pct = float(best["Residual"]) * 100
-                except:
-                    st.error("Invalid MF or residual data.")
+                except Exception as e:
+                    st.error(f"Invalid MF or residual data: {e}")
                     return
 
                 term_months = int(term)
@@ -82,8 +93,10 @@ def main():
                         continue
 
                     residual_pct = base_residual_pct
-                    if mileage == "10K": residual_pct += 1
-                    elif mileage == "15K": residual_pct -= 2
+                    if mileage == "10K":
+                        residual_pct += 1
+                    elif mileage == "15K":
+                        residual_pct -= 2
 
                     residual = msrp * (residual_pct / 100)
                     cap_cost = msrp - rebate - money_down
@@ -118,3 +131,7 @@ def main():
             st.error(f"Something went wrong: {e}")
     else:
         st.info("Please enter a VIN and select a tier to begin.")
+
+
+if __name__ == "__main__":
+    main()
