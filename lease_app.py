@@ -26,54 +26,33 @@ if vin and tier:
         for term in terms:
             st.subheader(f"{term}-Month Term")
 
-            term_rows = matches[matches["TERM"] == term]
-            if term_rows.empty:
-                continue
+            options = matches[matches["TERM"] == term]
+            best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
 
-            base_row = term_rows.iloc[0]
-            msrp = float(base_row["MSRP"])
-            lease_cash = float(base_row["LEASE CASH"])
-            base_mf = float(base_row["MONEY FACTOR"])
-            base_residual = float(base_row["RESIDUAL"])
+            msrp = float(best["MSRP"])
+            lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
+            base_mf = float(best["MONEY FACTOR"])
+            residual_pct = float(best["RESIDUAL"])
+            term_months = int(term)
 
-            apply_markup_all = st.checkbox(f"Apply Markup to All {term}-Month Options", key=f"markup_all_{term}")
-            apply_rebate_all = st.checkbox(f"Apply Lease Cash to All {term}-Month Options", key=f"rebate_all_{term}")
+            col1, col2 = st.columns(2)
+            with col2:
+                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
+                include_lease_cash = st.toggle("Include Lease Cash", value=False, key=f"rebate_{term}")
 
-            st.markdown("**Mileage Options**")
+            mf = base_mf if include_markup else base_mf - 0.0004
+            rebate = lease_cash if include_lease_cash else 0.0
 
-            for mileage in ["10K", "12K", "15K"]:
-                if mileage == "10K" and 33 <= int(term) <= 48:
-                    residual = base_residual + 1
-                elif mileage == "15K":
-                    residual = base_residual - 2
-                else:
-                    residual = base_residual
+            residual = msrp * (residual_pct / 100)
+            cap_cost = msrp - rebate - money_down
+            rent = (cap_cost + residual) * mf * term_months
+            depreciation = cap_cost - residual
+            base_monthly = (depreciation + rent) / term_months
+            tax = base_monthly * county_tax
+            total_monthly = base_monthly + tax
 
-                row_key = f"{term}_{mileage}"
-
-                col1, col2, col3, col4, col5 = st.columns([1.2, 1, 2, 1, 1])
-
-                with col4:
-                    include_markup = st.checkbox("", value=apply_markup_all, key=f"markup_{row_key}")
-                with col5:
-                    include_rebate = st.checkbox("", value=apply_rebate_all, key=f"rebate_{row_key}")
-
-                mf = base_mf + 0.0004 if include_markup else base_mf
-                rebate = lease_cash if include_rebate else 0
-                cap_cost = msrp - rebate - money_down
-                residual_value = msrp * (residual / 100)
-                rent_charge = (cap_cost + residual_value) * mf * int(term)
-                depreciation = cap_cost - residual_value
-                base_monthly = (depreciation + rent_charge) / int(term)
-                tax = base_monthly * county_tax
-                total_monthly = base_monthly + tax
-
-                with col1:
-                    st.markdown(f"**{mileage}**")
-                with col2:
-                    st.markdown(f"{residual:.1f}%")
-                with col3:
-                    st.markdown(f"<h4 style='margin:0;'>${total_monthly:.2f}</h4>", unsafe_allow_html=True)
-
+            with col1:
+                st.markdown(f"<h2 style='color:#2e86de;'>${total_monthly:.2f} / month</h2>", unsafe_allow_html=True)
+                st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
