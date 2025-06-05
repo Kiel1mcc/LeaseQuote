@@ -23,6 +23,16 @@ lease_data: pd.DataFrame = load_lease_data()
 locator_data: pd.DataFrame = load_locator_data()
 
 
+def is_ev_phev(row: pd.Series) -> bool:
+    """Return True if vehicle description suggests EV or PHEV."""
+    text = f"{row.get('Trim', '')} {row.get('Modeldescription', '')}".lower()
+    if any(k in text for k in ["electric", "phev", "plug-in", "plug in", "ioniq"]):
+        return True
+    if "ev" in text.replace("hev", ""):
+        return True
+    return False
+
+
 def main() -> None:
     """Run the Streamlit lease quote calculator."""
 
@@ -65,6 +75,14 @@ def main() -> None:
                         term_months = int(term)
 
                         col1, col2, col3 = st.columns([1, 2, 2])
+                        ev_phev = is_ev_phev(best)
+                        with col1:
+                            single_pay = st.toggle(
+                                "Single Pay (EV/PHEV)",
+                                value=False,
+                                key=f"singlepay_{term}",
+                                disabled=not ev_phev,
+                            )
                         with col2:
                             include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
                         toggle_color = '#ff4d4d' if include_markup else '#cccccc'
@@ -81,7 +99,8 @@ def main() -> None:
                         with col3:
                             include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
-                        mf = base_mf + 0.0004 if not include_markup else base_mf
+                        mf_base = base_mf - 0.00015 if single_pay and ev_phev else base_mf
+                        mf = mf_base + (0.0004 if not include_markup else 0)
                         rebate = lease_cash if include_lease_cash else 0.0
 
                         mileage_cols = st.columns(3)
@@ -129,7 +148,10 @@ def main() -> None:
 
                                 label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min(all_payments) else ""
                                 st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
-                                st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
+                                discount_label = " (Single Pay Discount Applied)" if single_pay and ev_phev else ""
+                                st.caption(
+                                    f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}{discount_label}"
+                                )
     else:
         st.info("Please enter a VIN and select a tier to begin.")
 
