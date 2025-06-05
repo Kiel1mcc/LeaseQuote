@@ -1,63 +1,66 @@
 import streamlit as st
 import pandas as pd
 
-# Load lease program data
 @st.cache_data
-def load_data():
+def load_lease_data():
     df = pd.read_csv("All_Lease_Programs_Database.csv")
-    df.columns = df.columns.str.strip().str.title()  # Normalize column names
+    df.columns = df.columns.str.strip().str.title()
     return df
 
-data = load_data()
+@st.cache_data
+def load_locator_data():
+    df = pd.read_excel("Locator_Detail_20250605.xlsx")
+    df.columns = df.columns.str.strip().str.title()
+    df["Vin"] = df["Vin"].str.upper()
+    return df
+
+lease_data = load_lease_data()
+locator_data = load_locator_data()
 
 st.title("Lease Quote Calculator")
 
-vin = st.text_input("Enter VIN:").strip().lower()
+vin_input = st.text_input("Enter VIN:").strip().upper()
 tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 county_tax = st.number_input("County Tax Rate (%)", value=7.25) / 100
 money_down = st.number_input("Money Down ($)", value=0.0)
 
-if vin and tier:
+if vin_input and tier:
     all_payments = []
 
-    if tier not in data.columns:
-        st.error(f"Tier column '{tier}' not found. Your data columns are: {data.columns.tolist()}")
+    if tier not in lease_data.columns:
+        st.error(f"Tier column '{tier}' not found. Your data columns are: {lease_data.columns.tolist()}")
     else:
-        matches = data[data["Vin"].str.lower() == vin]
-        matches = matches[~matches[tier].isnull()]
+        lease_matches = lease_data[lease_data["Vin"].str.upper() == vin_input]
+        lease_matches = lease_matches[~lease_matches[tier].isnull()]
 
-        if matches.empty:
+        locator_match = locator_data[locator_data["Vin"] == vin_input]
+
+        if lease_matches.empty:
             st.warning("No matching lease options found.")
+        elif locator_match.empty:
+            st.warning("VIN not found in Locator file. Can't determine MSRP.")
         else:
-            available_terms = sorted(matches["Term"].dropna().unique(), key=lambda x: int(x))
+            msrp_str = str(locator_match.iloc[0]["Msrp"]).replace("$", "").replace(",", "").strip()
+            try:
+                msrp = float(msrp_str)
+            except:
+                st.error(f"Could not parse MSRP from locator file: {locator_match.iloc[0]['Msrp']}")
+                st.stop()
+
+            available_terms = sorted(lease_matches["Term"].dropna().unique(), key=lambda x: int(x))
 
             for term in available_terms:
                 st.subheader(f"{int(term)}-Month Term")
+                term_data = lease_matches[lease_matches["Term"] == term].copy()
 
-                options = matches[matches["Term"] == term].copy()
-                options["Residual"] = options["Residual"].astype(float)
-                best = options.iloc[0]
-
-                msrp = float(best["Msrp"])
-                lease_cash = float(best["Leasecash"]) if best["Leasecash"] else 0.0
-                base_mf = float(best[tier])
-                base_residual_pct = float(best["Residual"]) * 100
+                base_mf = float(term_data.iloc[0][tier])
+                base_residual_pct = float(term_data.iloc[0]["Residual"]) * 100
+                lease_cash = float(term_data.iloc[0].get("Leasecash", 0) or 0)
                 term_months = int(term)
 
                 col1, col2, col3 = st.columns([1, 2, 2])
                 with col2:
                     include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
-                toggle_color = '#ff4d4d' if include_markup else '#cccccc'
-                st.markdown(
-                    f"""
-                    <style>
-                        div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
-                            background-color: {toggle_color} !important;
-                        }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
                 with col3:
                     include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
@@ -66,49 +69,10 @@ if vin and tier:
 
                 mileage_cols = st.columns(3)
                 mile_data = []
+
                 for i, mileage in enumerate(["10K", "12K", "15K"]):
                     if mileage == "10K" and not (33 <= term_months <= 48):
                         mile_data.append((mileage, None, True))
                         continue
 
-                    if mileage == "12K":
-                        residual_pct = base_residual_pct
-                    elif mileage == "10K":
-                        residual_pct = base_residual_pct + 1
-                    elif mileage == "15K":
-                        residual_pct = base_residual_pct - 2
-                    else:
-                        residual_pct = None
-
-                    residual = msrp * (residual_pct / 100)
-                    cap_cost = msrp - rebate - money_down
-                    rent = (cap_cost + residual) * mf * term_months
-                    depreciation = cap_cost - residual
-                    base_monthly = (depreciation + rent) / term_months
-                    tax = base_monthly * county_tax
-                    total_monthly = base_monthly + tax
-
-                    mile_data.append((mileage, total_monthly, False))
-
-                mile_min_payment = min([amt for _, amt, na in mile_data if amt is not None])
-                all_payments.extend([amt for _, amt, na in mile_data if amt is not None])
-
-                mileage_cols = st.columns(3)
-                for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
-                    with mileage_cols[i]:
-                        if not_available:
-                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
-                            continue
-
-                        if total_monthly == min(all_payments) and total_monthly == mile_min_payment:
-                            highlight = "font-weight:bold; color:#27ae60;"  # green
-                        elif total_monthly == mile_min_payment:
-                            highlight = "font-weight:bold; color:#f1c40f;"  # yellow
-                        else:
-                            highlight = "color:#2e86de;"  # blue
-
-                        label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min(all_payments) else ""
-                        st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
-                        st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
-else:
-    st.info("Please enter a VIN and select a tier to begin.")
+                    residual_pct = base_residual_pct + 1 if mileage == "10K" else base_residual_pct - 2 if mileage == "15K" else base_r
