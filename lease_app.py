@@ -1,3 +1,20 @@
+import streamlit as st
+import pandas as pd
+
+# Load lease and locator data
+lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
+locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+
+
+def is_ev_phev(row: pd.Series) -> bool:
+    """Return True if the vehicle qualifies for EV/PHEV incentives."""
+    desc = " ".join(
+        str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]
+    ).lower()
+    keywords = ["electric", "plug", "phev", "fuel cell"]
+    return any(k in desc for k in keywords)
+
+
 def main():
     st.title("Lease Quote Calculator")
 
@@ -121,3 +138,7 @@ def main():
             st.error(f"Something went wrong: {e}")
     else:
         st.info("Please enter a VIN and select a tier to begin.")
+
+
+if __name__ == "__main__":
+    main()
