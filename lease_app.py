@@ -49,16 +49,18 @@ if vin and tier:
                 "15K": base_residual_pct - 2
             }
 
-            for mileage, residual_pct in mileage_options.items():
-                residual = msrp * (residual_pct / 100)
-                cap_cost = msrp - rebate - money_down
-                rent = (cap_cost + residual) * mf * term_months
-                depreciation = cap_cost - residual
-                base_monthly = (depreciation + rent) / term_months
-                tax = base_monthly * county_tax
-                total_monthly = base_monthly + tax
+            mileage_cols = st.columns(3)
+            for i, (mileage, residual_pct) in enumerate(mileage_options.items()):
+                with mileage_cols[i]:
+                    residual = msrp * (residual_pct / 100)
+                    cap_cost = msrp - rebate - money_down
+                    rent = (cap_cost + residual) * mf * term_months
+                    depreciation = cap_cost - residual
+                    base_monthly = (depreciation + rent) / term_months
+                    tax = base_monthly * county_tax
+                    total_monthly = base_monthly + tax
 
-                st.markdown(f"<h4 style='color:#2e86de;'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
-                st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
+                    st.markdown(f"<h4 style='color:#2e86de;'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                    st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
