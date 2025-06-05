@@ -77,7 +77,7 @@ if vin and tier:
                 mile_data.append((mileage, total_monthly, False))
 
             min_payment = min([amt for _, amt, na in mile_data if amt is not None])
-all_payments.append(min_payment)
+            all_payments.append(min_payment)
 
             mileage_cols = st.columns(3)
             term_min = min([amt for _, amt, na in mile_data if amt is not None])
