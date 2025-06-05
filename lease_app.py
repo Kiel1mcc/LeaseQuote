@@ -3,9 +3,8 @@ import pandas as pd
 
 # Load lease and locator data
 lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
-
 locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
-locator_data.columns = locator_data.columns.str.strip()  # <-- Do not title-case
+locator_data.columns = locator_data.columns.str.strip()
 locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
 
 def is_ev_phev(row: pd.Series) -> bool:
@@ -52,13 +51,13 @@ def main():
                 best = options.iloc[0]
 
                 try:
-                    lease_cash = float(best["LeaseCash"]) if best["LeaseCash"] else 0.0
+                    lease_cash = float(best["LeaseCash"])
                 except:
                     lease_cash = 0.0
 
                 try:
                     base_mf = float(best[tier])
-                    base_residual_pct = float(best["Residual"]) * 100
+                    base_residual_pct = float(best["Residual"])
                 except Exception as e:
                     st.error(f"Invalid MF or residual data: {e}")
                     return
@@ -70,58 +69,66 @@ def main():
                 with col1:
                     single_pay = st.toggle("Single Pay (EV/PHEV)", False, key=f"sp_{term}", disabled=not ev_phev)
                 with col2:
-                    include_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
+                    remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
                 with col3:
-                    include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", False, key=f"rebate_{term}")
+                    include_lease_cash = st.toggle(f"Apply Lease Cash (${lease_cash:,.0f})", False, key=f"rebate_{term}")
 
-                toggle_color = '#ff4d4d' if include_markup else '#cccccc'
-                st.markdown(
-                    f"<style>div[data-testid='stToggle'][key='markup_{term}'] > div:first-child "
-                    f"{{ background-color: {toggle_color} !important; }}</style>", unsafe_allow_html=True)
+                toggle_color = '#ff4d4d' if remove_markup else '#cccccc'
+                st.markdown(f"""
+                <style>
+                    div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
+                        background-color: {toggle_color} !important;
+                    }}
+                </style>
+                """, unsafe_allow_html=True)
 
-                mf = (base_mf - 0.00015 if single_pay and ev_phev else base_mf) + (0 if include_markup else 0.0004)
-                rebate = lease_cash if include_lease_cash else 0.0
+                # Final MF based on toggles
+                mf = (base_mf - 0.00015 if single_pay and ev_phev else base_mf)
+                mf += 0 if remove_markup else 0.0004
+
+                # Fees
+                doc_fee = 250.00
+                acq_fee = 650.00
+                title_fee = 15.00
+                license_fee = 47.50
+                fees_total = doc_fee + acq_fee + title_fee + license_fee
+
+                # Cap cost calc based on lease cash toggle
+                cap_cost = msrp + fees_total
+                if include_lease_cash:
+                    cap_cost -= lease_cash
+
+                residual_value = msrp * base_residual_pct
+
+                # Lease math
+                depreciation = cap_cost - residual_value
+                rent = (cap_cost + residual_value) * mf * term_months
+                base_monthly = (depreciation + rent) / term_months
+
+                # Taxes
+                monthly_tax = base_monthly * county_tax
+                doc_tax = doc_fee * county_tax
+                acq_tax = acq_fee * county_tax
+                rebate_tax = lease_cash * county_tax if include_lease_cash else 0
+                total_upfront_tax = doc_tax + acq_tax + rebate_tax
+
+                final_monthly = base_monthly + monthly_tax
 
                 mileage_cols = st.columns(3)
-                mile_data = []
-                for mileage in ["10K", "12K", "15K"]:
+                for i, mileage in enumerate(["10K", "12K", "15K"]):
                     if mileage == "10K" and not (33 <= term_months <= 48):
-                        mile_data.append((mileage, None, True, base_residual_pct + 1))
+                        st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    residual_pct = base_residual_pct
-                    if mileage == "10K":
-                        residual_pct += 1
-                    elif mileage == "15K":
-                        residual_pct -= 2
-
-                    residual = msrp * (residual_pct / 100)
-                    cap_cost = msrp - rebate - money_down
-                    rent = (cap_cost + residual) * mf * term_months
+                    residual_pct_adj = base_residual_pct + (1 if mileage == "10K" else -2 if mileage == "15K" else 0)
+                    residual = msrp * residual_pct_adj
                     depreciation = cap_cost - residual
-                    base_monthly = (depreciation + rent) / term_months
-                    tax = base_monthly * county_tax
-                    total_monthly = base_monthly + tax
+                    rent = (cap_cost + residual) * mf * term_months
+                    monthly = (depreciation + rent) / term_months
+                    monthly_final = monthly + monthly * county_tax
 
-                    mile_data.append((mileage, total_monthly, False, residual_pct))
-
-                min_payment = min([amt for _, amt, _, _ in mile_data if amt is not None])
-
-                for i, (mileage, total_monthly, not_available, residual_pct) in enumerate(mile_data):
-                    with mileage_cols[i]:
-                        if not_available:
-                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
-                            continue
-
-                        highlight = "color:#2e86de;"
-                        if total_monthly == min_payment:
-                            highlight = "font-weight:bold; color:#27ae60;"
-
-                        st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
-                        st.markdown(
-                            f"<div style='color:gray; font-size:0.85em;'>MF: {mf:.5f} | Residual: {residual_pct:.1f}%</div>",
-                            unsafe_allow_html=True
-                        )
+                    st.markdown(f"<h4 style='color:#2e86de;'>${monthly_final:.2f} / month</h4>", unsafe_allow_html=True)
+                    st.caption(f"MF: {mf:.5f}, Residual: {residual_pct_adj * 100:.1f}%, Fees Taxed: ${total_upfront_tax:.2f}")
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
