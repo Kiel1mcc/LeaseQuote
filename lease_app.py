@@ -1,31 +1,3 @@
-import streamlit as st
-import pandas as pd
-
-@st.cache_data
-def load_lease_data() -> pd.DataFrame:
-    df = pd.read_csv("All_Lease_Programs_Database.csv")
-    df.columns = df.columns.str.strip().str.title()
-    return df
-
-@st.cache_data
-def load_locator_data() -> pd.DataFrame:
-    df = pd.read_excel("Locator_Detail_20250605.xlsx", engine="openpyxl")
-    df.columns = df.columns.str.strip().str.title()
-    df["Vin"] = df["Vin"].astype(str).str.strip().str.lower()
-    df["Msrp"] = df["Msrp"].replace('[\\$,]', '', regex=True).astype(float)
-    return df
-
-def is_ev_phev(row: pd.Series) -> bool:
-    text = f"{row.get('Trim', '')} {row.get('Modeldescription', '')}".lower()
-    if any(k in text for k in ["electric", "phev", "plug-in", "plug in", "ioniq"]):
-        return True
-    if "ev" in text.replace("hev", ""):
-        return True
-    return False
-
-lease_data = load_lease_data()
-locator_data = load_locator_data()
-
 def main():
     st.title("Lease Quote Calculator")
 
@@ -125,15 +97,15 @@ def main():
                                 tax = base_monthly * county_tax
                                 total_monthly = base_monthly + tax
 
-                                mile_data.append((mileage, total_monthly, False))
+                                mile_data.append((mileage, total_monthly, residual_pct))
 
-                            mile_min_payment = min([amt for _, amt, na in mile_data if amt is not None])
-                            all_payments.extend([amt for _, amt, na in mile_data if amt is not None])
+                            mile_min_payment = min([amt for _, amt, _ in mile_data if amt is not None])
+                            all_payments.extend([amt for _, amt, _ in mile_data if amt is not None])
 
                             mileage_cols = st.columns(3)
-                            for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
+                            for i, (mileage, total_monthly, residual_pct) in enumerate(mile_data):
                                 with mileage_cols[i]:
-                                    if not_available:
+                                    if total_monthly is None:
                                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                                         continue
 
@@ -142,10 +114,11 @@ def main():
                                         highlight = "font-weight:bold; color:#27ae60;"
 
                                     st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                                    st.markdown(
+                                        f"<div style='color:gray; font-size:0.85em;'>MF: {mf:.5f} | Residual: {residual_pct:.1f}%</div>",
+                                        unsafe_allow_html=True
+                                    )
         except Exception as e:
             st.error(f"Something went wrong: {e}")
     else:
         st.info("Please enter a VIN and select a tier to begin.")
-
-if __name__ == "__main__":
-    main()
