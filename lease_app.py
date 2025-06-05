@@ -12,16 +12,22 @@ df = load_data()
 st.title("Lease Calculator")
 
 vin = st.text_input("Enter VIN").strip().upper()
-tier = st.selectbox("Select Credit Tier", ["Tier 1", "Tier 5", "Tier 6", "Tier 7", "Tier 8"])
+
+tier = st.selectbox("Select Credit Tier", [
+    "Tier 1", "Tier 2", "Tier 3", "Tier 4",
+    "Tier 5", "Tier 6", "Tier 7", "Tier 8"
+])
+
 county_tax = st.number_input("County Tax Rate (%)", value=7.25, step=0.01)
 money_down = st.number_input("Money Down ($)", value=0.0, step=100.0)
 
 if vin:
     matches = df[(df["VIN"].str.upper() == vin) & (df["TIER"] == tier)]
+    
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
-        st.subheader("Estimated Payments:")
+        st.subheader(f"Estimated Payments for {tier}:")
         for term in sorted(matches["TERM"].unique(), key=lambda x: int(x)):
             options = matches[matches["TERM"] == term]
             best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
@@ -29,20 +35,4 @@ if vin:
             try:
                 msrp = float(best["MSRP"])
                 lease_cash = float(best["LEASE CASH"])
-                mf = float(best["MONEY FACTOR"])
-                residual_pct = float(best["RESIDUAL"])
-                term_months = int(best["TERM"])
-
-                residual = msrp * (residual_pct / 100)
-                cap_cost = msrp - lease_cash - money_down
-                rent = (cap_cost + residual) * mf * term_months
-                depreciation = cap_cost - residual
-                base_monthly = (depreciation + rent) / term_months
-                tax = base_monthly * (county_tax / 100)
-                total_monthly = base_monthly + tax
-
-                st.markdown(f"**{term} months:** ${total_monthly:.2f}/mo (Residual: {residual_pct}%)")
-
-            except:
-                st.write(f"{term} months: Invalid data")
-
+                mf = flo
