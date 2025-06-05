@@ -1,62 +1,69 @@
 import streamlit as st
 import pandas as pd
 
+# Load lease program data
 @st.cache_data
 def load_data():
     return pd.read_csv("All_Lease_Programs_Database.csv")
 
-df = load_data()
+data = load_data()
 
-st.title("Lease Calculator")
+st.title("Lease Quote Calculator")
 
-vin = st.text_input("Enter VIN").strip().upper()
+vin = st.text_input("Enter VIN:").strip().lower()
+tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
+county_tax = st.number_input("County Tax Rate (%)", value=7.25) / 100
+money_down = st.number_input("Money Down ($)", value=0.0)
 
-tier = st.selectbox("Select Credit Tier", [
-    "Tier 1", "Tier 2", "Tier 3", "Tier 4",
-    "Tier 5", "Tier 6", "Tier 7", "Tier 8"
-])
-
-county_tax = st.number_input("County Tax Rate (%)", value=7.25, step=0.01)
-money_down = st.number_input("Money Down ($)", value=0.0, step=100.0)
-
-if vin:
-    matches = df[(df["VIN"].str.upper() == vin) & (df["TIER"] == tier)]
+if vin and tier:
+    matches = data[(data["VIN"].str.lower() == vin) & (data["TIER"] == tier)]
 
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
-        st.subheader(f"Payment Options for {tier}")
-        for i, term in enumerate(sorted(matches["TERM"].unique(), key=lambda x: int(x))):
-            options = matches[matches["TERM"] == term]
-            best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
+        terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
 
-            msrp = float(best["MSRP"])
-            lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
-            base_mf = float(best["MONEY FACTOR"])
-            residual_pct = float(best["RESIDUAL"])
-            term_months = int(term)
+        for term in terms:
+            st.subheader(f"{term}-Month Term")
 
-            # Display term title with lease cash
-            st.markdown(f"### {term_months}-Month Term  |  Lease Cash: ${lease_cash:,.0f}")
+            term_rows = matches[matches["TERM"] == term]
+            if term_rows.empty:
+                continue
 
-            col1, col2 = st.columns([3, 2])
-            with col2:
-                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
-                include_lease_cash = st.toggle("Include Lease Cash", value=False, key=f"rebate_{term}")
+            base_row = term_rows.iloc[0]
+            msrp = float(base_row["MSRP"])
+            lease_cash = float(base_row["LEASE CASH"])
+            base_mf = float(base_row["MONEY FACTOR"])
+            base_residual = float(base_row["RESIDUAL"])
 
-            # Apply toggles
-            mf = base_mf if include_markup else base_mf - 0.0004
-            rebate = lease_cash if include_lease_cash else 0.0
+            apply_markup_all = st.checkbox(f"Apply Markup to All {term}-Month Options", key=f"markup_all_{term}")
+            apply_rebate_all = st.checkbox(f"Apply Lease Cash to All {term}-Month Options", key=f"rebate_all_{term}")
 
-            # Calculate lease payment
-            residual = msrp * (residual_pct / 100)
-            cap_cost = msrp - rebate - money_down
-            rent = (cap_cost + residual) * mf * term_months
-            depreciation = cap_cost - residual
-            base_monthly = (depreciation + rent) / term_months
-            tax = base_monthly * (county_tax / 100)
-            total_monthly = base_monthly + tax
+            st.markdown("| Mileage | Residual % | Monthly Payment | Markup | Lease Cash |")
+            st.markdown("|---------|-------------|------------------|--------|-------------|")
 
-            with col1:
-                st.markdown(f"<h2 style='color:#2e86de;'>${total_monthly:.2f} / month</h2>", unsafe_allow_html=True)
-                st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:,.0f}")
+            for mileage in ["10K", "12K", "15K"]:
+                if mileage == "10K" and 33 <= int(term) <= 48:
+                    residual = base_residual + 1
+                elif mileage == "15K":
+                    residual = base_residual - 2
+                else:
+                    residual = base_residual
+
+                row_key = f"{term}_{mileage}"
+                include_markup = st.checkbox("", value=apply_markup_all, key=f"markup_{row_key}")
+                include_rebate = st.checkbox("", value=apply_rebate_all, key=f"rebate_{row_key}")
+
+                mf = base_mf + 0.0004 if include_markup else base_mf
+                rebate = lease_cash if include_rebate else 0
+                cap_cost = msrp - rebate - money_down
+                residual_value = msrp * (residual / 100)
+                rent_charge = (cap_cost + residual_value) * mf * int(term)
+                depreciation = cap_cost - residual_value
+                base_monthly = (depreciation + rent_charge) / int(term)
+                tax = base_monthly * county_tax
+                total_monthly = base_monthly + tax
+
+                st.markdown(f"| {mileage} | {residual:.1f}% | **${total_monthly:.2f}** | {'✅' if include_markup else '❌'} | {'✅' if include_rebate else '❌'} |")
+else:
+    st.info("Please enter a VIN and select a tier to begin.")
