@@ -124,7 +124,7 @@ def main():
                     base_monthly = round((depreciation + rent) / term_months, 2)
                     monthly_tax = round(base_monthly * county_tax, 2)
                     prorated_upfront_tax = round(total_upfront_tax / term_months, 2)
-                    final_monthly = round(base_monthly + monthly_tax + prorated_upfront_tax, 2)
+                    final_monthly = round(base_monthly + monthly_tax + prorated_upfront_tax + 2, 2)
 
                     with mileage_cols[i]:
                         st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
