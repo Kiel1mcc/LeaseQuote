@@ -3,17 +3,15 @@ import pandas as pd
 
 # Load lease and locator data
 lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
-locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 
+locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+locator_data.columns = locator_data.columns.str.strip().str.title()
+locator_data["Vin"] = locator_data["Vin"].astype(str).str.strip().str.lower()
 
 def is_ev_phev(row: pd.Series) -> bool:
-    """Return True if the vehicle qualifies for EV/PHEV incentives."""
-    desc = " ".join(
-        str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]
-    ).lower()
+    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "Modeldescription"]).lower()
     keywords = ["electric", "plug", "phev", "fuel cell"]
     return any(k in desc for k in keywords)
-
 
 def main():
     st.title("Lease Quote Calculator")
@@ -31,22 +29,22 @@ def main():
                 st.error(f"Tier column '{tier}' not found.")
                 return
 
-            msrp_row = locator_data[locator_data["VIN"] == vin]
+            msrp_row = locator_data[locator_data["Vin"] == vin]
             if msrp_row.empty:
                 st.error("VIN not found in locator file.")
                 return
 
-            model_number = msrp_row["ModelNumber"].iloc[0]
+            model_number = msrp_row["Model"].iloc[0]
             st.info(f"🔍 Looking up Model Number: {model_number}")
 
-            if model_number not in lease_data["ModelNumber"].values:
+            if model_number not in lease_data["Modelnumber"].values:
                 st.error(f"No lease entries found for model number {model_number}")
                 return
 
-            msrp = float(msrp_row["MSRP"].iloc[0])
+            msrp = float(msrp_row["Msrp"].iloc[0])
             st.info(f"✔ VIN matched: Model {model_number}, MSRP ${msrp:,.2f}")
 
-            matches = lease_data[lease_data["ModelNumber"] == model_number]
+            matches = lease_data[lease_data["Modelnumber"] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
                 st.warning("No lease matches found for this tier.")
@@ -62,7 +60,7 @@ def main():
                 best = options.iloc[0]
 
                 try:
-                    lease_cash = float(best["LeaseCash"]) if best["LeaseCash"] else 0.0
+                    lease_cash = float(best["Leasecash"]) if best["Leasecash"] else 0.0
                 except:
                     lease_cash = 0.0
 
@@ -138,7 +136,6 @@ def main():
             st.error(f"Something went wrong: {e}")
     else:
         st.info("Please enter a VIN and select a tier to begin.")
-
 
 if __name__ == "__main__":
     main()
