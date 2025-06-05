@@ -37,7 +37,15 @@ if vin and tier:
 
             col1, col2, col3 = st.columns([1, 2, 2])
             with col2:
-                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
+                include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
+            toggle_color = '#ff4d4d' if include_markup else '#cccccc'
+            st.markdown(f"""
+                <style>
+                    div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
+                        background-color: {toggle_color} !important;
+                    }}
+                </style>
+            """, unsafe_allow_html=True)
             with col3:
                 include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
