@@ -98,37 +98,35 @@ def main():
                 if include_lease_cash:
                     cap_cost -= lease_cash
 
-                residual_value = msrp * base_residual_pct
-
-                # Lease math
-                depreciation = cap_cost - residual_value
-                rent = (cap_cost + residual_value) * mf * term_months
-                base_monthly = (depreciation + rent) / term_months
-
                 # Taxes
-                monthly_tax = base_monthly * county_tax
                 doc_tax = doc_fee * county_tax
                 acq_tax = acq_fee * county_tax
                 rebate_tax = lease_cash * county_tax if include_lease_cash else 0
                 total_upfront_tax = doc_tax + acq_tax + rebate_tax
 
-                final_monthly = base_monthly + monthly_tax
-
                 mileage_cols = st.columns(3)
                 for i, mileage in enumerate(["10K", "12K", "15K"]):
                     if mileage == "10K" and not (33 <= term_months <= 48):
-                        st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
+                        with mileage_cols[i]:
+                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    residual_pct_adj = base_residual_pct + (1 if mileage == "10K" else -2 if mileage == "15K" else 0)
-                    residual = msrp * residual_pct_adj
-                    depreciation = cap_cost - residual
-                    rent = (cap_cost + residual) * mf * term_months
-                    monthly = (depreciation + rent) / term_months
-                    monthly_final = monthly + monthly * county_tax
+                    residual_pct = base_residual_pct * 100
+                    if mileage == "10K":
+                        residual_pct += 1
+                    elif mileage == "15K":
+                        residual_pct -= 2
 
-                    st.markdown(f"<h4 style='color:#2e86de;'>${monthly_final:.2f} / month</h4>", unsafe_allow_html=True)
-                    st.caption(f"MF: {mf:.5f}, Residual: {residual_pct_adj * 100:.1f}%, Fees Taxed: ${total_upfront_tax:.2f}")
+                    residual_value = msrp * (residual_pct / 100)
+                    depreciation = cap_cost - residual_value
+                    rent = (cap_cost + residual_value) * mf * term_months
+                    base_monthly = (depreciation + rent) / term_months
+                    monthly_tax = base_monthly * county_tax
+                    final_monthly = base_monthly + monthly_tax
+
+                    with mileage_cols[i]:
+                        st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax:.2f}")
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
