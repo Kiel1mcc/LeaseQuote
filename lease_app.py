@@ -53,27 +53,39 @@ if vin and tier:
             rebate = lease_cash if include_lease_cash else 0.0
 
             mileage_cols = st.columns(3)
+            mile_data = []
             for i, mileage in enumerate(["10K", "12K", "15K"]):
+                if mileage == "10K" and not (33 <= term_months <= 48):
+                    mile_data.append((mileage, None, True))
+                    continue
+
+                residual_pct = base_residual_pct
+                if mileage == "10K" and 33 <= term_months <= 48:
+                    residual_pct += 1
+                elif mileage == "15K":
+                    residual_pct -= 2
+
+                residual = msrp * (residual_pct / 100)
+                cap_cost = msrp - rebate - money_down
+                rent = (cap_cost + residual) * mf * term_months
+                depreciation = cap_cost - residual
+                base_monthly = (depreciation + rent) / term_months
+                tax = base_monthly * county_tax
+                total_monthly = base_monthly + tax
+
+                mile_data.append((mileage, total_monthly, False))
+
+            min_payment = min([amt for _, amt, na in mile_data if amt is not None])
+
+            mileage_cols = st.columns(3)
+            for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
                 with mileage_cols[i]:
-                    if mileage == "10K" and not (33 <= term_months <= 48):
+                    if not_available:
                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    residual_pct = base_residual_pct
-                    if mileage == "10K" and 33 <= term_months <= 48:
-                        residual_pct += 1
-                    elif mileage == "15K":
-                        residual_pct -= 2
-
-                    residual = msrp * (residual_pct / 100)
-                    cap_cost = msrp - rebate - money_down
-                    rent = (cap_cost + residual) * mf * term_months
-                    depreciation = cap_cost - residual
-                    base_monthly = (depreciation + rent) / term_months
-                    tax = base_monthly * county_tax
-                    total_monthly = base_monthly + tax
-
-                    st.markdown(f"<h4 style='color:#2e86de;'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                    highlight = "font-weight:bold; color:#27ae60;" if total_monthly == min_payment else "color:#2e86de;"
+                    st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
                     st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
