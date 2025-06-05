@@ -94,7 +94,8 @@ if vin and tier:
                     else:
                         highlight = "color:#2e86de;"
 
-                    st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+                    label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min([p for sublist in all_payments for p in ([sublist] if isinstance(sublist, float) else sublist)]) else ""
+                    st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
                     st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
