@@ -87,14 +87,14 @@ if vin and tier:
                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    if total_monthly == term_min and total_monthly == min(all_payments):
+                    if total_monthly == min(all_payments):
                         highlight = "font-weight:bold; color:#27ae60;"  # Green for lowest overall
-                    elif total_monthly == term_min:
+                    elif False:
                         highlight = "font-weight:bold; color:#f1c40f;"  # Yellow for lowest in term
                     else:
                         highlight = "color:#2e86de;"
 
-                    label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min([p for sublist in all_payments for p in ([sublist] if isinstance(sublist, float) else sublist)]) else ""
+                    label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min(all_payments) else ""
                     st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
                     st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
