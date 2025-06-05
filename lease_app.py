@@ -39,8 +39,7 @@ if vin and tier:
             apply_markup_all = st.checkbox(f"Apply Markup to All {term}-Month Options", key=f"markup_all_{term}")
             apply_rebate_all = st.checkbox(f"Apply Lease Cash to All {term}-Month Options", key=f"rebate_all_{term}")
 
-            st.markdown("| Mileage | Residual % | Monthly Payment | Markup | Lease Cash |")
-            st.markdown("|---------|-------------|------------------|--------|-------------|")
+            st.markdown("**Mileage Options**")
 
             for mileage in ["10K", "12K", "15K"]:
                 if mileage == "10K" and 33 <= int(term) <= 48:
@@ -51,8 +50,13 @@ if vin and tier:
                     residual = base_residual
 
                 row_key = f"{term}_{mileage}"
-                include_markup = st.checkbox("", value=apply_markup_all, key=f"markup_{row_key}")
-                include_rebate = st.checkbox("", value=apply_rebate_all, key=f"rebate_{row_key}")
+
+                col1, col2, col3, col4, col5 = st.columns([1.2, 1, 2, 1, 1])
+
+                with col4:
+                    include_markup = st.checkbox("", value=apply_markup_all, key=f"markup_{row_key}")
+                with col5:
+                    include_rebate = st.checkbox("", value=apply_rebate_all, key=f"rebate_{row_key}")
 
                 mf = base_mf + 0.0004 if include_markup else base_mf
                 rebate = lease_cash if include_rebate else 0
@@ -64,6 +68,12 @@ if vin and tier:
                 tax = base_monthly * county_tax
                 total_monthly = base_monthly + tax
 
-                st.markdown(f"| {mileage} | {residual:.1f}% | **${total_monthly:.2f}** | {'✅' if include_markup else '❌'} | {'✅' if include_rebate else '❌'} |")
+                with col1:
+                    st.markdown(f"**{mileage}**")
+                with col2:
+                    st.markdown(f"{residual:.1f}%")
+                with col3:
+                    st.markdown(f"<h4 style='margin:0;'>${total_monthly:.2f}</h4>", unsafe_allow_html=True)
+
 else:
     st.info("Please enter a VIN and select a tier to begin.")
