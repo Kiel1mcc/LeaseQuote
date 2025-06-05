@@ -36,13 +36,13 @@ if vin:
             residual_pct = float(best["RESIDUAL"])
             term_months = int(term)
 
-            # Per-term toggles
-            st.markdown(f"### {term_months} Month Term")
-            col1, col2 = st.columns(2)
-            with col1:
-                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
+            # Display term title with lease cash
+            st.markdown(f"### {term_months}-Month Term  |  Lease Cash: ${lease_cash:,.0f}")
+
+            col1, col2 = st.columns([3, 2])
             with col2:
-                include_lease_cash = st.toggle("Include Lease Cash", value=True, key=f"leasecash_{term}")
+                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
+                include_lease_cash = st.toggle("Include Lease Cash", value=False, key=f"rebate_{term}")
 
             # Apply toggles
             mf = base_mf if include_markup else base_mf - 0.0004
@@ -57,6 +57,6 @@ if vin:
             tax = base_monthly * (county_tax / 100)
             total_monthly = base_monthly + tax
 
-            # Display result
-            st.write(f"**Estimated Payment:** ${total_monthly:.2f}/mo")
-            st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
+            with col1:
+                st.markdown(f"<h2 style='color:#2e86de;'>${total_monthly:.2f} / month</h2>", unsafe_allow_html=True)
+                st.caption(f"Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:,.0f}")
