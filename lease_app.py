@@ -24,7 +24,7 @@ def main() -> None:
         msrp = float(msrp_row["Msrp"].iloc[0])
         year = msrp_row["Year"].iloc[0] if "Year" in msrp_row else None
 
-        matches = lease_data[lease_data["Model_Number"] == model_number]
+        matches = lease_data[lease_data["Modelnumber"] == model_number]
         matches = matches[~matches[tier].isnull()]
 
         if matches.empty:
@@ -127,3 +127,4 @@ def main() -> None:
 
     else:
         st.info("Please enter a VIN and select a tier to begin.")
+
