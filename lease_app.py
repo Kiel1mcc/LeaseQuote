@@ -37,14 +37,14 @@ def main():
             model_number = msrp_row["Model"].iloc[0]
             st.info(f"🔍 Looking up Model Number: {model_number}")
 
-            if model_number not in lease_data["Modelnumber"].values:
+            if model_number not in lease_data["ModelNumber"].values:
                 st.error(f"No lease entries found for model number {model_number}")
                 return
 
             msrp = float(msrp_row["Msrp"].iloc[0])
             st.info(f"✔ VIN matched: Model {model_number}, MSRP ${msrp:,.2f}")
 
-            matches = lease_data[lease_data["Modelnumber"] == model_number]
+            matches = lease_data[lease_data["ModelNumber"] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
                 st.warning("No lease matches found for this tier.")
@@ -60,7 +60,7 @@ def main():
                 best = options.iloc[0]
 
                 try:
-                    lease_cash = float(best["Leasecash"]) if best["Leasecash"] else 0.0
+                    lease_cash = float(best["LeaseCash"]) if best["LeaseCash"] else 0.0
                 except:
                     lease_cash = 0.0
 
