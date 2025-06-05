@@ -106,3 +106,4 @@ if vin and tier:
                     st.caption(f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}")
 else:
     st.info("Please enter a VIN and select a tier to begin.")
+
