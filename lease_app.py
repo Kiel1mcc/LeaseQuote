@@ -38,7 +38,8 @@ if vin and tier:
 
             col1, col2, col3 = st.columns([1, 2, 2])
             with col2:
-                include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
+                markup_label = "Remove Markup" if not st.session_state.get(f"markup_{term}", False) else "Add Markup"
+                include_markup = st.toggle(markup_label, value=False, key=f"markup_{term}")
             toggle_color = '#ff4d4d' if include_markup else '#cccccc'
             st.markdown(f"""
                 <style>
@@ -48,7 +49,8 @@ if vin and tier:
                 </style>
             """, unsafe_allow_html=True)
             with col3:
-                include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
+                rebate_label = f"Include Lease Cash (${lease_cash:,.0f})" if not st.session_state.get(f"rebate_{term}", False) else f"Remove Lease Cash (${lease_cash:,.0f})"
+                include_lease_cash = st.toggle(rebate_label, value=False, key=f"rebate_{term}")
 
             mf = base_mf + 0.0004 if not include_markup else base_mf
             rebate = lease_cash if include_lease_cash else 0.0
