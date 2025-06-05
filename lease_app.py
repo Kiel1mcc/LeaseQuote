@@ -30,7 +30,7 @@ if vin and tier:
             options = matches[matches["TERM"] == term]
             options = options.copy()
             options["RESIDUAL"] = options["RESIDUAL"].astype(float)
-            best = options.sort_values("RESIDUAL", ascending=False).drop_duplicates(subset=["TERM"]).iloc[0]
+            best = options.iloc[0]
 
             msrp = float(best["MSRP"])
             lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
