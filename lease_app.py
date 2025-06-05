@@ -26,35 +26,32 @@ if vin:
         st.warning("No matching lease options found.")
     else:
         st.subheader(f"Payment Options for {tier}")
-        for term in sorted(matches["TERM"].unique(), key=lambda x: int(x)):
-            term_rows = matches[matches["TERM"] == term]
-            best = term_rows.loc[term_rows["LEASE CASH"].astype(float).idxmax()]
+        for i, term in enumerate(sorted(matches["TERM"].unique(), key=lambda x: int(x))):
+            options = matches[matches["TERM"] == term]
+            best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
 
             msrp = float(best["MSRP"])
             lease_cash = float(best["LEASE CASH"]) if best["LEASE CASH"] else 0.0
-            mf = float(best["MONEY FACTOR"])
+            base_mf = float(best["MONEY FACTOR"])
             residual_pct = float(best["RESIDUAL"])
             term_months = int(term)
 
+            # Per-term toggles
+            st.markdown(f"### {term_months} Month Term")
             col1, col2 = st.columns(2)
             with col1:
-                include_markup = st.checkbox(f"{term} mo - Markup MF", value=True, key=f"markup_{term}")
+                include_markup = st.toggle("Include Markup", value=True, key=f"markup_{term}")
             with col2:
-                include_lease_cash = st.checkbox(f"{term} mo - Use Rebate", value=True, key=f"rebate_{term}")
+                include_lease_cash = st.toggle("Include Lease Cash", value=True, key=f"leasecash_{term}")
 
             # Apply toggles
-            applied_mf = mf if include_markup else mf - 0.0004
-            applied_rebate = lease_cash if include_lease_cash else 0.0
+            mf = base_mf if include_markup else base_mf - 0.0004
+            rebate = lease_cash if include_lease_cash else 0.0
 
+            # Calculate lease payment
             residual = msrp * (residual_pct / 100)
-            cap_cost = msrp - applied_rebate - money_down
-            rent = (cap_cost + residual) * applied_mf * term_months
+            cap_cost = msrp - rebate - money_down
+            rent = (cap_cost + residual) * mf * term_months
             depreciation = cap_cost - residual
             base_monthly = (depreciation + rent) / term_months
-            tax = base_monthly * (county_tax / 100)
-            total_monthly = base_monthly + tax
-
-            st.markdown(
-                f"**{term_months} months:** ${total_monthly:.2f}/mo "
-                f"(Residual: {residual_pct}%, MF: {applied_mf:.5f})"
-            )
+            tax = base_monthly * (county_tax / 10_*_
