@@ -23,7 +23,7 @@ money_down = st.number_input("Money Down ($)", value=0.0, step=100.0)
 
 if vin:
     matches = df[(df["VIN"].str.upper() == vin) & (df["TIER"] == tier)]
-    
+
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
@@ -35,4 +35,18 @@ if vin:
             try:
                 msrp = float(best["MSRP"])
                 lease_cash = float(best["LEASE CASH"])
-                mf = flo
+                mf = float(best["MONEY FACTOR"])
+                residual_pct = float(best["RESIDUAL"])
+                term_months = int(best["TERM"])
+
+                residual = msrp * (residual_pct / 100)
+                cap_cost = msrp - lease_cash - money_down
+                rent = (cap_cost + residual) * mf * term_months
+                depreciation = cap_cost - residual
+                base_monthly = (depreciation + rent) / term_months
+                tax = base_monthly * (county_tax / 100)
+                total_monthly = base_monthly + tax
+
+                st.markdown(f"**{term_months} months:** ${total_monthly:.2f}/mo (Residual: {residual_pct}%)")
+            except Exception as e:
+                st.error(f"{term} months: Calculation error — {e}")
