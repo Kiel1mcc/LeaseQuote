@@ -25,7 +25,7 @@ if vin and tier:
         available_terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
 
         for term in available_terms:
-            st.subheader(f"{term}-Month Term")
+            st.subheader(f"{int(term)}-Month Term")
 
             options = matches[matches["TERM"] == term]
             best = options.loc[options["LEASE CASH"].astype(float).idxmax()]
@@ -39,14 +39,14 @@ if vin and tier:
             col1, col2, col3 = st.columns([1, 2, 2])
             with col2:
                 include_markup = st.toggle("Remove Markup", value=False, key=f"markup_{term}")
-                toggle_color = '#ff4d4d' if include_markup else '#cccccc'
-                st.markdown(f"""
-                    <style>
-                        div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
-                            background-color: {toggle_color} !important;
-                        }}
-                    </style>
-                """, unsafe_allow_html=True)
+            toggle_color = '#ff4d4d' if include_markup else '#cccccc'
+            st.markdown(f"""
+                <style>
+                    div[data-testid='stToggle'][key='markup_{term}'] > div:first-child {{
+                        background-color: {toggle_color} !important;
+                    }}
+                </style>
+            """, unsafe_allow_html=True)
             with col3:
                 include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
@@ -80,6 +80,7 @@ if vin and tier:
             all_payments.extend([amt for _, amt, na in mile_data if amt is not None])
             
             mileage_cols = st.columns(3)
+            term_min = min([amt for _, amt, na in mile_data if amt is not None])
             for i, (mileage, total_monthly, not_available) in enumerate(mile_data):
                 with mileage_cols[i]:
                     if not_available:
