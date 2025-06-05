@@ -21,9 +21,9 @@ if vin and tier:
     if matches.empty:
         st.warning("No matching lease options found.")
     else:
-        terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
+        available_terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
 
-        for term in terms:
+        for term in available_terms:
             st.subheader(f"{term}-Month Term")
 
             options = matches[matches["TERM"] == term]
@@ -43,15 +43,19 @@ if vin and tier:
             mf = base_mf if include_markup else base_mf - 0.0004
             rebate = lease_cash if include_lease_cash else 0.0
 
-            mileage_options = {
-                "10K": base_residual_pct + 1 if 33 <= term_months <= 48 else base_residual_pct,
-                "12K": base_residual_pct,
-                "15K": base_residual_pct - 2
-            }
-
             mileage_cols = st.columns(3)
-            for i, (mileage, residual_pct) in enumerate(mileage_options.items()):
+            for i, mileage in enumerate(["10K", "12K", "15K"]):
                 with mileage_cols[i]:
+                    if mileage == "10K" and not (33 <= term_months <= 48):
+                        st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
+                        continue
+
+                    residual_pct = base_residual_pct
+                    if mileage == "10K" and 33 <= term_months <= 48:
+                        residual_pct += 1
+                    elif mileage == "15K":
+                        residual_pct -= 2
+
                     residual = msrp * (residual_pct / 100)
                     cap_cost = msrp - rebate - money_down
                     rent = (cap_cost + residual) * mf * term_months
