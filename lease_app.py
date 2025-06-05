@@ -1,17 +1,16 @@
 import streamlit as st
 import pandas as pd
 
-# Load data
+# Load lease and locator data
 lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
+
 locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 locator_data.columns = locator_data.columns.str.strip().str.title()
 locator_data["Vin"] = locator_data["Vin"].astype(str).str.strip().str.lower()
 
-
 def is_ev_phev(row: pd.Series) -> bool:
-    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
+    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "Modeldescription"]).lower()
     return any(k in desc for k in ["electric", "plug", "phev", "fuel cell"])
-
 
 def main():
     st.title("Lease Quote Calculator")
@@ -23,8 +22,6 @@ def main():
 
     if vin and tier:
         try:
-            all_payments = []
-
             if tier not in lease_data.columns:
                 st.error(f"Tier column '{tier}' not found.")
                 return
@@ -109,7 +106,6 @@ def main():
                     mile_data.append((mileage, total_monthly, False, residual_pct))
 
                 min_payment = min([amt for _, amt, _, _ in mile_data if amt is not None])
-                all_payments.extend([amt for _, amt, _, _ in mile_data if amt is not None])
 
                 for i, (mileage, total_monthly, not_available, residual_pct) in enumerate(mile_data):
                     with mileage_cols[i]:
@@ -131,7 +127,6 @@ def main():
             st.error(f"Something went wrong: {e}")
     else:
         st.info("Please enter a VIN and select a tier to begin.")
-
 
 if __name__ == "__main__":
     main()
