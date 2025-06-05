@@ -5,7 +5,7 @@ import pandas as pd
 @st.cache_data
 def load_lease_data() -> pd.DataFrame:
     """Return normalized lease program information."""
-    df = pd.read_csv("All_Lease_Programs_Database.csv")
+    df = pd.read_csv("All_Lease_Programs_Database.csv", encoding="utf-8-sig")
     df.columns = df.columns.str.strip().str.title()  # Normalize column names
     return df
 
