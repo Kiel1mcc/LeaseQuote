@@ -1,6 +1,32 @@
-def main() -> None:
-    """Run the Streamlit lease quote calculator."""
+import streamlit as st
+import pandas as pd
 
+@st.cache_data
+def load_lease_data() -> pd.DataFrame:
+    df = pd.read_csv("All_Lease_Programs_Database.csv")
+    df.columns = df.columns.str.strip().str.title()
+    return df
+
+@st.cache_data
+def load_locator_data() -> pd.DataFrame:
+    df = pd.read_excel("Locator_Detail_20250605.xlsx", engine="openpyxl")
+    df.columns = df.columns.str.strip().str.title()
+    df["Vin"] = df["Vin"].astype(str).str.strip().str.lower()
+    df["Msrp"] = df["Msrp"].replace('[\\$,]', '', regex=True).astype(float)
+    return df
+
+def is_ev_phev(row: pd.Series) -> bool:
+    text = f"{row.get('Trim', '')} {row.get('Modeldescription', '')}".lower()
+    if any(k in text for k in ["electric", "phev", "plug-in", "plug in", "ioniq"]):
+        return True
+    if "ev" in text.replace("hev", ""):
+        return True
+    return False
+
+lease_data = load_lease_data()
+locator_data = load_locator_data()
+
+def main():
     st.title("Lease Quote Calculator")
 
     vin = st.text_input("Enter VIN:").strip().lower()
@@ -69,8 +95,8 @@ def main() -> None:
                             )
                             with col3:
                                 include_lease_cash = st.toggle(
-                                    f"Include Lease Cash (${lease_cash:,.0f})", 
-                                    value=False, 
+                                    f"Include Lease Cash (${lease_cash:,.0f})",
+                                    value=False,
                                     key=f"rebate_{term}"
                                 )
 
@@ -85,14 +111,11 @@ def main() -> None:
                                     mile_data.append((mileage, None, True))
                                     continue
 
-                                if mileage == "12K":
-                                    residual_pct = base_residual_pct
-                                elif mileage == "10K":
-                                    residual_pct = base_residual_pct + 1
+                                residual_pct = base_residual_pct
+                                if mileage == "10K":
+                                    residual_pct += 1
                                 elif mileage == "15K":
-                                    residual_pct = base_residual_pct - 2
-                                else:
-                                    residual_pct = None
+                                    residual_pct -= 2
 
                                 residual = msrp * (residual_pct / 100)
                                 cap_cost = msrp - rebate - money_down
@@ -114,16 +137,15 @@ def main() -> None:
                                         st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                                         continue
 
-                                    if total_monthly == min(all_payments) and total_monthly == mile_min_payment:
-                                        highlight = "font-weight:bold; color:#27ae60;"  # green
-                                    elif total_monthly == mile_min_payment:
-                                        highlight = "font-weight:bold; color:#f1c40f;"  # yellow
-                                    else:
-                                        highlight = "color:#2e86de;"  # blue
+                                    highlight = "color:#2e86de;"
+                                    if total_monthly == mile_min_payment:
+                                        highlight = "font-weight:bold; color:#27ae60;"
 
-                                    label = "<span style='font-size:0.8em;'> - Lowest Payment</span>" if total_monthly == min(all_payments) else ""
-                                    st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month{label}</h4>", unsafe_allow_html=True)
-                                    discount_label = " (Single Pay Discount Applied)" if single_pay and ev_phev else ""
-                                    st.caption(
-                                        f"Mileage: {mileage}, Residual: {residual_pct}%, MF: {mf:.5f}, Cap Cost: ${cap_cost:.2f}{discount_label}"
-                                    )
+                                    st.markdown(f"<h4 style='{highlight}'>${total_monthly:.2f} / month</h4>", unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Something went wrong: {e}")
+    else:
+        st.info("Please enter a VIN and select a tier to begin.")
+
+if __name__ == "__main__":
+    main()
