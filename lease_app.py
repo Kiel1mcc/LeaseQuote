@@ -102,7 +102,8 @@ def main():
                 doc_tax = doc_fee * county_tax
                 acq_tax = acq_fee * county_tax
                 rebate_tax = lease_cash * county_tax if include_lease_cash else 0
-                total_upfront_tax = doc_tax + acq_tax + rebate_tax
+                cap_reduction_tax = money_down * county_tax
+                total_upfront_tax = doc_tax + acq_tax + rebate_tax + cap_reduction_tax
 
                 mileage_cols = st.columns(3)
                 for i, mileage in enumerate(["10K", "12K", "15K"]):
