@@ -50,7 +50,7 @@ if vin and tier:
             with col3:
                 include_lease_cash = st.toggle(f"Include Lease Cash (${lease_cash:,.0f})", value=False, key=f"rebate_{term}")
 
-            mf = base_mf if include_markup else base_mf - 0.0004
+            mf = base_mf + 0.0004 if not include_markup else base_mf
             rebate = lease_cash if include_lease_cash else 0.0
 
             mileage_cols = st.columns(3)
