@@ -5,11 +5,11 @@ import pandas as pd
 lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
 
 locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
-locator_data.columns = locator_data.columns.str.strip().str.title()
-locator_data["Vin"] = locator_data["Vin"].astype(str).str.strip().str.lower()
+locator_data.columns = locator_data.columns.str.strip()  # <-- Do not title-case
+locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
 
 def is_ev_phev(row: pd.Series) -> bool:
-    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "Modeldescription"]).lower()
+    desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
     return any(k in desc for k in ["electric", "plug", "phev", "fuel cell"])
 
 def main():
@@ -36,7 +36,7 @@ def main():
                 st.error("No lease entries found for this vehicle.")
                 return
 
-            msrp = float(msrp_row["Msrp"].iloc[0])
+            msrp = float(msrp_row["MSRP"].iloc[0])
             matches = lease_data[lease_data["ModelNumber"] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
