@@ -23,10 +23,11 @@ def main():
 
     # County dropdown
     selected_county = st.selectbox(
-        "Select County:",
-        county_df["Dropdown_Label"],
-        index=county_df[county_df["Dropdown_Label"].str.startswith("Marion ")].index[0]
+    "Select County:",
+    county_df["Dropdown_Label"],
+    index=next(iter(county_df[county_df["Dropdown_Label"].str.contains("^Marion", regex=True)].index), 0)
     )
+
 
     county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
 
