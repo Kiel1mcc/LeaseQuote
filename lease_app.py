@@ -8,7 +8,7 @@ locator_data.columns = locator_data.columns.str.strip()
 locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
 
 # Load county tax rates
-county_df = pd.read_csv("County_Tax_Rates.csv")
+county_df = pd.read_csv("County_Tax_Rates_FULL.csv")
 county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "%)"
 
 def is_ev_phev(row: pd.Series) -> bool:
@@ -22,14 +22,13 @@ def main():
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
     # County dropdown
-selected_county = st.selectbox(
-    "Select County:",
-    county_df["Dropdown_Label"],
-    index=county_df[county_df["Dropdown_Label"].str.startswith("Marion ")].index[0]
-)
+    selected_county = st.selectbox(
+        "Select County:",
+        county_df["Dropdown_Label"],
+        index=county_df[county_df["Dropdown_Label"].str.startswith("Marion ")].index[0]
+    )
 
-county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
-
+    county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
 
     money_down = st.number_input("Money Down ($)", value=0.0)
 
@@ -105,7 +104,7 @@ county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate
                 acq_fee = 650.00
                 title_fee = 15.00
                 license_fee = 47.50
-                fees_total = doc_fee + acq_fee + title_fee + license_fee
+                fees_total = doc_fee + doc_fee + title_fee + license_fee
 
                 # Cap cost calc based on lease cash toggle
                 cap_cost = msrp + fees_total
