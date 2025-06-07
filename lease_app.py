@@ -27,17 +27,17 @@ def calculate_lease_payment(vin, tier, selected_county, money_down, term, option
         county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
         msrp = float(options["MSRP"].iloc[0])
         lease_cash = float(best.get("LeaseCash", 0.0))
-        base_mf = float(best[tier])
-        base_residual_pct = float(best["Residual"])
+        base_mf = float(best[tier])  # Pull MF directly from tier column in lease_data
+        base_residual_pct = float(best["Residual"])  # Pull residual directly from lease_data
         term_months = int(term)
         ev_phev = is_ev_phev(best)
 
-        # Money Factor adjustments
-        mf = base_mf + 0.0004
-        if remove_markup:
-            mf = base_mf
+        # Adjust money factor based on toggles
+        mf = base_mf
         if single_pay and ev_phev:
             mf -= 0.00015
+        if remove_markup:
+            mf = base_mf  # No markup adjustment beyond base
 
         # Fees
         fees = {"doc_fee": 250.00, "acq_fee": 650.00, "title_fee": 15.00, "license_fee": 47.50}
