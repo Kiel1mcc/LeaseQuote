@@ -23,11 +23,10 @@ def main():
 
     # County dropdown
     selected_county = st.selectbox(
-    "Select County:",
-    county_df["Dropdown_Label"],
-    index=next(iter(county_df[county_df["Dropdown_Label"].str.contains("^Marion", regex=True)].index), 0)
+        "Select County:",
+        county_df["Dropdown_Label"],
+        index=next(iter(county_df[county_df["Dropdown_Label"].str.contains("^Marion", regex=True)].index), 0)
     )
-
 
     county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
 
@@ -105,10 +104,10 @@ def main():
                 acq_fee = 650.00
                 title_fee = 15.00
                 license_fee = 47.50
-                fees_total = doc_fee + doc_fee + title_fee + license_fee
+                fees_total = doc_fee + acq_fee + title_fee + license_fee
 
-                # Cap cost calc based on lease cash toggle
-                cap_cost = msrp + fees_total
+                # Cap cost correctly reduced by money down
+                cap_cost = msrp + fees_total - money_down
                 if include_lease_cash:
                     cap_cost -= lease_cash
 
@@ -117,7 +116,10 @@ def main():
                 acq_tax = round(acq_fee * county_tax, 2)
                 rebate_tax = round(lease_cash * county_tax, 2) if include_lease_cash else 0
                 cap_reduction_tax = round(money_down * county_tax, 2)
-                total_upfront_tax = doc_tax + acq_tax + rebate_tax + cap_reduction_tax
+
+                # Total upfront tax for monthly calc (EXCLUDE cap_reduction_tax)
+                total_upfront_tax_for_prorated = doc_tax + acq_tax + rebate_tax
+                prorated_upfront_tax = round(total_upfront_tax_for_prorated / term_months, 2)
 
                 mileage_cols = st.columns(3)
                 for i, mileage in enumerate(["10K", "12K", "15K"]):
@@ -137,12 +139,11 @@ def main():
                     rent = round((cap_cost + residual_value) * mf * term_months, 2)
                     base_monthly = round((depreciation + rent) / term_months, 2)
                     monthly_tax = round(base_monthly * county_tax, 2)
-                    prorated_upfront_tax = round(total_upfront_tax / term_months, 2)
                     final_monthly = round(base_monthly + monthly_tax + prorated_upfront_tax + 2, 2)
 
                     with mileage_cols[i]:
                         st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
-                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax:.2f}")
+                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax_for_prorated:.2f}, Cap Reduction Tax: ${cap_reduction_tax:.2f}")
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
