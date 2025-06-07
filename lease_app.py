@@ -33,7 +33,7 @@ def main():
     money_down = st.number_input("Money Down ($)", value=0.0)
 
     # Program settings — allows matching CDK behavior
-    program_cap_reduction_percent = 1.0  # Adjust per program if needed
+    program_cap_reduction_percent = 1.0  # Default — adjust if needed per program
 
     if vin and tier:
         try:
@@ -112,26 +112,43 @@ def main():
                 license_fee = 47.50
                 fees_total = doc_fee + acq_fee + title_fee + license_fee
 
-                # Taxes
+                # Taxes on fees:
                 doc_tax = round(doc_fee * county_tax, 2)
                 acq_tax = round(acq_fee * county_tax, 2)
-                rebate_applied_to_cap_cost = lease_cash * program_cap_reduction_percent
-                rebate_tax = round(rebate_applied_to_cap_cost * county_tax, 2)
 
+                # Iterative Cap Reduction Tax loop:
+                # Initialize:
+                rebate_applied_to_cap_cost = lease_cash * program_cap_reduction_percent if include_lease_cash else 0.0
                 cap_reduction_base = money_down + rebate_applied_to_cap_cost
-                cap_reduction_tax = round(cap_reduction_base * county_tax, 2)
 
-                # Cap Reduction handling
-                cap_reduction_tax_paid = min(money_down, cap_reduction_tax)
-                remaining_money_down = max(0, money_down - cap_reduction_tax_paid)
+                previous_tax = 0.0
+                tolerance = 0.01  # 1 cent tolerance for loop convergence
+                max_iterations = 20
+                iteration = 0
 
-                # Cap Cost Calculation per your CDK flow:
-                # Cap Cost Base = MSRP - "Discount" → for now using MSRP as base, assume no manual discount.
+                while iteration < max_iterations:
+                    cap_reduction_tax = round(cap_reduction_base * county_tax, 2)
+                    remaining_money_down = max(0, money_down - cap_reduction_tax)
+                    rebate_used_for_cap_cost = min(rebate_applied_to_cap_cost, cap_reduction_base - remaining_money_down)
+                    new_cap_reduction_base = remaining_money_down + rebate_used_for_cap_cost
+
+                    if abs(new_cap_reduction_base * county_tax - cap_reduction_tax) < tolerance:
+                        break
+
+                    cap_reduction_base = new_cap_reduction_base
+                    iteration += 1
+
+                # Final Cap Reduction values:
+                final_cap_reduction_tax = cap_reduction_tax
+                final_remaining_money_down = remaining_money_down
+                final_rebate_applied = rebate_used_for_cap_cost
+                total_cap_cost_reduction = final_remaining_money_down + final_rebate_applied
+
+                # Cap Cost Calculation:
                 cap_cost_base = msrp
-                cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax + rebate_tax + title_fee + license_fee
+                cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax + title_fee + license_fee
 
-                # Net Cap Cost after Cap Reduction:
-                net_cap_cost = cap_cost_total - (remaining_money_down + rebate_applied_to_cap_cost)
+                net_cap_cost = cap_cost_total - total_cap_cost_reduction
 
                 # Residual value:
                 residual_value = round(msrp * (base_residual_pct / 100), 2)
@@ -156,6 +173,14 @@ def main():
                     <li><b>Base Monthly Payment (F):</b> ${base_monthly_payment:.2f}</li>
                     <li><b>Monthly Sales Tax:</b> ${monthly_sales_tax:.2f}</li>
                     <li><b>Total Monthly Payment:</b> ${final_monthly_payment:.2f}</li>
+                </ul>
+
+                <h4 style='color:#27ae60;'>Cap Cost Reduction Breakdown</h4>
+                <ul>
+                    <li><b>Cap Reduction Tax:</b> ${final_cap_reduction_tax:.2f}</li>
+                    <li><b>Remaining Money Down applied to Cap Cost:</b> ${final_remaining_money_down:.2f}</li>
+                    <li><b>Rebate applied to Cap Cost:</b> ${final_rebate_applied:.2f}</li>
+                    <li><b>Total Cap Cost Reduction:</b> ${total_cap_cost_reduction:.2f}</li>
                 </ul>
                 """, unsafe_allow_html=True)
 
