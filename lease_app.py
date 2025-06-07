@@ -21,11 +21,11 @@ def main():
     vin = st.text_input("Enter VIN:").strip().lower()
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
-    # County dropdown with default to Marion — FIXED here (no space after Marion)
+    # County dropdown with default to Marion — now safe with int() fix!
     selected_county = st.selectbox(
         "Select County:",
         county_df["Dropdown_Label"],
-        index=county_df[county_df["Dropdown_Label"].str.startswith("Marion")].index[0]
+        index=int(county_df[county_df["Dropdown_Label"].str.startswith("Marion")].index[0])
     )
     county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
 
