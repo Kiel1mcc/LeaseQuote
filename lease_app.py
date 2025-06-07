@@ -96,8 +96,11 @@ def main():
                 """, unsafe_allow_html=True)
 
                 # Final MF based on toggles
-                mf = (base_mf - 0.00015 if single_pay and ev_phev else base_mf)
-                mf += 0 if remove_markup else 0.0004
+                mf = base_mf
+                if remove_markup:
+                    mf -= 0.0004
+                if single_pay and ev_phev:
+                    mf -= 0.00015
 
                 # Fees
                 doc_fee = 250.00
@@ -106,18 +109,24 @@ def main():
                 license_fee = 47.50
                 fees_total = doc_fee + acq_fee + title_fee + license_fee
 
-                # Cap cost correctly reduced by money down
-                cap_cost = msrp + fees_total - money_down
-                if include_lease_cash:
-                    cap_cost -= lease_cash
-
                 # Taxes
                 doc_tax = round(doc_fee * county_tax, 2)
                 acq_tax = round(acq_fee * county_tax, 2)
                 rebate_tax = round(lease_cash * county_tax, 2) if include_lease_cash else 0
                 cap_reduction_tax = round(money_down * county_tax, 2)
 
-                # Total upfront tax for monthly calc (EXCLUDE cap_reduction_tax)
+                # CDK-style Money Down handling:
+                # First pay Cap Reduction Tax
+                cap_reduction_tax_paid = min(money_down, cap_reduction_tax)
+                remaining_money_down = max(0, money_down - cap_reduction_tax_paid)
+
+                # Cap Cost
+                cap_cost = msrp + fees_total
+                if include_lease_cash:
+                    cap_cost -= lease_cash
+                cap_cost -= remaining_money_down
+
+                # Prorated Upfront Tax (EXCLUDES Cap Reduction Tax → paid upfront)
                 total_upfront_tax_for_prorated = doc_tax + acq_tax + rebate_tax
                 prorated_upfront_tax = round(total_upfront_tax_for_prorated / term_months, 2)
 
@@ -143,7 +152,7 @@ def main():
 
                     with mileage_cols[i]:
                         st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
-                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax_for_prorated:.2f}, Cap Reduction Tax: ${cap_reduction_tax:.2f}")
+                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax_for_prorated:.2f}, Cap Reduction Tax Paid: ${cap_reduction_tax_paid:.2f}, Remaining Money Down: ${remaining_money_down:.2f}")
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
