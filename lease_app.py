@@ -130,7 +130,8 @@ def main():
 
                 # Cap Cost Calculation:
                 cap_cost_base = msrp
-                cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax + title_fee + license_fee
+                # Avoid double-counting title and license fees in the cap cost
+                cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax
                 net_cap_cost = cap_cost_total - total_cap_cost_reduction
 
                 # Residual value:
