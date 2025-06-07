@@ -32,6 +32,9 @@ def main():
 
     money_down = st.number_input("Money Down ($)", value=0.0)
 
+    # Program settings — allows matching CDK behavior
+    program_cap_reduction_percent = 1.0  # Adjust per program if needed
+
     if vin and tier:
         try:
             if tier not in lease_data.columns:
@@ -112,53 +115,49 @@ def main():
                 # Taxes
                 doc_tax = round(doc_fee * county_tax, 2)
                 acq_tax = round(acq_fee * county_tax, 2)
-                rebate_tax = round(lease_cash * county_tax, 2) if include_lease_cash else 0
+                rebate_applied_to_cap_cost = lease_cash * program_cap_reduction_percent
+                rebate_tax = round(rebate_applied_to_cap_cost * county_tax, 2)
 
-                # NEW: CDK-style Cap Reduction Tax on (Money Down + Rebate)
-                cap_reduction_base = money_down
-                if include_lease_cash:
-                    cap_reduction_base += lease_cash
-
+                cap_reduction_base = money_down + rebate_applied_to_cap_cost
                 cap_reduction_tax = round(cap_reduction_base * county_tax, 2)
 
-                # CDK-style Money Down handling:
-                # First pay Cap Reduction Tax
+                # Cap Reduction handling
                 cap_reduction_tax_paid = min(money_down, cap_reduction_tax)
                 remaining_money_down = max(0, money_down - cap_reduction_tax_paid)
 
-                # Cap Cost
-                cap_cost = msrp + fees_total
-                if include_lease_cash:
-                    cap_cost -= lease_cash
-                cap_cost -= remaining_money_down
+                # Cap Cost Calculation per your CDK flow:
+                # Cap Cost Base = MSRP - "Discount" → for now using MSRP as base, assume no manual discount.
+                cap_cost_base = msrp
+                cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax + rebate_tax + title_fee + license_fee
 
-                # Prorated Upfront Tax (EXCLUDES Cap Reduction Tax → paid upfront)
-                total_upfront_tax_for_prorated = doc_tax + acq_tax + rebate_tax
-                prorated_upfront_tax = round(total_upfront_tax_for_prorated / term_months, 2)
+                # Net Cap Cost after Cap Reduction:
+                net_cap_cost = cap_cost_total - (remaining_money_down + rebate_applied_to_cap_cost)
 
-                mileage_cols = st.columns(3)
-                for i, mileage in enumerate(["10K", "12K", "15K"]):
-                    if mileage == "10K" and not (33 <= term_months <= 48):
-                        with mileage_cols[i]:
-                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
-                        continue
+                # Residual value:
+                residual_value = round(msrp * (base_residual_pct / 100), 2)
 
-                    residual_pct = base_residual_pct * 100
-                    if mileage == "10K":
-                        residual_pct += 1
-                    elif mileage == "15K":
-                        residual_pct -= 2
+                # CDK Section 3 style calculation:
+                avg_monthly_dep = round((net_cap_cost - residual_value) / term_months, 2)
+                avg_monthly_rent = round(((net_cap_cost + residual_value) * mf) / term_months, 2)
+                base_monthly_payment = round(avg_monthly_dep + avg_monthly_rent, 2)
 
-                    residual_value = round(msrp * (residual_pct / 100), 2)
-                    depreciation = round(cap_cost - residual_value, 2)
-                    rent = round((cap_cost + residual_value) * mf * term_months, 2)
-                    base_monthly = round((depreciation + rent) / term_months, 2)
-                    monthly_tax = round(base_monthly * county_tax, 2)
-                    final_monthly = round(base_monthly + monthly_tax + prorated_upfront_tax + 2, 2)
+                # Monthly Sales Tax → tax only Depreciation portion:
+                monthly_sales_tax = round(avg_monthly_dep * county_tax, 2)
 
-                    with mileage_cols[i]:
-                        st.markdown(f"<h4 style='color:#2e86de;'>${final_monthly:.2f} / month</h4>", unsafe_allow_html=True)
-                        st.caption(f"MF: {mf:.5f}, Residual: {residual_pct:.1f}%, Fees Taxed: ${total_upfront_tax_for_prorated:.2f}, Cap Reduction Tax Paid: ${cap_reduction_tax_paid:.2f}, Remaining Money Down: ${remaining_money_down:.2f}, Full Cap Reduction Tax: ${cap_reduction_tax:.2f}")
+                # Final Monthly Payment:
+                final_monthly_payment = base_monthly_payment + monthly_sales_tax
+
+                # Display results exactly like CDK Section 3:
+                st.markdown(f"""
+                <h4 style='color:#2e86de;'>Lease Payment Breakdown</h4>
+                <ul>
+                    <li><b>Depreciation (D):</b> ${avg_monthly_dep:.2f}</li>
+                    <li><b>Rent Charge (E):</b> ${avg_monthly_rent:.2f}</li>
+                    <li><b>Base Monthly Payment (F):</b> ${base_monthly_payment:.2f}</li>
+                    <li><b>Monthly Sales Tax:</b> ${monthly_sales_tax:.2f}</li>
+                    <li><b>Total Monthly Payment:</b> ${final_monthly_payment:.2f}</li>
+                </ul>
+                """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
