@@ -8,7 +8,7 @@ locator_data.columns = locator_data.columns.str.strip()
 locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
 
 # Load county tax rates
-county_df = pd.read_csv("County_Tax_Rates_FULL.csv")
+county_df = pd.read_csv("County_Tax_Rates.csv")
 county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "%)"
 
 def is_ev_phev(row: pd.Series) -> bool:
