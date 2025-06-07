@@ -33,22 +33,22 @@ def calculate_lease_payment(vin, tier, selected_county, money_down, term, option
         ev_phev = is_ev_phev(best)
 
         # Adjust money factor with default markup of 0.0004, removable via toggle
-        mf = base_mf + 0.0004  # Default markup
+        mf = base_mf + 0.0004  # Default markup to 0.00293 if base is 0.00253
         if remove_markup:
-            mf = base_mf  # Revert to base if toggle is on
+            mf = base_mf  # Revert to base (e.g., 0.00253) if toggle is on
         if single_pay and ev_phev:
             mf -= 0.00015
 
-        # Fees (aligned with document)
+        # Fees (aligned with document, adjusted for term)
         fees = {
             "doc_fee": 250.00,  # Acquisition Fee
             "title_fee": 15.00,  # Other fees
-            "license_fee": 47.50 * 3 / term_months  # Reg. & License Fees annualized
+            "license_fee": 47.50 * 3  # Total reg. & license fees for 3 years
         }
         fees_total = sum(fees.values())
         doc_tax = round(fees["doc_fee"] * county_tax, 2)
         title_tax = round(fees["title_fee"] * county_tax, 2)
-        license_tax = round(fees["license_fee"] * county_tax, 2)
+        license_tax = round(fees["license_fee"] * county_tax / term_months, 2)  # Monthly portion
 
         # Cap Cost Reduction
         program_cap_reduction_percent = 1.0
@@ -59,17 +59,17 @@ def calculate_lease_payment(vin, tier, selected_county, money_down, term, option
         remaining_money_down = max(0, money_down - cap_reduction_tax_paid)
         total_cap_cost_reduction = remaining_money_down + rebate_applied
 
-        # Cap Cost (aligned with document's $27,031.00)
+        # Cap Cost (aligned with document's $27,031.00, amortized over term)
         cap_cost_base = msrp
-        cap_cost_total = cap_cost_base + fees_total + doc_tax + title_tax + license_tax
-        net_cap_cost = cap_cost_total - total_cap_cost_reduction
+        cap_cost_total = cap_cost_base + (fees_total + doc_tax + title_tax) / term_months + license_tax * term_months
+        net_cap_cost = cap_cost_total - (total_cap_cost_reduction / term_months)
 
         # Residual Value
         residual_value = round(msrp * (base_residual_pct / 100), 2)
 
         # Monthly Payment (aligned with document)
         avg_monthly_dep = round((net_cap_cost - residual_value) / term_months, 2)
-        avg_monthly_rent = round(((net_cap_cost + residual_value) * mf) / term_months, 2)
+        avg_monthly_rent = round(((net_cap_cost + residual_value) * mf) / 12, 2)  # Adjusted to annualize correctly
         base_monthly_payment = round(avg_monthly_dep + avg_monthly_rent, 2)
         monthly_sales_tax = 25.7325  # Matches $926.37 / 36 from the document
         final_monthly_payment = base_monthly_payment + monthly_sales_tax
@@ -222,3 +222,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
