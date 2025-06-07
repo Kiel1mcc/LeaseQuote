@@ -22,13 +22,14 @@ def main():
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
     # County dropdown
-    selected_county = st.selectbox(
+selected_county = st.selectbox(
     "Select County:",
     county_df["Dropdown_Label"],
-    index=county_df[county_df["County"] == "Marion"].index[0]
+    index=county_df[county_df["Dropdown_Label"].str.startswith("Marion ")].index[0]
 )
 
-    county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
+county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
+
 
     money_down = st.number_input("Money Down ($)", value=0.0)
 
