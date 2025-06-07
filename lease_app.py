@@ -32,7 +32,7 @@ def main():
 
     money_down = st.number_input("Money Down ($)", value=0.0)
 
-    # Program settings — allows matching CDK behavior
+    # Program settings
     program_cap_reduction_percent = 1.0  # Default — adjust if needed per program
 
     if vin and tier:
@@ -116,38 +116,21 @@ def main():
                 doc_tax = round(doc_fee * county_tax, 2)
                 acq_tax = round(acq_fee * county_tax, 2)
 
-                # Iterative Cap Reduction Tax loop:
-                # Initialize:
+                # Simple Cap Reduction calculation:
                 rebate_applied_to_cap_cost = lease_cash * program_cap_reduction_percent if include_lease_cash else 0.0
                 cap_reduction_base = money_down + rebate_applied_to_cap_cost
+                cap_reduction_tax = round(cap_reduction_base * county_tax, 2)
 
-                previous_tax = 0.0
-                tolerance = 0.01  # 1 cent tolerance for loop convergence
-                max_iterations = 20
-                iteration = 0
+                # Remaining Money Down after paying Cap Reduction Tax
+                cap_reduction_tax_paid = min(money_down, cap_reduction_tax)
+                remaining_money_down = max(0, money_down - cap_reduction_tax_paid)
 
-                while iteration < max_iterations:
-                    cap_reduction_tax = round(cap_reduction_base * county_tax, 2)
-                    remaining_money_down = max(0, money_down - cap_reduction_tax)
-                    rebate_used_for_cap_cost = min(rebate_applied_to_cap_cost, cap_reduction_base - remaining_money_down)
-                    new_cap_reduction_base = remaining_money_down + rebate_used_for_cap_cost
-
-                    if abs(new_cap_reduction_base * county_tax - cap_reduction_tax) < tolerance:
-                        break
-
-                    cap_reduction_base = new_cap_reduction_base
-                    iteration += 1
-
-                # Final Cap Reduction values:
-                final_cap_reduction_tax = cap_reduction_tax
-                final_remaining_money_down = remaining_money_down
-                final_rebate_applied = rebate_used_for_cap_cost
-                total_cap_cost_reduction = final_remaining_money_down + final_rebate_applied
+                # Total Cap Cost Reduction
+                total_cap_cost_reduction = remaining_money_down + rebate_applied_to_cap_cost
 
                 # Cap Cost Calculation:
                 cap_cost_base = msrp
                 cap_cost_total = cap_cost_base + fees_total + doc_tax + acq_tax + title_fee + license_fee
-
                 net_cap_cost = cap_cost_total - total_cap_cost_reduction
 
                 # Residual value:
@@ -164,7 +147,7 @@ def main():
                 # Final Monthly Payment:
                 final_monthly_payment = base_monthly_payment + monthly_sales_tax
 
-                # Display results exactly like CDK Section 3:
+                # Display results:
                 st.markdown(f"""
                 <h4 style='color:#2e86de;'>Lease Payment Breakdown</h4>
                 <ul>
@@ -177,9 +160,9 @@ def main():
 
                 <h4 style='color:#27ae60;'>Cap Cost Reduction Breakdown</h4>
                 <ul>
-                    <li><b>Cap Reduction Tax:</b> ${final_cap_reduction_tax:.2f}</li>
-                    <li><b>Remaining Money Down applied to Cap Cost:</b> ${final_remaining_money_down:.2f}</li>
-                    <li><b>Rebate applied to Cap Cost:</b> ${final_rebate_applied:.2f}</li>
+                    <li><b>Cap Reduction Tax:</b> ${cap_reduction_tax:.2f}</li>
+                    <li><b>Remaining Money Down applied to Cap Cost:</b> ${remaining_money_down:.2f}</li>
+                    <li><b>Rebate applied to Cap Cost:</b> ${rebate_applied_to_cap_cost:.2f}</li>
                     <li><b>Total Cap Cost Reduction:</b> ${total_cap_cost_reduction:.2f}</li>
                 </ul>
                 """, unsafe_allow_html=True)
