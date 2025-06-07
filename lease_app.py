@@ -7,7 +7,7 @@ locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 locator_data.columns = locator_data.columns.str.strip()
 locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
 
-county_df = pd.read_csv("County_Tax_Rates_FULL.csv")
+county_df = pd.read_csv("County_Tax_Rates.csv")
 
 def is_ev_phev(row: pd.Series) -> bool:
     desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
