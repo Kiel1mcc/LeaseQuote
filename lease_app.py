@@ -21,7 +21,6 @@ def main():
     vin = st.text_input("Enter VIN:").strip().lower()
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
-    # County dropdown with default to Marion — now safe with int() fix!
     selected_county = st.selectbox(
         "Select County:",
         county_df["Dropdown_Label"],
@@ -43,33 +42,33 @@ def main():
                 return
 
             model_number = msrp_row["ModelNumber"].iloc[0]
-            if model_number not in lease_data["ModelNumber"].values:
+            if model_number not in lease_data["MODEL #"].values:
                 st.error("No lease entries found for this vehicle.")
                 return
 
             msrp = float(msrp_row["MSRP"].iloc[0])
-            matches = lease_data[lease_data["ModelNumber"] == model_number]
+            matches = lease_data[lease_data["MODEL #"] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
                 st.warning("No lease matches found for this tier.")
                 return
 
-            available_terms = sorted(matches["Term"].dropna().unique(), key=lambda x: int(x))
+            available_terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
 
             for term in available_terms:
                 st.subheader(f"{int(term)}-Month Term")
-                options = matches[matches["Term"] == term].copy()
-                options["Residual"] = options["Residual"].astype(float)
+                options = matches[matches["TERM"] == term].copy()
+                options["RESIDUAL"] = options["RESIDUAL"].astype(float)
                 best = options.iloc[0]
 
                 try:
-                    lease_cash = float(best["LeaseCash"])
+                    lease_cash = float(best["LEASE CASH"])
                 except:
                     lease_cash = 0.0
 
                 try:
                     base_mf = float(best[tier])
-                    base_residual_pct = float(best["Residual"])
+                    base_residual_pct = float(best["RESIDUAL"])
                 except Exception as e:
                     st.error(f"Invalid MF or residual data: {e}")
                     return
@@ -85,18 +84,15 @@ def main():
                 with col3:
                     include_lease_cash = st.toggle(f"Apply Lease Cash (${lease_cash:,.0f})", False, key=f"rebate_{term}")
 
-                # Final MF based on toggles
                 mf = (base_mf - 0.00015 if single_pay and ev_phev else base_mf)
                 mf += 0 if remove_markup else 0.0004
 
-                # Fees
                 doc_fee = 250.00
                 acq_fee = 650.00
                 title_fee = 15.00
                 license_fee = 47.50
                 fees_total = doc_fee + acq_fee + title_fee + license_fee
 
-                # Cap cost calc based on lease cash toggle
                 cap_cost = msrp + fees_total
                 if include_lease_cash:
                     cap_cost -= lease_cash
@@ -110,28 +106,41 @@ def main():
                             st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
 
-                    residual_pct = base_residual_pct * 100
+                    residual_pct = base_residual_pct
                     if mileage == "10K":
                         residual_pct += 1
                     elif mileage == "15K":
                         residual_pct -= 2
 
-                    residual_value = round(msrp * (residual_pct / 100), 2)
+                    residual_value = msrp * (residual_pct / 100)
 
-                    # Updated calculation — match CDK behavior
                     depreciation = (adj_cap_cost - residual_value) / term_months
                     rent_charge = (adj_cap_cost + residual_value) * mf
                     base_monthly_payment = depreciation + rent_charge
+
                     monthly_sales_tax = round(base_monthly_payment * county_tax, 2)
                     total_monthly_payment = round(base_monthly_payment + monthly_sales_tax, 2)
+
+                    # Total tax over term
+                    total_tax_over_term = monthly_sales_tax * term_months
+                    cap_cost_plus_tax = adj_cap_cost + total_tax_over_term
+
+                    # Avg Monthly Depreciation
+                    avg_monthly_depreciation = (cap_cost_plus_tax - residual_value) / term_months
+
+                    # Avg Monthly Lease Charge
+                    avg_monthly_lease_charge = (adj_cap_cost + residual_value) * mf
+
+                    # Total Base Payment (Depreciation + Lease Charge)
+                    total_base_payment = avg_monthly_depreciation + avg_monthly_lease_charge
 
                     with mileage_cols[i]:
                         st.markdown(f"""
                         <h4 style='color:#2e86de;'>${total_monthly_payment:.2f} / month</h4>
                         <p>
-                        <b>Depreciation (D):</b> ${depreciation:.2f} <br>
-                        <b>Rent Charge (E):</b> ${rent_charge:.2f} <br>
-                        <b>Base Monthly Payment (F):</b> ${base_monthly_payment:.2f} <br>
+                        <b>Avg Monthly Depreciation:</b> ${avg_monthly_depreciation:.2f} <br>
+                        <b>Avg Monthly Lease Charge:</b> ${avg_monthly_lease_charge:.2f} <br>
+                        <b>Total Base Payment:</b> ${total_base_payment:.2f} <br>
                         <b>Monthly Sales Tax:</b> ${monthly_sales_tax:.2f} <br>
                         <b>Total Monthly Payment:</b> ${total_monthly_payment:.2f}
                         </p>
