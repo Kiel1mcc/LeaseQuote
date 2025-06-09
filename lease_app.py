@@ -6,21 +6,27 @@ import re
 # Load lease and locator data
 try:
     lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
-    lease_data.columns = lease_data.columns.str.strip().str.upper()
+    lease_data.columns = lease_data.columns.str.strip()
 except FileNotFoundError:
     st.error("Lease data file 'All_Lease_Programs_Database.csv' not found.")
     st.stop()
 
 # Determine model column safely
-if "MODEL #" in lease_data.columns:
+model_column = None
+if "MODEL" in lease_data.columns:
+    model_column = "MODEL"
+elif "ModelNumber" in lease_data.columns:
+    model_column = "ModelNumber"
+elif "MODEL #" in lease_data.columns:
     model_column = "MODEL #"
 elif "MODEL NUMBER" in lease_data.columns:
     model_column = "MODEL NUMBER"
-elif "MODEL" in lease_data.columns:
-    model_column = "MODEL"
 else:
-    st.error("MODEL column not found in lease data.")
+    st.error("No valid model column (MODEL, ModelNumber, MODEL #, MODEL NUMBER) found in lease data.")
     st.stop()
+
+# Debug: Log lease_data columns
+st.write(f"Debug - Columns in lease_data: {lease_data.columns.tolist()}")
 
 # Ensure model column is uppercase and clean
 lease_data[model_column] = (lease_data[model_column].astype(str)
