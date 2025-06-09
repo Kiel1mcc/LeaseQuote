@@ -121,22 +121,40 @@ def main():
                 st.warning("No lease matches found for this tier.")
                 return
 
-            available_terms = sorted(matches["TERM"].dropna().unique(), key=lambda x: int(x))
+            # Debug: Log matches to inspect Term values
+            st.write(f"Debug - Matching rows for {model_number}: {matches[['ModelNumber', 'Term', tier, 'Residual']].to_dict()}")
+
+            # Validate Term column
+            if "Term" not in matches.columns:
+                st.error("Term column not found in lease data for this model.")
+                return
+
+            # Ensure Term values are numeric and non-null
+            matches = matches[matches["Term"].notnull()]
+            try:
+                available_terms = sorted(matches["Term"].astype(float).unique(), key=lambda x: int(x))
+            except ValueError as e:
+                st.error(f"Invalid Term values in lease data: {e}")
+                return
+
+            if not available_terms:
+                st.error("No valid lease terms found for this model.")
+                return
 
             for term in available_terms:
                 st.subheader(f"{int(term)}-Month Term")
-                options = matches[matches["TERM"] == term].copy()
-                options["RESIDUAL"] = options["RESIDUAL"].astype(float)
+                options = matches[matches["Term"] == term].copy()
+                options["Residual"] = options["Residual"].astype(float)
                 best = options.iloc[0]
 
                 try:
-                    lease_cash = float(best["LEASE CASH"])
+                    lease_cash = float(best["LeaseCash"])
                 except:
                     lease_cash = 0.0
 
                 try:
                     base_mf = float(best[tier])
-                    base_residual_pct = float(best["RESIDUAL"])
+                    base_residual_pct = float(best["Residual"])
                 except Exception as e:
                     st.error(f"Invalid MF or residual data: {e}")
                     return
