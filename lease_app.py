@@ -50,7 +50,7 @@ def main():
                 st.error("VIN not found in locator file.")
                 return
 
-            model_number = msrp_row["ModelNumber"].iloc[0]
+            model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
             if model_number not in lease_data[model_column].values:
                 st.error("No lease entries found for this vehicle.")
                 return
