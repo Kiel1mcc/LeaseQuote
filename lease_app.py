@@ -33,10 +33,10 @@ if not os.path.exists(excel_file):
 try:
     locator_data = pd.read_excel(excel_file)
     locator_data.columns = locator_data.columns.str.strip()
-    # Normalize VINs to remove hidden characters
+    # Normalize VINs to uppercase and remove hidden characters
     locator_data["Vin"] = (locator_data["VIN"].astype(str)
                          .str.strip()
-                         .str.lower()
+                         .str.upper()
                          .str.replace("\u200b", "")
                          .str.replace("\ufeff", ""))
 except Exception as e:
@@ -58,9 +58,10 @@ def is_ev_phev(row: pd.Series) -> bool:
 def main():
     st.title("Lease Quote Calculator")
 
-    vin = (st.text_input("Enter VIN:")
+    # Normalize input VIN to uppercase and remove hidden characters
+    vin = (st.text_input("Enter VIN:", help="VIN will be converted to uppercase for matching")
            .strip()
-           .lower()
+           .upper()
            .replace("\u200b", "")
            .replace("\ufeff", ""))
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
@@ -77,21 +78,15 @@ def main():
     if vin and tier:
         try:
             # Debug: Log input and data for troubleshooting
-            st.write(f"Debug - Input VIN: {vin}")
+            st.write(f"Debug - Input VIN (normalized to uppercase): {vin}")
             st.write(f"Debug - First 5 VINs in locator_data: {locator_data['Vin'].head().tolist()}")
             st.write(f"Debug - Columns in locator_data: {locator_data.columns.tolist()}")
 
-            # Try exact VIN match first
+            # Exact VIN match after normalization
             msrp_row = locator_data[locator_data["Vin"] == vin]
             if msrp_row.empty:
-                # Fallback: Case-insensitive partial match
-                st.write("Debug - Exact VIN not found, trying case-insensitive search...")
-                msrp_row = locator_data[locator_data["Vin"].str.contains(vin, case=False, na=False)]
-                if msrp_row.empty:
-                    st.error("VIN not found in locator file.")
-                    return
-                else:
-                    st.write(f"Debug - Found similar VIN(s): {msrp_row['Vin'].tolist()}")
+                st.error(f"VIN '{vin}' not found in locator file. Please check the VIN and try again.")
+                return
 
             model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
             if model_number not in lease_data[model_column].values:
