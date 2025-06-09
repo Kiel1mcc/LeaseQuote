@@ -85,7 +85,7 @@ def main():
                     include_lease_cash = st.toggle(f"Apply Lease Cash (${lease_cash:,.0f})", False, key=f"rebate_{term}")
 
                 mf = (base_mf - 0.00015 if single_pay and ev_phev else base_mf)
-                mf += 0 if remove_markup else 0.0004
+                mf_with_markup = mf + (0 if remove_markup else 0.0004)
 
                 doc_fee = 250.00
                 acq_fee = 650.00
@@ -115,34 +115,29 @@ def main():
                     residual_value = msrp * (residual_pct / 100)
 
                     depreciation = (adj_cap_cost - residual_value) / term_months
-                    rent_charge = (adj_cap_cost + residual_value) * mf
+                    rent_charge = (adj_cap_cost + residual_value) * mf_with_markup
                     base_monthly_payment = depreciation + rent_charge
 
                     monthly_sales_tax = round(base_monthly_payment * county_tax, 2)
                     total_monthly_payment = round(base_monthly_payment + monthly_sales_tax, 2)
 
-                    # Total tax over term
                     total_tax_over_term = monthly_sales_tax * term_months
                     cap_cost_plus_tax = adj_cap_cost + total_tax_over_term
 
-                    # Avg Monthly Depreciation
+                    # YOUR TWO FORMULAS:
                     avg_monthly_depreciation = (cap_cost_plus_tax - residual_value) / term_months
+                    avg_monthly_lease_charge = mf_with_markup * (cap_cost_plus_tax + residual_value)
 
-                    # Avg Monthly Lease Charge
-                    avg_monthly_lease_charge = (adj_cap_cost + residual_value) * mf
-
-                    # Total Base Payment (Depreciation + Lease Charge)
-                    total_base_payment = avg_monthly_depreciation + avg_monthly_lease_charge
+                    # PAYMENT = sum of your two formulas:
+                    payment = avg_monthly_depreciation + avg_monthly_lease_charge
 
                     with mileage_cols[i]:
                         st.markdown(f"""
-                        <h4 style='color:#2e86de;'>${total_monthly_payment:.2f} / month</h4>
+                        <h4 style='color:#2e86de;'>${payment:.2f} / month (Your formula)</h4>
                         <p>
                         <b>Avg Monthly Depreciation:</b> ${avg_monthly_depreciation:.2f} <br>
                         <b>Avg Monthly Lease Charge:</b> ${avg_monthly_lease_charge:.2f} <br>
-                        <b>Total Base Payment:</b> ${total_base_payment:.2f} <br>
-                        <b>Monthly Sales Tax:</b> ${monthly_sales_tax:.2f} <br>
-                        <b>Total Monthly Payment:</b> ${total_monthly_payment:.2f}
+                        <b>Payment (Your formula):</b> ${payment:.2f}
                         </p>
                         """, unsafe_allow_html=True)
 
