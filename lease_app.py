@@ -1,9 +1,14 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # Load lease and locator data
-lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
-lease_data.columns = lease_data.columns.str.strip().str.upper()
+try:
+    lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
+    lease_data.columns = lease_data.columns.str.strip().str.upper()
+except FileNotFoundError:
+    st.error("Lease data file 'All_Lease_Programs_Database.csv' not found.")
+    st.stop()
 
 # Determine model column safely
 if "MODEL #" in lease_data.columns:
@@ -19,13 +24,32 @@ else:
 # Ensure model column is uppercase and clean
 lease_data[model_column] = lease_data[model_column].astype(str).str.strip().str.upper()
 
-locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
-locator_data.columns = locator_data.columns.str.strip()
-locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
+# Load locator data with file validation
+excel_file = "Locator_Detail_20250605.xlsx"
+if not os.path.exists(excel_file):
+    st.error(f"Locator data file '{excel_file}' not found.")
+    st.stop()
+
+try:
+    locator_data = pd.read_excel(excel_file)
+    locator_data.columns = locator_data.columns.str.strip()
+    # Normalize VINs to remove hidden characters
+    locator_data["Vin"] = (locator_data["VIN"].astype(str)
+                         .str.strip()
+                         .str.lower()
+                         .str.replace("\u200b", "")
+                         .str.replace("\ufeff", ""))
+except Exception as e:
+    st.error(f"Failed to load locator data: {e}")
+    st.stop()
 
 # Load county tax rates and build Dropdown_Label column
-county_df = pd.read_csv("County_Tax_Rates.csv")
-county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "% )"
+try:
+    county_df = pd.read_csv("County_Tax_Rates.csv")
+    county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "% )"
+except FileNotFoundError:
+    st.error("County tax rates file 'County_Tax_Rates.csv' not found.")
+    st.stop()
 
 def is_ev_phev(row: pd.Series) -> bool:
     desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
@@ -34,7 +58,11 @@ def is_ev_phev(row: pd.Series) -> bool:
 def main():
     st.title("Lease Quote Calculator")
 
-    vin = st.text_input("Enter VIN:").strip().lower()
+    vin = (st.text_input("Enter VIN:")
+           .strip()
+           .lower()
+           .replace("\u200b", "")
+           .replace("\ufeff", ""))
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
     selected_county = st.selectbox(
@@ -48,10 +76,22 @@ def main():
 
     if vin and tier:
         try:
+            # Debug: Log input and data for troubleshooting
+            st.write(f"Debug - Input VIN: {vin}")
+            st.write(f"Debug - First 5 VINs in locator_data: {locator_data['Vin'].head().tolist()}")
+            st.write(f"Debug - Columns in locator_data: {locator_data.columns.tolist()}")
+
+            # Try exact VIN match first
             msrp_row = locator_data[locator_data["Vin"] == vin]
             if msrp_row.empty:
-                st.error("VIN not found in locator file.")
-                return
+                # Fallback: Case-insensitive partial match
+                st.write("Debug - Exact VIN not found, trying case-insensitive search...")
+                msrp_row = locator_data[locator_data["Vin"].str.contains(vin, case=False, na=False)]
+                if msrp_row.empty:
+                    st.error("VIN not found in locator file.")
+                    return
+                else:
+                    st.write(f"Debug - Found similar VIN(s): {msrp_row['Vin'].tolist()}")
 
             model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
             if model_number not in lease_data[model_column].values:
@@ -126,14 +166,14 @@ def main():
 
                     residual_value = msrp * (residual_pct / 100)
 
-                    # This is only to compute total_tax_over_term to match your 27031 logic
+                    # Compute total_tax_over_term
                     depreciation = (adj_cap_cost - residual_value) / term_months
                     rent_charge = (adj_cap_cost + residual_value) * mf_with_markup
                     base_monthly_payment = depreciation + rent_charge
                     monthly_sales_tax = round(base_monthly_payment * county_tax, 2)
                     total_tax_over_term = monthly_sales_tax * term_months
 
-                    # Now your flow starts here:
+                    # Calculate final payment
                     cap_cost_plus_tax = adj_cap_cost + total_tax_over_term
 
                     avg_monthly_depreciation = (cap_cost_plus_tax - residual_value) / term_months
