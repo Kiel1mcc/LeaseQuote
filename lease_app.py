@@ -45,8 +45,8 @@ def main():
 
     if vin and tier:
         try:
-            if tier not in lease_data.columns:
-                st.error(f"Tier column '{tier}' not found.")
+            if "TIER" not in lease_data.columns or "MONEY FACTOR" not in lease_data.columns:
+                st.error("Lease data must contain 'TIER' and 'MONEY FACTOR' columns.")
                 return
 
             msrp_row = locator_data[locator_data["Vin"] == vin]
@@ -60,8 +60,7 @@ def main():
                 return
 
             msrp = float(msrp_row["MSRP"].iloc[0])
-            matches = lease_data[lease_data[model_column] == model_number]
-            matches = matches[~matches[tier].isnull()]
+            matches = lease_data[(lease_data[model_column] == model_number) & (lease_data["TIER"] == tier)]
             if matches.empty:
                 st.warning("No lease matches found for this tier.")
                 return
@@ -80,7 +79,7 @@ def main():
                     lease_cash = 0.0
 
                 try:
-                    base_mf = float(best[tier])
+                    base_mf = float(best["MONEY FACTOR"])
                     base_residual_pct = float(best["RESIDUAL"])
                 except Exception as e:
                     st.error(f"Invalid MF or residual data: {e}")
