@@ -126,13 +126,17 @@ def main():
                     total_monthly_payment = round(base_monthly_payment + monthly_sales_tax, 2)
 
                     with mileage_cols[i]:
-                        st.markdown(f"<h4 style='color:#2e86de;'>${total_monthly_payment:.2f} / month</h4>", unsafe_allow_html=True)
-                        st.markdown(f"**Depreciation (D):** ${depreciation:.2f}<br>"
-                                    f"**Rent Charge (E):** ${rent_charge:.2f}<br>"
-                                    f"**Base Monthly Payment (F):** ${base_monthly_payment:.2f}<br>"
-                                    f"**Monthly Sales Tax:** ${monthly_sales_tax:.2f}<br>"
-                                    f"**Total Monthly Payment:** ${total_monthly_payment:.2f}",
-                                    unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <h4 style='color:#2e86de;'>${total_monthly_payment:.2f} / month</h4>
+                    <p>
+                    <b>Depreciation (D):</b> ${depreciation:.2f} <br>
+                    <b>Rent Charge (E):</b> ${rent_charge:.2f} <br>
+                    <b>Base Monthly Payment (F):</b> ${base_monthly_payment:.2f} <br>
+                    <b>Monthly Sales Tax:</b> ${monthly_sales_tax:.2f} <br>
+                    <b>Total Monthly Payment:</b> ${total_monthly_payment:.2f}
+                    </p>
+                    """, unsafe_allow_html=True)
+
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
