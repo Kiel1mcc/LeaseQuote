@@ -16,6 +16,9 @@ else:
     st.error("MODEL column not found in lease data.")
     st.stop()
 
+# Ensure model column is uppercase and clean
+lease_data[model_column] = lease_data[model_column].astype(str).str.strip().str.upper()
+
 locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 locator_data.columns = locator_data.columns.str.strip()
 locator_data["Vin"] = locator_data["VIN"].astype(str).str.strip().str.lower()
