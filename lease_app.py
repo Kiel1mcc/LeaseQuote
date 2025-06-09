@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import re
 
 # Load lease and locator data
 try:
@@ -22,7 +23,10 @@ else:
     st.stop()
 
 # Ensure model column is uppercase and clean
-lease_data[model_column] = lease_data[model_column].astype(str).str.strip().str.upper()
+lease_data[model_column] = (lease_data[model_column].astype(str)
+                           .str.strip()
+                           .str.upper()
+                           .apply(lambda x: re.sub(r'[^\x20-\x7E]', '', x)))  # Remove non-printable characters
 
 # Load locator data with file validation
 excel_file = "Locator_Detail_20250605.xlsx"
@@ -82,15 +86,26 @@ def main():
             st.write(f"Debug - First 5 VINs in locator_data: {locator_data['Vin'].head().tolist()}")
             st.write(f"Debug - Columns in locator_data: {locator_data.columns.tolist()}")
 
-            # Exact VIN match after normalization
+            # Exact VIN match
             msrp_row = locator_data[locator_data["Vin"] == vin]
             if msrp_row.empty:
                 st.error(f"VIN '{vin}' not found in locator file. Please check the VIN and try again.")
                 return
 
-            model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
+            # Normalize ModelNumber
+            model_number = (msrp_row["ModelNumber"].iloc[0]
+                           .strip()
+                           .upper()
+                           .replace("\u200b", "")
+                           .replace("\ufeff", ""))
+            model_number = re.sub(r'[^\x20-\x7E]', '', model_number)  # Remove non-printable characters
+
+            # Debug: Log model number and lease data models
+            st.write(f"Debug - Model Number from locator_data: {model_number}")
+            st.write(f"Debug - Unique Model Numbers in lease_data[{model_column}]: {sorted(lease_data[model_column].unique().tolist())}")
+
             if model_number not in lease_data[model_column].values:
-                st.error("No lease entries found for this vehicle.")
+                st.error(f"No lease entries found for Model Number '{model_number}'.")
                 return
 
             msrp = float(msrp_row["MSRP"].iloc[0])
