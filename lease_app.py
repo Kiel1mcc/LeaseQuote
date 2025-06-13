@@ -66,7 +66,6 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
 
         monthly_tax_loop = round(base_payment_loop * county_tax, 2)
 
-        # CDK-style First Payment calculation: full Q fee + tax up front
         ltr_fee_upfront = 62.50
         ltr_fee_tax = round(ltr_fee_upfront * county_tax, 2)
 
@@ -143,46 +142,32 @@ def main():
                 base_residual_pct = float(best["Residual"])
                 term_months = int(term)
 
-                mileage_cols = st.columns(3, gap="small")
-                for i, mileage in enumerate(["10K", "12K", "15K"]):
-                    if mileage == "10K" and not (33 <= term_months <= 48):
-                        with mileage_cols[i]:
-                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
-                        continue
+                residual_value = msrp * (base_residual_pct / 100)
 
-                    residual_pct = base_residual_pct
-                    if mileage == "10K":
-                        residual_pct += 1
-                    elif mileage == "15K":
-                        residual_pct -= 2
+                remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
+                mf_to_use = base_mf if remove_markup else base_mf + 0.0004
 
-                    residual_value = msrp * (residual_pct / 100)
+                loop_result = run_ccr_balancing_loop(
+                    target_das=money_down,
+                    msrp=msrp,
+                    lease_cash=lease_cash,
+                    residual_value=residual_value,
+                    term_months=term_months,
+                    mf=mf_to_use,
+                    county_tax=county_tax,
+                    q_value=q_value
+                )
 
-                    remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}_{mileage}")
-                    mf_to_use = base_mf if remove_markup else base_mf + 0.0004
-
-                    loop_result = run_ccr_balancing_loop(
-                        target_das=money_down,
-                        msrp=msrp,
-                        lease_cash=lease_cash,
-                        residual_value=residual_value,
-                        term_months=term_months,
-                        mf=mf_to_use,
-                        county_tax=county_tax,
-                        q_value=q_value
-                    )
-
-                    with mileage_cols[i]:
-                        st.markdown(f"""
-                        <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
-                        <p>
-                        <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
-                        <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
-                        <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
-                        <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
-                        <b>Iterations:</b> {loop_result['Iterations']} <br>
-                        </p>
-                        """, unsafe_allow_html=True)
+                st.markdown(f"""
+                <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
+                <p>
+                <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
+                <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
+                <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
+                <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
+                <b>Iterations:</b> {loop_result['Iterations']} <br>
+                </p>
+                """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
