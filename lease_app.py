@@ -35,7 +35,6 @@ except FileNotFoundError:
     st.stop()
 
 try:
-    # Load MSRP as string to prevent type issues
     locator_data = pd.read_excel("Locator_Detail_20250605.xlsx", dtype={"MSRP": str})
     locator_data.columns = locator_data.columns.str.strip()
     locator_data["VIN"] = (locator_data["VIN"].astype(str)
@@ -47,126 +46,138 @@ except FileNotFoundError:
     st.error("Locator data file 'Locator_Detail_20250605.xlsx' not found.")
     st.stop()
 
-# Function to calculate lease details based on user-provided CCR
-def calculate_lease_details(ccr, msrp, lease_cash, residual_value, term_months, mf, county_tax, q_value, fixed_fees):
-    gross_cap_cost = msrp - lease_cash
-    adjusted_cap_cost = gross_cap_cost - ccr
-    monthly_depreciation = (adjusted_cap_cost - residual_value) / term_months
-    monthly_rent_charge = (adjusted_cap_cost + residual_value) * mf
-    base_payment = monthly_depreciation + monthly_rent_charge
-    monthly_ltr_fee = q_value / term_months
-    monthly_payment_pre_tax = base_payment + monthly_ltr_fee
-    monthly_tax = monthly_payment_pre_tax * county_tax
-    total_monthly_payment = monthly_payment_pre_tax + monthly_tax
-    ccr_tax = ccr * county_tax
-    first_payment = total_monthly_payment
-    total_das = ccr + ccr_tax + first_payment + fixed_fees
+def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
+    min_ccr = 0.0
+    max_ccr = target_das
+    iteration = 0
+
+    monthly_ltr_fee = round(q_value / term_months, 2)
+    fixed_fees = 250.00 + 650.00 + 15.00 + 47.50
+    cap_cost = msrp - lease_cash
+
+    while iteration < max_iterations:
+        iteration += 1
+        ccr_guess = (min_ccr + max_ccr) / 2
+
+        adj_cap_cost_loop = cap_cost - ccr_guess
+
+        monthly_depreciation = (adj_cap_cost_loop - residual_value) / term_months
+        monthly_rent_charge = (adj_cap_cost_loop + residual_value) * mf
+        base_payment_loop = round(monthly_depreciation + monthly_rent_charge, 2)
+
+        monthly_tax_loop = round(base_payment_loop * county_tax, 2)
+        first_payment_loop = round(base_payment_loop + monthly_tax_loop + monthly_ltr_fee, 2)
+
+        ccr_tax_loop = round(ccr_guess * county_tax, 2)
+
+        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
+
+        if abs(total_das_loop - target_das) <= tolerance:
+            break
+
+        if total_das_loop > target_das:
+            max_ccr = ccr_guess
+        else:
+            min_ccr = ccr_guess
+
     return {
-        "Monthly_Payment": round(total_monthly_payment, 2),
-        "Total_DAS": round(total_das, 2)
+        "CCR": round(ccr_guess, 2),
+        "CCR_Tax": ccr_tax_loop,
+        "First_Payment": first_payment_loop,
+        "Total_DAS": total_das_loop,
+        "Iterations": iteration
     }
 
-# Main application function
 def main():
     st.title("Lease Quote Calculator")
-    
-    # User inputs
+
     vin = st.text_input("Enter VIN:", help="VIN will be converted to uppercase for matching").strip().upper()
     tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
     selected_county = st.selectbox("Select County:", county_df["Dropdown_Label"])
     county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
-    ccr = st.number_input("Capitalized Cost Reduction (CCR) ($)", value=0.0, min_value=0.0, help="Amount paid upfront to reduce the lease cost")
-    
-    # Explanatory text
+
+    money_down = st.number_input("Down Payment ($)", value=0.0, min_value=0.0, help="Enter total amount the customer is putting down")
+
     st.markdown("""
     **Calculation Details:**
-    - **Capitalized Cost Reduction (CCR):** The amount you pay upfront to reduce the lease cost.
-    - **Total Due at Signing (DAS):** Includes CCR, CCR tax, first month's payment, and fixed fees ($962.50).
-    - **Monthly Payment:** Includes depreciation, rent charge, monthly fees, and tax.
+    - **Down Payment:** What the customer is putting down.
+    - **Loop will solve for:** CCR, CCR Tax, First Payment to exactly match Down Payment (Total DAS).
     """)
-    
+
     if vin and tier:
         try:
-            # Match VIN to vehicle details
             msrp_row = locator_data[locator_data["VIN"] == vin]
             if msrp_row.empty:
                 st.error(f"VIN '{vin}' not found in locator file.")
                 return
-            
+
             model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
             model_number = re.sub(r'[^\x20-\x7E]', '', model_number)
-            
-            # Convert MSRP to string and clean it
+
             msrp_str = str(msrp_row["MSRP"].iloc[0])
             msrp = float(msrp_str.replace('$', '').replace(',', ''))
-            
-            # Display vehicle information
+
             st.write(f"Vehicle: {msrp_row['Model'].iloc[0]} {msrp_row['Trim'].iloc[0]}, MSRP: ${msrp:.2f}")
-            
-            # Find matching lease programs
+
             matches = lease_data[lease_data[model_column] == model_number]
             matches = matches[~matches[tier].isnull()]
             if matches.empty:
                 st.error(f"No lease matches found for this tier.")
                 return
-            
-            # Get available lease terms
+
             available_terms = sorted(matches["Term"].astype(float).unique(), key=lambda x: int(x))
-            
-            # Fixed fees and Q-value
-            fixed_fees = 962.50  # Sum of acquisition, documentation, etc.
-            q_value = 62.50  # Fee divided over the term
-            
-            # Process each term
+
+            fixed_fees = 962.50
+            q_value = 62.50
+
             for term in available_terms:
                 st.subheader(f"{int(term)}-Month Term")
                 options = matches[matches["Term"] == term].copy()
                 best = options.iloc[0]
-                
+
                 lease_cash = float(best.get("LeaseCash", 0.0))
                 base_mf = float(best[tier])
                 base_residual_pct = float(best["Residual"])
                 term_months = int(term)
-                
-                # Display results for each mileage option
+
                 mileage_cols = st.columns(3, gap="small")
                 for i, mileage in enumerate(["10K", "12K", "15K"]):
-                    # Check 10K mileage availability
                     if mileage == "10K" and not (33 <= term_months <= 48):
                         with mileage_cols[i]:
                             st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
                         continue
-                    
-                    # Adjust residual percentage based on mileage
+
                     residual_pct = base_residual_pct
                     if mileage == "10K":
                         residual_pct += 1
                     elif mileage == "15K":
                         residual_pct -= 2
+
                     residual_value = msrp * (residual_pct / 100)
-                    
-                    # Adjusted money factor
-                    mf = base_mf + 0.0004
-                    
-                    # Calculate lease details
-                    lease_details = calculate_lease_details(
-                        ccr=ccr,
+
+                    loop_result = run_ccr_balancing_loop(
+                        target_das=money_down,
                         msrp=msrp,
                         lease_cash=lease_cash,
                         residual_value=residual_value,
                         term_months=term_months,
-                        mf=mf,
+                        mf=base_mf + 0.0004,
                         county_tax=county_tax,
-                        q_value=q_value,
-                        fixed_fees=fixed_fees
+                        q_value=q_value
                     )
-                    
-                    # Display results
+
                     with mileage_cols[i]:
                         st.markdown(f"""
-                        <h4 style='color:#2e86de;'>${lease_details['Monthly_Payment']:.2f} / month</h4>
-                        <p><b>Total Due at Signing:</b> ${lease_details['Total_DAS']:.2f}</p>
+                        <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
+                        <p>
+                        <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
+                        <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
+                        <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
+                        <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
+                        <b>Iterations:</b> {loop_result['Iterations']} <br>
+                        </p>
                         """, unsafe_allow_html=True)
+
         except Exception as e:
             st.error(f"Something went wrong: {e}")
     else:
