@@ -82,8 +82,10 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         monthly_rent_charge = (adj_cap_cost_loop + residual_value) * mf
         base_payment_loop = round(monthly_depreciation + monthly_rent_charge, 2)
 
-        monthly_tax_loop = round(base_payment_loop * county_tax, 2)
-        first_payment_loop = round(base_payment_loop + monthly_tax_loop + monthly_ltr_fee, 2)
+        # Monthly payment should include the LTR fee before tax is applied
+        monthly_payment_pre_tax = base_payment_loop + monthly_ltr_fee
+        monthly_tax_loop = round(monthly_payment_pre_tax * county_tax, 2)
+        first_payment_loop = round(monthly_payment_pre_tax + monthly_tax_loop, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
