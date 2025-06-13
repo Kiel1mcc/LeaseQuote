@@ -62,14 +62,16 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
 
         monthly_depreciation = (adj_cap_cost_loop - residual_value) / term_months
         monthly_rent_charge = (adj_cap_cost_loop + residual_value) * mf
-        base_payment_loop = round(monthly_depreciation + monthly_rent_charge, 2)
 
-        monthly_tax_loop = round(base_payment_loop * county_tax, 2)
+        # Do not round base payment here
+        base_payment_loop_exact = monthly_depreciation + monthly_rent_charge
+
+        monthly_tax_loop = round(base_payment_loop_exact * county_tax, 2)
 
         ltr_fee_upfront = 62.50
         ltr_fee_tax = round(ltr_fee_upfront * county_tax, 2)
 
-        first_payment_loop = round(base_payment_loop + monthly_tax_loop + ltr_fee_upfront + ltr_fee_tax, 2)
+        first_payment_loop = round(base_payment_loop_exact + monthly_tax_loop + ltr_fee_upfront + ltr_fee_tax, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
