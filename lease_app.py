@@ -67,13 +67,15 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash_applied, residual_value,
 
         monthly_tax_loop = round(base_payment_loop_exact * county_tax, 2)
 
-        first_month_payment = round(base_payment_loop_exact + monthly_tax_loop, 2)
+        ltr_fee_tax = round(q_value * county_tax, 2)
+
+        first_month_payment = round(base_payment_loop_exact + monthly_tax_loop + q_value + ltr_fee_tax, 2)
 
         first_payment_loop = round(first_month_payment, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
-        total_das_loop = round(lease_cash_applied + ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
+        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
 
         if abs(total_das_loop - target_das) <= tolerance:
             break
