@@ -212,3 +212,23 @@ def main():
                         county_tax=county_tax,
                         q_value=62.50
                     )
+
+                    with mileage_cols[i]:
+                        st.markdown(f"""
+                        <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month (Loop - CDK Match)</h4>
+                        <p>
+                        <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
+                        <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
+                        <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
+                        <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
+                        <b>Iterations:</b> {loop_result['Iterations']} <br>
+                        </p>
+                        """, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"Something went wrong: {e}")
+    else:
+        st.info("Please enter a VIN and select a tier to begin.")
+
+if __name__ == "__main__":
+    main()
