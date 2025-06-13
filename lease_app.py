@@ -149,6 +149,9 @@ def main():
                 remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
                 mf_to_use = base_mf if remove_markup else base_mf + 0.0004
 
+                # Debug print for MF and Residual %
+                st.write(f"Debug: Term {term_months} mo → MF used: {mf_to_use}, Residual % used: {base_residual_pct}%")
+
                 loop_result = run_ccr_balancing_loop(
                     target_das=money_down,
                     msrp=msrp,
