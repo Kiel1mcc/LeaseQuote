@@ -149,9 +149,6 @@ def main():
                 remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
                 mf_to_use = base_mf if remove_markup else base_mf + 0.0004
 
-                # Debug print for MF and Residual %
-                st.write(f"Debug: Term {term_months} mo → MF used: {mf_to_use}, Residual % used: {base_residual_pct}%")
-
                 loop_result = run_ccr_balancing_loop(
                     target_das=money_down,
                     msrp=msrp,
@@ -166,6 +163,8 @@ def main():
                 st.markdown(f"""
                 <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
                 <p>
+                <b>MF used:</b> {mf_to_use} <br>
+                <b>Residual % used:</b> {base_residual_pct}% <br>
                 <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
                 <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
                 <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
