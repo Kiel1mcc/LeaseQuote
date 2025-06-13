@@ -29,7 +29,7 @@ lease_data[model_column] = (lease_data[model_column].astype(str)
 try:
     county_df = pd.read_csv("County_Tax_Rates.csv")
     county_df.columns = county_df.columns.str.strip()
-    county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "%)"
+    county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "% )"
 except FileNotFoundError:
     st.error("County tax rates file 'County_Tax_Rates.csv' not found.")
     st.stop()
@@ -72,11 +72,11 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
 
         first_month_payment = round(base_payment_loop_exact + monthly_tax_loop, 2)
 
-        first_payment_loop = round(first_month_payment + ltr_fee_upfront + ltr_fee_tax, 2)
+        first_payment_loop = round(first_month_payment, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
-        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
+        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + ltr_fee_upfront + ltr_fee_tax + fixed_fees, 2)
 
         if abs(total_das_loop - target_das) <= tolerance:
             break
