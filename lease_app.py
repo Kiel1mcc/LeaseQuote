@@ -46,13 +46,13 @@ except FileNotFoundError:
     st.error("Locator data file 'Locator_Detail_20250605.xlsx' not found.")
     st.stop()
 
-def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
+def run_ccr_balancing_loop(target_das, msrp, lease_cash_applied, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
     min_ccr = 0.0
-    max_ccr = msrp - residual_value - 500  # proper upper bound
+    max_ccr = msrp - residual_value - 500
     iteration = 0
 
-    fixed_fees = 250.00 + 650.00 + 15.00 + 47.50
-    cap_cost = msrp  # FIXED HERE, no longer subtracting lease_cash
+    fixed_fees = 900.00
+    cap_cost = msrp
 
     while iteration < max_iterations:
         iteration += 1
@@ -67,16 +67,13 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
 
         monthly_tax_loop = round(base_payment_loop_exact * county_tax, 2)
 
-        ltr_fee_upfront = 62.50
-        ltr_fee_tax = round(ltr_fee_upfront * county_tax, 2)
-
         first_month_payment = round(base_payment_loop_exact + monthly_tax_loop, 2)
 
         first_payment_loop = round(first_month_payment, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
-        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
+        total_das_loop = round(lease_cash_applied + ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
 
         if abs(total_das_loop - target_das) <= tolerance:
             break
@@ -142,11 +139,15 @@ def main():
                 best = options.iloc[0]
 
                 lease_cash = float(best.get("LeaseCash", 0.0))
+                apply_lease_cash = st.toggle(f"Apply Lease Cash (${lease_cash:.0f})", False, key=f"leasecash_{term}")
+
+                lease_cash_applied = lease_cash if apply_lease_cash else 0.0
+
                 base_mf = float(best[tier])
                 base_residual_pct = float(best["Residual"])
                 term_months = int(term)
 
-                residual_value = msrp * (base_residual_pct / 100)
+                residual_value = msrp * base_residual_pct
 
                 remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}")
                 mf_to_use = base_mf if remove_markup else base_mf + 0.0004
@@ -154,7 +155,7 @@ def main():
                 loop_result = run_ccr_balancing_loop(
                     target_das=money_down,
                     msrp=msrp,
-                    lease_cash=lease_cash,
+                    lease_cash_applied=lease_cash_applied,
                     residual_value=residual_value,
                     term_months=term_months,
                     mf=mf_to_use,
@@ -166,17 +167,17 @@ def main():
                 <h4 style='color:#2e86de;'>${loop_result['First_Month_Payment']:.2f} / month</h4>
                 <p>
                 <b>MF used:</b> {mf_to_use} <br>
-                <b>Residual % used:</b> {base_residual_pct}% <br>
+                <b>Residual % used:</b> {base_residual_pct * 100:.2f}% <br>
                 <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
                 <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
                 <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
                 <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
                 <b>Iterations:</b> {loop_result['Iterations']} <br>
                 <b>--- Debug Variables ---</b> <br>
-                <b>C (Rebates/LeaseCash):</b> ${lease_cash:.2f} <br>
-                <b>K (Fixed Fees):</b> $962.50 <br>
+                <b>C (Down Payment + LeaseCash Applied):</b> ${money_down + lease_cash_applied:.2f} <br>
+                <b>K (Fixed Fees):</b> $0.00 <br>
                 <b>U:</b> $0.00 <br>
-                <b>M (Taxable Fees):</b> $0.00 <br>
+                <b>M (Doc Fee + Acq Fee):</b> $900.00 <br>
                 <b>Q (LTR Fee):</b> ${q_value:.2f} <br>
                 <b>Tax Rate:</b> {county_tax * 100:.2f}% <br>
                 <b>F (MF used):</b> {mf_to_use} <br>
