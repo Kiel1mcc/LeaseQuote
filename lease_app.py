@@ -52,7 +52,7 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
     iteration = 0
 
     fixed_fees = 250.00 + 650.00 + 15.00 + 47.50
-    cap_cost = msrp - lease_cash
+    cap_cost = msrp  # FIXED HERE, no longer subtracting lease_cash
 
     while iteration < max_iterations:
         iteration += 1
