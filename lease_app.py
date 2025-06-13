@@ -46,12 +46,11 @@ except FileNotFoundError:
     st.error("Locator data file 'Locator_Detail_20250605.xlsx' not found.")
     st.stop()
 
-def run_ccr_balancing_loop(target_das, msrp, lease_cash_applied, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
+def run_ccr_balancing_loop(target_loop_amount, msrp, lease_cash_applied, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
     min_ccr = 0.0
     max_ccr = msrp - residual_value - 500
     iteration = 0
 
-    fixed_fees = 900.00
     cap_cost = msrp
 
     while iteration < max_iterations:
@@ -75,12 +74,12 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash_applied, residual_value,
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
-        total_das_loop = round(ccr_guess + ccr_tax_loop + first_payment_loop + fixed_fees, 2)
+        total_loop_amount = round(ccr_guess + ccr_tax_loop + first_payment_loop, 2)
 
-        if abs(total_das_loop - target_das) <= tolerance:
+        if abs(total_loop_amount - target_loop_amount) <= tolerance:
             break
 
-        if total_das_loop > target_das:
+        if total_loop_amount > target_loop_amount:
             max_ccr = ccr_guess
         else:
             min_ccr = ccr_guess
@@ -90,7 +89,7 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash_applied, residual_value,
         "CCR_Tax": ccr_tax_loop,
         "First_Payment": first_payment_loop,
         "First_Month_Payment": first_month_payment,
-        "Total_DAS": total_das_loop,
+        "Total_Loop_Amount": total_loop_amount,
         "Iterations": iteration
     }
 
@@ -107,7 +106,7 @@ def main():
     st.markdown("""
     **Calculation Details:**
     - **Down Payment:** What the customer is putting down.
-    - **Loop will solve for:** CCR, CCR Tax, First Payment to exactly match Down Payment (Total DAS).
+    - **Loop will solve for:** CCR, CCR Tax, First Payment to exactly match Down Payment.
     """)
 
     if vin and tier:
@@ -155,7 +154,7 @@ def main():
                 mf_to_use = base_mf if remove_markup else base_mf + 0.0004
 
                 loop_result = run_ccr_balancing_loop(
-                    target_das=money_down,
+                    target_loop_amount=money_down,
                     msrp=msrp,
                     lease_cash_applied=lease_cash_applied,
                     residual_value=residual_value,
@@ -173,12 +172,10 @@ def main():
                 <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
                 <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
                 <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
-                <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
+                <b>Total Loop Amount (matches down payment):</b> ${loop_result['Total_Loop_Amount']:.2f} <br>
                 <b>Iterations:</b> {loop_result['Iterations']} <br>
                 <b>--- Debug Variables ---</b> <br>
                 <b>C (Down Payment + LeaseCash Applied):</b> ${money_down + lease_cash_applied:.2f} <br>
-                <b>K (Fixed Fees):</b> $0.00 <br>
-                <b>U:</b> $0.00 <br>
                 <b>M (Doc Fee + Acq Fee):</b> $900.00 <br>
                 <b>Q (LTR Fee):</b> ${q_value:.2f} <br>
                 <b>Tax Rate:</b> {county_tax * 100:.2f}% <br>
