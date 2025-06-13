@@ -4,7 +4,7 @@ import re
 
 # Load data files with error handling
 try:
-    lease_data = pd.read_csv("All_Lease_Programs_Database (3).csv")
+    lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
     lease_data.columns = lease_data.columns.str.strip()
 except FileNotFoundError:
     st.error("Lease data file 'All_Lease_Programs_Database (3).csv' not found.")
