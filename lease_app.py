@@ -7,7 +7,7 @@ try:
     lease_data = pd.read_csv("All_Lease_Programs_Database.csv")
     lease_data.columns = lease_data.columns.str.strip()
 except FileNotFoundError:
-    st.error("Lease data file 'All_Lease_Programs_Database (3).csv' not found.")
+    st.error("Lease data file 'All_Lease_Programs_Database.csv' not found.")
     st.stop()
 
 # Determine the model column dynamically
@@ -31,11 +31,12 @@ try:
     county_df.columns = county_df.columns.str.strip()
     county_df["Dropdown_Label"] = county_df["County"] + " (" + county_df["Tax Rate"].astype(str) + "%)"
 except FileNotFoundError:
-    st.error("County tax rates file 'County_Tax_Rates (1).csv' not found.")
+    st.error("County tax rates file 'County_Tax_Rates.csv' not found.")
     st.stop()
 
 try:
-    locator_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+    # Load MSRP as string to prevent type issues
+    locator_data = pd.read_excel("Locator_Detail_20250605.xlsx", dtype={"MSRP": str})
     locator_data.columns = locator_data.columns.str.strip()
     locator_data["VIN"] = (locator_data["VIN"].astype(str)
                          .str.strip()
@@ -94,7 +95,10 @@ def main():
             
             model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
             model_number = re.sub(r'[^\x20-\x7E]', '', model_number)
-            msrp = float(msrp_row["MSRP"].iloc[0].replace('$', '').replace(',', ''))
+            
+            # Convert MSRP to string and clean it
+            msrp_str = str(msrp_row["MSRP"].iloc[0])
+            msrp = float(msrp_str.replace('$', '').replace(',', ''))
             
             # Display vehicle information
             st.write(f"Vehicle: {msrp_row['Model'].iloc[0]} {msrp_row['Trim'].iloc[0]}, MSRP: ${msrp:.2f}")
