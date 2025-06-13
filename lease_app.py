@@ -104,3 +104,113 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         "Total_DAS": total_das_loop,
         "Iterations": iteration
     }
+
+def main():
+    st.title("Lease Quote Calculator")
+
+    vin = st.text_input("Enter VIN:", help="VIN will be converted to uppercase for matching").strip().upper()
+    tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
+
+    selected_county = st.selectbox(
+        "Select County:",
+        county_df["Dropdown_Label"],
+        index=int(county_df[county_df["Dropdown_Label"].str.startswith("Marion")].index[0])
+    )
+    county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
+
+    money_down = st.number_input("Money Down ($)", value=0.0)
+
+    if vin and tier:
+        try:
+            msrp_row = locator_data[locator_data["Vin"] == vin]
+            if msrp_row.empty:
+                st.error(f"VIN '{vin}' not found in locator file. Please check the VIN and try again.")
+                return
+
+            model_number = (msrp_row["ModelNumber"].iloc[0]
+                           .strip()
+                           .upper()
+                           .replace("\u200b", "")
+                           .replace("\ufeff", ""))
+            model_number = re.sub(r'[^\x20-\x7E]', '', model_number)
+
+            if model_number not in lease_data[model_column].values:
+                st.error(f"No lease entries found for Model Number '{model_number}'.")
+                return
+
+            msrp = float(msrp_row["MSRP"].iloc[0])
+            matches = lease_data[lease_data[model_column] == model_number]
+            matches = matches[~matches[tier].isnull()]
+            if matches.empty:
+                st.error(f"No lease matches found for this tier.")
+                return
+
+            if "Term" not in matches.columns:
+                st.error("Term column not found in lease data for this model.")
+                return
+
+            matches = matches[matches["Term"].notnull()]
+            available_terms = sorted(matches["Term"].astype(float).unique(), key=lambda x: int(x))
+
+            if not available_terms:
+                st.error("No valid lease terms found for this model.")
+                return
+
+            for term in available_terms:
+                st.subheader(f"{int(term)}-Month Term")
+                options = matches[matches["Term"] == term].copy()
+                options["Residual"] = options["Residual"].astype(float)
+                best = options.iloc[0]
+
+                lease_cash = float(best.get("LeaseCash", 0.0))
+                base_mf = float(best[tier])
+                base_residual_pct = float(best["Residual"])
+
+                term_months = int(term)
+                ev_phev = is_ev_phev(best)
+
+                mileage_cols = st.columns(3, gap="small")
+                for i, mileage in enumerate(["10K", "12K", "15K"]):
+                    if mileage == "10K" and not (33 <= term_months <= 48):
+                        with mileage_cols[i]:
+                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
+                        continue
+
+                    residual_pct = base_residual_pct
+                    if mileage == "10K":
+                        residual_pct += 1
+                    elif mileage == "15K":
+                        residual_pct -= 2
+
+                    residual_value = msrp * (residual_pct / 100)
+
+                    loop_result = run_ccr_balancing_loop(
+                        target_das=money_down,
+                        msrp=msrp,
+                        lease_cash=lease_cash,
+                        residual_value=residual_value,
+                        term_months=term_months,
+                        mf=base_mf + 0.0004,
+                        county_tax=county_tax,
+                        q_value=62.50
+                    )
+
+                    with mileage_cols[i]:
+                        st.markdown(f"""
+                        <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month (Loop - CDK Match)</h4>
+                        <p>
+                        <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
+                        <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
+                        <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
+                        <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
+                        <b>Iterations:</b> {loop_result['Iterations']} <br>
+                        </p>
+                        """, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"Something went wrong: {e}")
+    else:
+        st.info("Please enter a VIN and select a tier to begin.")
+
+if __name__ == "__main__":
+    main()
