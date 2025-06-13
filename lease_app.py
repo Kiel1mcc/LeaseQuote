@@ -58,7 +58,7 @@ def is_ev_phev(row: pd.Series) -> bool:
     desc = " ".join(str(row.get(col, "")) for col in ["Model", "Trim", "ModelDescription"]).lower()
     return any(k in desc for k in ["electric", "plug", "phev", "fuel cell"])
 
-def run_ccr_balancing_loop(target_das, cap_cost, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
+def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
     min_ccr = 0.0
     max_ccr = target_das
     iteration = 0
@@ -68,17 +68,20 @@ def run_ccr_balancing_loop(target_das, cap_cost, residual_value, term_months, mf
     # Add fixed fees per CDK behavior
     fixed_fees = 250.00 + 650.00 + 15.00 + 47.50  # $962.50
 
+    # Cap cost should not include fees, only MSRP minus lease cash if applied
+    cap_cost = msrp - lease_cash
+
     while iteration < max_iterations:
         iteration += 1
         ccr_guess = (min_ccr + max_ccr) / 2
 
         adj_cap_cost_loop = cap_cost - ccr_guess
 
-        base_payment_loop = round(
-            mf * (adj_cap_cost_loop + residual_value) +
-            ((adj_cap_cost_loop - residual_value) / term_months),
-            2
-        )
+        # Correct base payment calculation
+        monthly_depreciation = (adj_cap_cost_loop - residual_value) / term_months
+        monthly_rent_charge = (adj_cap_cost_loop + residual_value) * mf
+        base_payment_loop = round(monthly_depreciation + monthly_rent_charge, 2)
+
         monthly_tax_loop = round(base_payment_loop * county_tax, 2)
         first_payment_loop = round(base_payment_loop + monthly_tax_loop + monthly_ltr_fee, 2)
 
