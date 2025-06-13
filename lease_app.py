@@ -48,7 +48,7 @@ except FileNotFoundError:
 
 def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
     min_ccr = 0.0
-    max_ccr = target_das
+    max_ccr = msrp - residual_value - 500  # proper upper bound
     iteration = 0
 
     fixed_fees = 250.00 + 650.00 + 15.00 + 47.50
@@ -63,7 +63,6 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         monthly_depreciation = (adj_cap_cost_loop - residual_value) / term_months
         monthly_rent_charge = (adj_cap_cost_loop + residual_value) * mf
 
-        # Do not round base payment here
         base_payment_loop_exact = monthly_depreciation + monthly_rent_charge
 
         monthly_tax_loop = round(base_payment_loop_exact * county_tax, 2)
