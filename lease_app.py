@@ -172,6 +172,17 @@ def main():
                 <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
                 <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
                 <b>Iterations:</b> {loop_result['Iterations']} <br>
+                <b>--- Debug Variables ---</b> <br>
+                <b>C (Rebates/LeaseCash):</b> ${lease_cash:.2f} <br>
+                <b>K (Fixed Fees):</b> $962.50 <br>
+                <b>U:</b> $0.00 <br>
+                <b>M (Taxable Fees):</b> $0.00 <br>
+                <b>Q (LTR Fee):</b> ${q_value:.2f} <br>
+                <b>Tax Rate:</b> {county_tax * 100:.2f}% <br>
+                <b>F (MF used):</b> {mf_to_use} <br>
+                <b>N (Term):</b> {term_months} <br>
+                <b>S (MSRP):</b> ${msrp:.2f} <br>
+                <b>R (Residual Value):</b> ${residual_value:.2f} <br>
                 </p>
                 """, unsafe_allow_html=True)
 
