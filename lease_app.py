@@ -51,7 +51,6 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
     max_ccr = target_das
     iteration = 0
 
-    monthly_ltr_fee = round(q_value / term_months, 2)
     fixed_fees = 250.00 + 650.00 + 15.00 + 47.50
     cap_cost = msrp - lease_cash
 
@@ -66,7 +65,12 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         base_payment_loop = round(monthly_depreciation + monthly_rent_charge, 2)
 
         monthly_tax_loop = round(base_payment_loop * county_tax, 2)
-        first_payment_loop = round(base_payment_loop + monthly_tax_loop + monthly_ltr_fee, 2)
+
+        # CDK-style First Payment calculation: full Q fee + tax up front
+        ltr_fee_upfront = 62.50
+        ltr_fee_tax = round(ltr_fee_upfront * county_tax, 2)
+
+        first_payment_loop = round(base_payment_loop + monthly_tax_loop + ltr_fee_upfront + ltr_fee_tax, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
@@ -87,104 +91,3 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         "Total_DAS": total_das_loop,
         "Iterations": iteration
     }
-
-def main():
-    st.title("Lease Quote Calculator")
-
-    vin = st.text_input("Enter VIN:", help="VIN will be converted to uppercase for matching").strip().upper()
-    tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
-    selected_county = st.selectbox("Select County:", county_df["Dropdown_Label"])
-    county_tax = county_df[county_df["Dropdown_Label"] == selected_county]["Tax Rate"].values[0] / 100
-
-    money_down = st.number_input("Down Payment ($)", value=0.0, min_value=0.0, help="Enter total amount the customer is putting down")
-
-    st.markdown("""
-    **Calculation Details:**
-    - **Down Payment:** What the customer is putting down.
-    - **Loop will solve for:** CCR, CCR Tax, First Payment to exactly match Down Payment (Total DAS).
-    """)
-
-    if vin and tier:
-        try:
-            msrp_row = locator_data[locator_data["VIN"] == vin]
-            if msrp_row.empty:
-                st.error(f"VIN '{vin}' not found in locator file.")
-                return
-
-            model_number = msrp_row["ModelNumber"].iloc[0].strip().upper()
-            model_number = re.sub(r'[^\x20-\x7E]', '', model_number)
-
-            msrp_str = str(msrp_row["MSRP"].iloc[0])
-            msrp = float(msrp_str.replace('$', '').replace(',', ''))
-
-            st.write(f"Vehicle: {msrp_row['Model'].iloc[0]} {msrp_row['Trim'].iloc[0]}, MSRP: ${msrp:.2f}")
-
-            matches = lease_data[lease_data[model_column] == model_number]
-            matches = matches[~matches[tier].isnull()]
-            if matches.empty:
-                st.error(f"No lease matches found for this tier.")
-                return
-
-            available_terms = sorted(matches["Term"].astype(float).unique(), key=lambda x: int(x))
-
-            fixed_fees = 962.50
-            q_value = 62.50
-
-            for term in available_terms:
-                st.subheader(f"{int(term)}-Month Term")
-                options = matches[matches["Term"] == term].copy()
-                best = options.iloc[0]
-
-                lease_cash = float(best.get("LeaseCash", 0.0))
-                base_mf = float(best[tier])
-                base_residual_pct = float(best["Residual"])
-                term_months = int(term)
-
-                mileage_cols = st.columns(3, gap="small")
-                for i, mileage in enumerate(["10K", "12K", "15K"]):
-                    if mileage == "10K" and not (33 <= term_months <= 48):
-                        with mileage_cols[i]:
-                            st.markdown(f"<div style='opacity:0.5'><h4>{mileage} Not Available</h4></div>", unsafe_allow_html=True)
-                        continue
-
-                    residual_pct = base_residual_pct
-                    if mileage == "10K":
-                        residual_pct += 1
-                    elif mileage == "15K":
-                        residual_pct -= 2
-
-                    residual_value = msrp * (residual_pct / 100)
-
-                    remove_markup = st.toggle("Remove Markup", False, key=f"markup_{term}_{mileage}")
-                    mf_to_use = base_mf if remove_markup else base_mf + 0.0004
-
-                    loop_result = run_ccr_balancing_loop(
-                        target_das=money_down,
-                        msrp=msrp,
-                        lease_cash=lease_cash,
-                        residual_value=residual_value,
-                        term_months=term_months,
-                        mf=mf_to_use,
-                        county_tax=county_tax,
-                        q_value=q_value
-                    )
-
-                    with mileage_cols[i]:
-                        st.markdown(f"""
-                        <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
-                        <p>
-                        <b>CCR:</b> ${loop_result['CCR']:.2f} <br>
-                        <b>CCR Tax:</b> ${loop_result['CCR_Tax']:.2f} <br>
-                        <b>First Payment:</b> ${loop_result['First_Payment']:.2f} <br>
-                        <b>Total DAS:</b> ${loop_result['Total_DAS']:.2f} <br>
-                        <b>Iterations:</b> {loop_result['Iterations']} <br>
-                        </p>
-                        """, unsafe_allow_html=True)
-
-        except Exception as e:
-            st.error(f"Something went wrong: {e}")
-    else:
-        st.info("Please enter a VIN and select a tier to begin.")
-
-if __name__ == "__main__":
-    main()
