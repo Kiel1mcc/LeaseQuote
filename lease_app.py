@@ -71,7 +71,9 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         ltr_fee_upfront = 62.50
         ltr_fee_tax = round(ltr_fee_upfront * county_tax, 2)
 
-        first_payment_loop = round(base_payment_loop_exact + monthly_tax_loop + ltr_fee_upfront + ltr_fee_tax, 2)
+        first_month_payment = round(base_payment_loop_exact + monthly_tax_loop, 2)
+
+        first_payment_loop = round(first_month_payment + ltr_fee_upfront + ltr_fee_tax, 2)
 
         ccr_tax_loop = round(ccr_guess * county_tax, 2)
 
@@ -89,6 +91,7 @@ def run_ccr_balancing_loop(target_das, msrp, lease_cash, residual_value, term_mo
         "CCR": round(ccr_guess, 2),
         "CCR_Tax": ccr_tax_loop,
         "First_Payment": first_payment_loop,
+        "First_Month_Payment": first_month_payment,
         "Total_DAS": total_das_loop,
         "Iterations": iteration
     }
@@ -161,7 +164,7 @@ def main():
                 )
 
                 st.markdown(f"""
-                <h4 style='color:#2e86de;'>${loop_result['First_Payment']:.2f} / month</h4>
+                <h4 style='color:#2e86de;'>${loop_result['First_Month_Payment']:.2f} / month</h4>
                 <p>
                 <b>MF used:</b> {mf_to_use} <br>
                 <b>Residual % used:</b> {base_residual_pct}% <br>
