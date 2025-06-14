@@ -48,7 +48,7 @@ except FileNotFoundError:
 
 def run_ccr_balancing_loop(target_loop_amount, msrp, lease_cash_applied, residual_value, term_months, mf, county_tax, q_value, tolerance=0.005, max_iterations=1000):
     min_ccr = 0.0
-    max_ccr = msrp - residual_value - 500
+    max_ccr = msrp - residual_value  # FIXED: removed -500 offset
     iteration = 0
 
     cap_cost = msrp
