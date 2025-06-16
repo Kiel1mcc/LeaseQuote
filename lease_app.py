@@ -5,7 +5,6 @@ import datetime
 
 # Helper function for lease payment calculation
 def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
-    # Step 1: Cap Cost Calculation (already pre-calculated into B as Cap Cost Reduction)
     K = 0
     U = 0
 
@@ -27,7 +26,10 @@ def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
     return {
         "Base Payment": round(base_payment, 2),
         "Monthly Payment": round(monthly_payment, 2),
-        "Cap Cost Reduction": round(B, 2)
+        "Cap Cost Reduction": round(B, 2),
+        "Average Monthly Depreciation": round(AMD, 2),
+        "Average Lease Charge": round(ALC, 2),
+        "Total Advance": round(TA, 2)
     }
 
 # Streamlit UI
@@ -98,14 +100,13 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = row["LeaseCash"]
 
-                # Updated CCR calculation based on Excel breakdown
                 top = money_down
                 fw = round(mf_to_use * term_months, 6)
-                smu_res = round(msrp + 900 - 0 + residual_value, 6)
-                smu_res_diff = round(msrp + 900 - 0 - residual_value, 6)
+                smu_res = round(msrp + 900 + residual_value, 6)
+                smu_res_diff = round(msrp + 900 - residual_value, 6)
 
-                top -= mf_to_use * (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - 0 + residual_value)
-                top += (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - 0 - residual_value) / term_months
+                top -= mf_to_use * (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) + residual_value)
+                top += (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - residual_value) / term_months
 
                 bottom = round((1 + tax_rate) * (1 - ((mf_to_use + 1 / term_months)) - tax_rate * mf_to_use * (1 + mf_to_use * term_months)), 4)
 
@@ -124,9 +125,14 @@ if vin_input:
 
                 st.markdown(f"""
                 ### {term_months}-Month Lease
+                **Money Factor:** {mf_to_use}  
+                **Residual Value:** ${residual_value:,.2f} ({residual_percent:.0%})  
+                **Cap Cost Reduction (CCR):** ${total_ccr:,.2f}  
+                **Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}  
+                **Average Monthly Depreciation (AMD):** ${payment_calc['Average Monthly Depreciation']:,.2f}  
+                **Average Lease Charge (ALC):** ${payment_calc['Average Lease Charge']:,.2f}  
                 **Base Payment:** ${payment_calc['Base Payment']:.2f}  
                 **Monthly Payment (w/ tax):** ${payment_calc['Monthly Payment']:.2f}  
-                **Cap Cost Reduction:** ${payment_calc['Cap Cost Reduction']:.2f}  
                 **Lease Cash Applied:** ${lease_cash:,.2f}  
                 **Down Payment:** ${money_down:,.2f}  
                 ---
