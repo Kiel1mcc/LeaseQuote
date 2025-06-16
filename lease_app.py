@@ -2,12 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
-from lease_utils import run_ccr_balancing_loop
-
-# Load data files
-lease_programs = pd.read_csv("Combined_Lease_Programs.csv")
-vehicle_data = pd.read_excel("Inventory_Detail_20250527.xlsx")
-county_rates = pd.read_csv("county_tax_rates.csv")
 
 # Helper function for lease payment calculation
 def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
@@ -28,6 +22,10 @@ def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
 
 # Streamlit UI
 st.title("Lease Quote Calculator")
+
+lease_programs = pd.read_csv("Combined_Lease_Programs.csv")
+vehicle_data = pd.read_excel("Inventory_Detail_20250527.xlsx")
+county_rates = pd.read_csv("county_tax_rates.csv")
 
 vin_input = st.text_input("Enter VIN:")
 selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
@@ -62,9 +60,8 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = row["Lease_Cash"]
 
-                loop_result = run_ccr_balancing_loop(
-                    msrp, residual_value, term_months, mf_to_use, money_down, lease_cash, tax_rate
-                )
+                # Placeholder CCR calculation
+                total_ccr = money_down + lease_cash
 
                 payment_calc = calculate_base_and_monthly_payment(
                     S=msrp,
@@ -73,7 +70,7 @@ if vin_input:
                     F=mf_to_use,
                     M=900,
                     Q=q_value,
-                    B=loop_result['CCR'],
+                    B=total_ccr,
                     tau=tax_rate
                 )
 
@@ -83,6 +80,6 @@ if vin_input:
                 **Monthly Payment (w/ tax):** ${payment_calc['Monthly Payment']:.2f}  
                 **Cap Cost Reduction:** ${payment_calc['Cap Cost Reduction']:.2f}  
                 **Lease Cash Applied:** ${lease_cash:,.2f}  
-                **CCR Loop Result:** ${loop_result['CCR']:,.2f}
+                **Down Payment:** ${money_down:,.2f}  
                 ---
                 """)
