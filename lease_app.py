@@ -23,7 +23,7 @@ def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
 # Streamlit UI
 st.title("Lease Quote Calculator")
 
-lease_programs = pd.read_csv("Combined_Lease_Programs.csv")
+lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Inventory_Detail_20250527.xlsx")
 county_rates = pd.read_csv("county_tax_rates.csv")
 
