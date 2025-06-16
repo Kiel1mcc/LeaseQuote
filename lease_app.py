@@ -57,9 +57,7 @@ if vin_input:
             st.stop()
 
         lease_col = lease_col_match[0]
-        matching_programs = lease_programs[
-            lease_programs[lease_col] == model_number
-        ]
+        matching_programs = lease_programs[lease_programs[lease_col] == model_number]
 
         if matching_programs.empty:
             st.error("No lease entries found for this vehicle.")
@@ -70,11 +68,23 @@ if vin_input:
             q_value = 47.50 + 15  # fixed fees
 
             for _, row in matching_programs.iterrows():
-                term_months = row["Lease_Term"]
-                mf_to_use = row["Money_Factor_Tier_" + str(tier_num)]
-                residual_percent = row["Residual_Percentage"]
+                if "LeaseTerm" in row:
+                    term_months = row["LeaseTerm"]
+                elif "Lease_Term" in row:
+                    term_months = row["Lease_Term"]
+                else:
+                    st.error("Lease term column not found in lease program entry.")
+                    continue
+
+                mf_col = f"Tier {tier_num}"
+                if mf_col not in row:
+                    st.error(f"Missing money factor column '{mf_col}' in lease program.")
+                    continue
+
+                mf_to_use = row[mf_col]
+                residual_percent = row["Residual"]
                 residual_value = round(msrp * residual_percent, 2)
-                lease_cash = row["Lease_Cash"]
+                lease_cash = row["LeaseCash"]
 
                 total_ccr = money_down + lease_cash
 
