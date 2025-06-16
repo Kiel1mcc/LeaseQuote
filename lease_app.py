@@ -5,14 +5,24 @@ import datetime
 
 # Helper function for lease payment calculation
 def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
+    # Step 1: Cap Cost Calculation (already pre-calculated into B as Cap Cost Reduction)
     K = 0
     U = 0
-    cap_cost = S + M - B
-    depreciation = (cap_cost - RES) / W
-    rent_charge = (cap_cost + RES) * F
-    base_payment = depreciation + rent_charge
-    tax = base_payment * tau
-    monthly_payment = base_payment + tax
+
+    # Step 2: Total Advance (TA)
+    TA = S + Q + (F * (S + M - B + RES)) * W + M - B
+
+    # Step 3: Average Monthly Depreciation (AMD)
+    AMD = (TA - RES) / W
+
+    # Step 4: Average Lease Charge (ALC)
+    ALC = F * (TA + RES)
+
+    # Step 5: Monthly Payment = AMD + ALC
+    monthly_payment = AMD + ALC
+
+    # Base Payment is treated here as same as monthly base before tax if needed
+    base_payment = monthly_payment / (1 + tau)  # remove tax to isolate base
 
     return {
         "Base Payment": round(base_payment, 2),
@@ -68,12 +78,15 @@ if vin_input:
             q_value = 47.50 + 15  # fixed fees
 
             for _, row in matching_programs.iterrows():
-                term_col = next((col for col in row.index if col.strip().lower() in ["leaseterm", "lease_term", "term"]), None)
-                if term_col is None:
+                term_months = None
+                for possible_term_col in ["LeaseTerm", "Lease_Term", "Term"]:
+                    if possible_term_col in row:
+                        term_months = row[possible_term_col]
+                        break
+
+                if term_months is None:
                     st.error("Lease term column not found in lease program entry.")
                     continue
-
-                term_months = row[term_col]
 
                 mf_col = f"Tier {tier_num}"
                 if mf_col not in row:
@@ -85,7 +98,18 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = row["LeaseCash"]
 
-                total_ccr = money_down + lease_cash
+                # Updated CCR calculation based on Excel breakdown
+                top = money_down
+                fw = round(mf_to_use * term_months, 6)
+                smu_res = round(msrp + 900 - 0 + residual_value, 6)
+                smu_res_diff = round(msrp + 900 - 0 - residual_value, 6)
+
+                top -= mf_to_use * (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - 0 + residual_value)
+                top += (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - 0 - residual_value) / term_months
+
+                bottom = round((1 + tax_rate) * (1 - ((mf_to_use + 1 / term_months)) - tax_rate * mf_to_use * (1 + mf_to_use * term_months)), 4)
+
+                total_ccr = round(top / bottom, 2)
 
                 payment_calc = calculate_base_and_monthly_payment(
                     S=msrp,
