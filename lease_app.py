@@ -29,7 +29,8 @@ county_rates = pd.read_csv("County_Tax_Rates.csv")
 
 vin_input = st.text_input("Enter VIN:")
 selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-selected_county = st.selectbox("Select County:", county_rates["Dropdown_Label"])
+county_column = county_rates.columns[0]  # fallback to first column if uncertain
+selected_county = st.selectbox("Select County:", county_rates[county_column])
 money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
 
 if vin_input:
@@ -49,7 +50,8 @@ if vin_input:
         else:
             st.markdown(f"**MSRP:** ${msrp:,.2f}")
             tier_num = int(selected_tier.split(" ")[1])
-            tax_rate = county_rates[county_rates["Dropdown_Label"] == selected_county]["Rate"].values[0]
+            rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
+tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0]
 
             q_value = 47.50 + 15  # fixed fees
 
