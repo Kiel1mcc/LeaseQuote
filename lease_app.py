@@ -51,7 +51,7 @@ if vin_input:
 
         st.markdown(f"**Model Number:** {model_number}<br>**Model:** {model}<br>**Trim:** {trim}<br>**MSRP:** ${msrp:,.2f}", unsafe_allow_html=True)
 
-        lease_col_match = [col for col in lease_programs.columns if col.strip().lower() in ["modelnumber"]]
+        lease_col_match = [col for col in lease_programs.columns if col.strip().lower() == "modelnumber"]
         if not lease_col_match:
             st.error("ModelNumber column not found in lease program file. Columns available: " + ", ".join(lease_programs.columns))
             st.stop()
@@ -68,13 +68,12 @@ if vin_input:
             q_value = 47.50 + 15  # fixed fees
 
             for _, row in matching_programs.iterrows():
-                if "LeaseTerm" in row:
-                    term_months = row["LeaseTerm"]
-                elif "Lease_Term" in row:
-                    term_months = row["Lease_Term"]
-                else:
+                term_col = next((col for col in row.index if col.strip().lower() in ["leaseterm", "lease_term", "term"]), None)
+                if term_col is None:
                     st.error("Lease term column not found in lease program entry.")
                     continue
+
+                term_months = row[term_col]
 
                 mf_col = f"Tier {tier_num}"
                 if mf_col not in row:
