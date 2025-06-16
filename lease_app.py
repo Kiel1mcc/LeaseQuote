@@ -100,13 +100,16 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = row["LeaseCash"]
 
-                top = money_down
-                fw = round(mf_to_use * term_months, 6)
-                smu_res = round(msrp + 900 + residual_value, 6)
-                smu_res_diff = round(msrp + 900 - residual_value, 6)
+                # NEW FORMULA for CCR numerator based on provided Excel formula:
+                fw = round(F := mf_to_use * term_months, 6)
+                smu_res_plus = round(msrp + 900 + residual_value, 6)
+                smu_res_minus = round(msrp + 900 - residual_value, 6)
 
-                top -= mf_to_use * (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) + residual_value)
-                top += (msrp + 900 + q_value + tax_rate * (fw * smu_res + smu_res_diff) - residual_value) / term_months
+                top = round(
+                    money_down
+                    - (mf_to_use * (msrp + 900 + q_value + tax_rate * (fw * smu_res_plus + smu_res_minus) - 0 + residual_value))
+                    + ((msrp + 900 + q_value + tax_rate * (fw * smu_res_plus + smu_res_minus) - 0 - residual_value) / term_months), 6
+                )
 
                 bottom = round((1 + tax_rate) * (1 - ((mf_to_use + 1 / term_months)) - tax_rate * mf_to_use * (1 + mf_to_use * term_months)), 4)
 
