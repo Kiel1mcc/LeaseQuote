@@ -24,7 +24,7 @@ def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, tau):
 st.title("Lease Quote Calculator")
 
 lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
-vehicle_data = pd.read_excel("Inventory_Detail_20250527.xlsx")
+vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("county_tax_rates.csv")
 
 vin_input = st.text_input("Enter VIN:")
