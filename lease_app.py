@@ -25,7 +25,7 @@ st.title("Lease Quote Calculator")
 
 lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
-county_rates = pd.read_csv("county_tax_rates.csv")
+county_rates = pd.read_csv("County_Tax_Rates.csv")
 
 vin_input = st.text_input("Enter VIN:")
 selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
