@@ -125,7 +125,7 @@ if vin_input:
 
                 st.markdown(f"""
                 ### {term_months}-Month Lease
-                **Money Factor:** {mf_to_use}  
+                **Money Factor:** {mf_to_use:.5f}  
                 **Residual Value:** ${residual_value:,.2f} ({residual_percent:.0%})  
                 **Cap Cost Reduction (CCR):** ${total_ccr:,.2f}  
                 **Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}  
