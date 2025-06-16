@@ -51,9 +51,9 @@ if vin_input:
             st.markdown(f"**MSRP:** ${msrp:,.2f}")
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0]
+            tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0]
 
-            q_value = 47.50 + 15  # fixed fees
+                        q_value = 47.50 + 15  # fixed fees
 
             for _, row in matching_programs.iterrows():
                 term_months = row["Lease_Term"]
