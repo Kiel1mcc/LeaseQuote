@@ -40,26 +40,24 @@ if vin_input:
     if vin_data.empty:
         st.error("VIN not found in inventory.")
     else:
-        model_number = vin_data["Model"].values[0]
-
-        my_column_matches = [col for col in vin_data.columns if col.strip().lower() in ["my", "model_year"]]
-        if not my_column_matches:
-            st.error("Model year column not found in VIN data. Columns available: " + ", ".join(vin_data.columns))
+        if not all(col in vin_data.columns for col in ["ModelNumber", "Model", "Trim", "MSRP"]):
+            st.error("Missing required columns. Columns found: " + ", ".join(vin_data.columns))
             st.stop()
-        my_column = my_column_matches[0]
 
-        model_year = vin_data[my_column].values[0]
+        model_number = vin_data["ModelNumber"].values[0]
+        model = vin_data["Model"].values[0]
+        trim = vin_data["Trim"].values[0]
         msrp = vin_data["MSRP"].values[0]
 
+        st.markdown(f"**Model Number:** {model_number}<br>**Model:** {model}<br>**Trim:** {trim}<br>**MSRP:** ${msrp:,.2f}", unsafe_allow_html=True)
+
         matching_programs = lease_programs[
-            (lease_programs["Model_Year"] == model_year) &
             (lease_programs["Model_Number"] == model_number)
         ]
 
         if matching_programs.empty:
             st.error("No lease entries found for this vehicle.")
         else:
-            st.markdown(f"**MSRP:** ${msrp:,.2f}")
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
             tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0]
