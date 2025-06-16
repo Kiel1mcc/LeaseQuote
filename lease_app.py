@@ -29,8 +29,10 @@ county_rates = pd.read_csv("County_Tax_Rates.csv")
 
 vin_input = st.text_input("Enter VIN:")
 selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-county_column = county_rates.columns[0]  # fallback to first column if uncertain
+
+county_column = county_rates.columns[0]  # fallback to first column
 selected_county = st.selectbox("Select County:", county_rates[county_column])
+
 money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
 
 if vin_input:
@@ -50,10 +52,10 @@ if vin_input:
         else:
             st.markdown(f"**MSRP:** ${msrp:,.2f}")
             tier_num = int(selected_tier.split(" ")[1])
+
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
             tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0]
-
-                        q_value = 47.50 + 15  # fixed fees
+            q_value = 47.50 + 15  # fixed fees
 
             for _, row in matching_programs.iterrows():
                 term_months = row["Lease_Term"]
@@ -62,7 +64,6 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = row["Lease_Cash"]
 
-                # Placeholder CCR calculation
                 total_ccr = money_down + lease_cash
 
                 payment_calc = calculate_base_and_monthly_payment(
