@@ -41,7 +41,8 @@ if vin_input:
         st.error("VIN not found in inventory.")
     else:
         model_number = vin_data["Model"].values[0]
-        model_year = vin_data["MY"].values[0]
+                my_column = [col for col in vin_data.columns if col.strip().lower() in ["my", "model_year"]][0]
+        model_year = vin_data[my_column].values[0]
         msrp = vin_data["MSRP"].values[0]
 
         matching_programs = lease_programs[(lease_programs["Model_Year"] == model_year) &
