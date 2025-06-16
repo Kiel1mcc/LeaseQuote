@@ -51,9 +51,9 @@ if vin_input:
 
         st.markdown(f"**Model Number:** {model_number}<br>**Model:** {model}<br>**Trim:** {trim}<br>**MSRP:** ${msrp:,.2f}", unsafe_allow_html=True)
 
-        lease_col_match = [col for col in lease_programs.columns if col.strip().lower() in ["model_number"]]
+        lease_col_match = [col for col in lease_programs.columns if col.strip().lower() in ["modelnumber"]]
         if not lease_col_match:
-            st.error("Model_Number column not found in lease program file. Columns available: " + ", ".join(lease_programs.columns))
+            st.error("ModelNumber column not found in lease program file. Columns available: " + ", ".join(lease_programs.columns))
             st.stop()
 
         lease_col = lease_col_match[0]
