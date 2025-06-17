@@ -109,6 +109,7 @@ if vin_input:
 
             st.markdown("### Lease Options")
             for _, row in matching_programs.iterrows():
+                mf_col = f"Tier {tier_num}"
                 if 'Residual' not in row or mf_col not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
                     st.info("The mileage and term combination is not available on the selected model.")
                     continue
