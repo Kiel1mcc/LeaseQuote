@@ -1,9 +1,12 @@
 import streamlit as st
 from setting_page import show_settings
-from lease_calculations import calculate_base_and_monthly_payment as calculate_payment
+from lease_calculations import calculate_payment
 
 def show_quote_page():
-    st.header("🔑 Lease Quote")
+    """
+    Main quote page: gather inputs and display lease calculation results.
+    """
+    st.title("🔑 Lease Quote")
 
     vin = st.text_input("Enter VIN or Stock #")
     county = st.selectbox(
@@ -13,37 +16,46 @@ def show_quote_page():
             st.session_state.settings["default_county"]
         ),
     )
-    credit_tier = st.selectbox(
-        "Credit Tier",
-        st.session_state.settings["credit_tiers"],
-        index=st.session_state.settings["credit_tiers"].index(
-            st.session_state.settings["default_tier"]
-        ),
-    )
-    lease_cash = st.checkbox(
-        "Apply Lease Cash",
-        value=st.session_state.settings["auto_apply_lease_cash"],
-    )
-    down = st.number_input(
-        "Down Payment",
-        min_value=0.0,
-        step=100.0,
-        value=0.0,
-    )
+    msrp = st.number_input("MSRP (Selling Price)", min_value=0.0, format="%.2f")
+    money_down = st.number_input("Money Down", min_value=0.0, format="%.2f")
+    rebate = st.number_input("Rebate", min_value=0.0, format="%.2f")
+    term = st.selectbox("Term (months)", [24, 36, 48, 60], index=1)
+    mileage = st.selectbox("Annual Mileage", [10000, 12000, 15000], index=0)
+    credit_score = st.slider("Estimated Credit Score", 300, 850, 800)
 
-    if st.button("Calculate"):
-        base, monthly = calculate_payment(
-            vin, county, credit_tier, lease_cash, down
+    # look up tax rate from session_state
+    tax_rate = st.session_state.settings["tax_rates"][county] / 100.0
+
+    # look up base money factor & residual from session_state tables
+    base_mf = st.session_state.settings["money_factors"][(term, mileage)]
+    residual_pct = st.session_state.settings["residuals"][(term, mileage)] / 100.0
+
+    # apply any global markup
+    mf = base_mf + st.session_state.settings["money_factor_markup"]
+
+    if st.button("Calculate Lease"):
+        results = calculate_payment(
+            msrp=msrp,
+            money_factor=mf,
+            residual_pct=residual_pct,
+            term=term,
+            mileage=mileage,
+            tax_rate=tax_rate,
+            money_down=money_down,
+            rebate=rebate,
         )
-        st.subheader(f"Monthly Payment: ${monthly:,.2f}")
-        st.write(f"**Base Payment:** ${base:,.2f}")
+        st.subheader("📊 Results")
+        for label, val in results.items():
+            st.write(f"**{label}:** ${val:,.2f}")
 
 def main():
+    # initialize settings on first run
+    if "settings" not in st.session_state:
+        st.session_state.settings = {}
+    # sidebar navigation
     st.sidebar.title("Main Menu")
     page = st.sidebar.radio("Go to", ["Quote", "Settings"])
-
     if page == "Settings":
-        st.header("⚙️ Settings")
         show_settings()
     else:
         show_quote_page()
