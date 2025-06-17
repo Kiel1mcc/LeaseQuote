@@ -15,8 +15,6 @@ selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tie
 county_column = county_rates.columns[0]
 selected_county = st.selectbox("Select County:", county_rates[county_column])
 money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
-inception_fees = st.number_input("Lease Inception Fees ($)", min_value=0.0, value=0.0)
-non_cash_ccr = st.number_input("Non-cash CCR ($)", min_value=0.0, value=0.0)
 
 # Add a checkbox for applying rebates
 apply_rebates = st.checkbox("Apply Rebates")
@@ -64,7 +62,7 @@ if vin_input:
                 residual_percent = float(row["Residual"])
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                rebates = float(row["Rebates"]) if "Rebates" in row else 0.0  # Assuming rebates are in the data
+                rebates = float(row["Rebates"]) if "Rebates" in row else 0.0
 
                 # Lease cash toggle
                 apply_lease_cash = st.checkbox(f"Apply Lease Cash for {term_months} months", key=f"lease_cash_{term_months}")
@@ -84,8 +82,8 @@ if vin_input:
                     M=962.50,
                     Q=0,
                     B=total_ccr,
-                    K=inception_fees,
-                    U=non_cash_ccr,
+                    K=0,  # Lease Inception Fees removed, set to 0
+                    U=0,  # Non-cash CCR removed, set to 0
                     tau=tax_rate
                 )
 
@@ -103,7 +101,5 @@ if vin_input:
                 **Lease Cash Applied:** {'Yes' if apply_lease_cash else 'No'}  
                 **Rebates Applied:** {'Yes' if apply_rebates else 'No'}  
                 **Down Payment:** ${money_down:,.2f}  
-                **Inception Fees:** ${inception_fees:,.2f}  
-                **Non-cash CCR:** ${non_cash_ccr:,.2f}  
                 ---
                 """)
