@@ -1,3 +1,11 @@
+# NOTE TO GROK OR ANY OTHER ENGINEER WORKING ON THIS FILE:
+# ------------------------------------------------------------
+# DO NOT modify `lease_calculations.py` to import anything from this file.
+# This file (lease_app.py) is the Streamlit app entry point.
+# It imports `calculate_base_and_monthly_payment` from lease_calculations.py.
+# If you reverse that or add circular references, it will break the app.
+# Keep all styling changes in this file. All math logic should live in lease_calculations.py only.
+
 import streamlit as st
 import pandas as pd
 import numpy as np
