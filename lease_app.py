@@ -8,21 +8,21 @@ st.markdown("""
     .main {
         background-color: #f5f5f5;
     }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+    }
+    .stTextInput>div>input {
+        border: 2px solid #4CAF50;
+        border-radius: 4px;
+    }
     .streamlit-expander {
         background-color: white;
         border: 1px solid #ddd;
         border-radius: 5px;
         padding: 10px;
         margin-bottom: 10px;
-    }
-    .metric-label {
-        font-weight: bold;
-    }
-    .vehicle-info {
-        background-color: #f0f0f0;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 20px;
     }
     .gray-text {
         color: gray;
@@ -38,20 +38,18 @@ lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
 
-# Section: Vehicle Information
-st.subheader("Vehicle Information")
-vin_input = st.text_input("Enter VIN:")
-selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-county_column = county_rates.columns[0]
-selected_county = st.selectbox("Select County:", county_rates[county_column])
+# Form for inputs
+with st.form(key='lease_form'):
+    st.subheader("Vehicle and Lease Information")
+    vin_input = st.text_input("Enter VIN:")
+    selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
+    county_column = county_rates.columns[0]
+    selected_county = st.selectbox("Select County:", county_rates[county_column])
+    cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)
+    apply_rebates = st.checkbox("Apply Rebates", help="Check to apply available rebates to the lease calculation.")
+    submit_button = st.form_submit_button(label='Calculate Lease Quote')
 
-# Section: Financial Details
-st.subheader("Financial Details")
-money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
-cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)  # New Cash Down field
-apply_rebates = st.checkbox("Apply Rebates", help="Check to apply available rebates to the lease calculation.")
-
-if vin_input:
+if submit_button and vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
@@ -67,7 +65,7 @@ if vin_input:
 
         # Display vehicle information in a styled box
         st.markdown(f"""
-        <div class='vehicle-info'>
+        <div class='vehicle-info' style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 20px;'>
             <strong>Model Number:</strong> {model_number}<br>
             <strong>Model:</strong> {model}<br>
             <strong>Trim:</strong> {trim}<br>
@@ -125,7 +123,7 @@ if vin_input:
                     rebates_to_use = rebates if apply_rebates else 0
 
                     # Calculate total CCR including Cash Down
-                    total_ccr = money_down + cash_down + rebates_to_use + lease_cash_to_use
+                    total_ccr = cash_down + rebates_to_use + lease_cash_to_use
 
                     payment_calc = calculate_base_and_monthly_payment(
                         S=msrp,
@@ -156,7 +154,7 @@ if vin_input:
                     with col3:
                         st.metric("Base Payment", f"${payment_calc['Base Payment']:,.2f}")
                         st.metric("Total Sales Tax (over term)", f"${payment_calc['Total Sales Tax']:,.2f}")
-                        st.metric("Down Payment", f"${money_down + cash_down:,.2f}")
+                        st.metric("Down Payment", f"${cash_down:,.2f}")
 
                     # Additional information
                     st.write(f"**Lease Cash Applied:** {'Yes' if apply_lease_cash else 'No'}")
