@@ -47,6 +47,20 @@ with st.sidebar:
     selected_county = st.selectbox("Select County:", county_rates[county_column])
     money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
 
+    st.markdown("---")
+    st.subheader("Display Settings")
+    show_money_factor = st.checkbox("Money Factor", value=True)
+    show_residual_value = st.checkbox("Residual Value", value=True)
+    show_monthly_payment = st.checkbox("Monthly Payment (w/ tax)", value=True)
+    show_down_payment = st.checkbox("Down Payment", value=True)
+    show_ccr = st.checkbox("Cap Cost Reduction (CCR)", value=False)
+    show_ta = st.checkbox("Total Advance (TA)", value=False)
+    show_amd = st.checkbox("Average Monthly Depreciation (AMD)", value=False)
+    show_alc = st.checkbox("Average Lease Charge (ALC)", value=False)
+    show_base = st.checkbox("Base Payment", value=False)
+    show_tax = st.checkbox("Total Sales Tax", value=False)
+    show_lease_cash = st.checkbox("Lease Cash Applied", value=False)
+
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
@@ -119,21 +133,30 @@ if vin_input:
                     tau=tax_rate
                 )
 
-                st.markdown(f"""
-                <h3>{term_months}-Month Lease</h3>
-                <div class="lease-details">
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                        <div><p class="metric-label">Money Factor</p><p class="metric-value">{mf_to_use:.5f}</p></div>
-                        <div><p class="metric-label">Residual Value</p><p class="metric-value">${residual_value:,.2f} ({residual_percent:.0%})</p></div>
-                        <div><p class="metric-label">Cap Cost Reduction (CCR)</p><p class="metric-value">{payment_calc['Cap Cost Reduction']}</p></div>
-                        <div><p class="metric-label">Total Advance (TA)</p><p class="metric-value">{payment_calc['Total Advance']}</p></div>
-                        <div><p class="metric-label">Average Monthly Depreciation (AMD)</p><p class="metric-value">{payment_calc['Average Monthly Depreciation']}</p></div>
-                        <div><p class="metric-label">Average Lease Charge (ALC)</p><p class="metric-value">{payment_calc['Average Lease Charge']}</p></div>
-                        <div><p class="metric-label">Base Payment</p><p class="metric-value">{payment_calc['Base Payment']}</p></div>
-                        <div><p class="metric-label">Monthly Payment (w/ tax)</p><p class="metric-value">{payment_calc['Monthly Payment']}</p></div>
-                        <div><p class="metric-label">Total Sales Tax (over term)</p><p class="metric-value">{payment_calc['Total Sales Tax']}</p></div>
-                        <div><p class="metric-label">Lease Cash Applied</p><p class="metric-value">${lease_cash:,.2f}</p></div>
-                        <div><p class="metric-label">Down Payment</p><p class="metric-value">${money_down:,.2f}</p></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<h3>{term_months}-Month Lease</h3>", unsafe_allow_html=True)
+                st.markdown("<div class='lease-details'><div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;'>", unsafe_allow_html=True)
+
+                if show_money_factor:
+                    st.markdown(f"<div><p class='metric-label'>Money Factor</p><p class='metric-value'>{mf_to_use:.5f}</p></div>", unsafe_allow_html=True)
+                if show_residual_value:
+                    st.markdown(f"<div><p class='metric-label'>Residual Value</p><p class='metric-value'>${residual_value:,.2f} ({residual_percent:.0%})</p></div>", unsafe_allow_html=True)
+                if show_ccr:
+                    st.markdown(f"<div><p class='metric-label'>Cap Cost Reduction (CCR)</p><p class='metric-value'>{payment_calc['Cap Cost Reduction']}</p></div>", unsafe_allow_html=True)
+                if show_ta:
+                    st.markdown(f"<div><p class='metric-label'>Total Advance (TA)</p><p class='metric-value'>{payment_calc['Total Advance']}</p></div>", unsafe_allow_html=True)
+                if show_amd:
+                    st.markdown(f"<div><p class='metric-label'>Average Monthly Depreciation (AMD)</p><p class='metric-value'>{payment_calc['Average Monthly Depreciation']}</p></div>", unsafe_allow_html=True)
+                if show_alc:
+                    st.markdown(f"<div><p class='metric-label'>Average Lease Charge (ALC)</p><p class='metric-value'>{payment_calc['Average Lease Charge']}</p></div>", unsafe_allow_html=True)
+                if show_base:
+                    st.markdown(f"<div><p class='metric-label'>Base Payment</p><p class='metric-value'>{payment_calc['Base Payment']}</p></div>", unsafe_allow_html=True)
+                if show_monthly_payment:
+                    st.markdown(f"<div><p class='metric-label'>Monthly Payment (w/ tax)</p><p class='metric-value'>{payment_calc['Monthly Payment']}</p></div>", unsafe_allow_html=True)
+                if show_tax:
+                    st.markdown(f"<div><p class='metric-label'>Total Sales Tax (over term)</p><p class='metric-value'>{payment_calc['Total Sales Tax']}</p></div>", unsafe_allow_html=True)
+                if show_lease_cash:
+                    st.markdown(f"<div><p class='metric-label'>Lease Cash Applied</p><p class='metric-value'>${lease_cash:,.2f}</p></div>", unsafe_allow_html=True)
+                if show_down_payment:
+                    st.markdown(f"<div><p class='metric-label'>Down Payment</p><p class='metric-value'>${money_down:,.2f}</p></div>", unsafe_allow_html=True)
+
+                st.markdown("</div></div>", unsafe_allow_html=True)
