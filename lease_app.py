@@ -51,34 +51,60 @@ vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
 county_column = county_rates.columns[0]
 
+# ----------------------
+# Data validation helpers
+# ----------------------
+
+def validate_columns(df, required_cols, name):
+    """Check that required columns are present in a DataFrame."""
+    missing = [c for c in required_cols if c not in df.columns]
+    if missing:
+        st.error(f"{name} is missing required columns: {', '.join(missing)}")
+        return False
+    return True
+
+data_valid = True
+
+if not validate_columns(vehicle_data, ["VIN", "ModelNumber", "Model", "Trim", "MSRP"], "Vehicle data"):
+    data_valid = False
+
+if not validate_columns(lease_programs, ["ModelNumber", "Residual"], "Lease program data"):
+    data_valid = False
+
+if not validate_columns(county_rates, [county_column], "County tax rates"):
+    data_valid = False
+
 if st.session_state.page == "main":
     st.title("Lease Quote Calculator")
 
-    # Inputs with defaults from settings
-    st.subheader("Vehicle and Lease Information")
-    vin_input = st.text_input("Enter VIN:")
-    tiers = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
-    selected_tier = st.selectbox(
-        "Select Tier:",
-        tiers,
-        index=tiers.index(st.session_state.settings["default_tier"])
-    )
-    counties = county_rates[county_column].tolist()
-    selected_county = st.selectbox(
-        "Select County:",
-        counties,
-        index=counties.index(st.session_state.settings["default_county"]) if st.session_state.settings["default_county"] in counties else 0
-    )
-    cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)
-    apply_rebates = st.checkbox(
-        "Apply Rebates",
-        value=st.session_state.settings["default_apply_rebates"],
-        help="Check to apply available rebates to the lease calculation."
-    )
+    if not data_valid:
+        st.warning("Unable to run calculator due to missing data columns.")
+    else:
+        # Inputs with defaults from settings
+        st.subheader("Vehicle and Lease Information")
+        vin_input = st.text_input("Enter VIN:")
+        tiers = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
+        selected_tier = st.selectbox(
+            "Select Tier:",
+            tiers,
+            index=tiers.index(st.session_state.settings["default_tier"])
+        )
+        counties = county_rates[county_column].tolist()
+        selected_county = st.selectbox(
+            "Select County:",
+            counties,
+            index=counties.index(st.session_state.settings["default_county"]) if st.session_state.settings["default_county"] in counties else 0
+        )
+        cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)
+        apply_rebates = st.checkbox(
+            "Apply Rebates",
+            value=st.session_state.settings["default_apply_rebates"],
+            help="Check to apply available rebates to the lease calculation."
+        )
 
-    # Calculate button
-    if st.button("Calculate Lease Quote"):
-        st.session_state.calculated = True
+        # Calculate button
+        if st.button("Calculate Lease Quote"):
+            st.session_state.calculated = True
 
     # Perform calculations
     if 'calculated' in st.session_state and st.session_state.calculated and vin_input:
@@ -88,12 +114,14 @@ if st.session_state.page == "main":
         else:
             if not all(col in vin_data.columns for col in ["ModelNumber", "Model", "Trim", "MSRP"]):
                 st.error("Missing required vehicle columns.")
-                st.stop()
-
-            model_number = vin_data["ModelNumber"].values[0]
-            model = vin_data["Model"].values[0]
-            trim = vin_data["Trim"].values[0]
-            msrp = vin_data["MSRP"].values[0]
+            else:
+                model_number = vin_data["ModelNumber"].values[0]
+                model = vin_data["Model"].values[0]
+                trim = vin_data["Trim"].values[0]
+                msrp = vin_data["MSRP"].values[0]
+                if cash_down > msrp:
+                    st.warning("Cash down exceeds MSRP. Using MSRP as maximum.")
+                    cash_down = msrp
 
             st.markdown(f"""
             <div class='vehicle-info' style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 20px;'>
@@ -107,31 +135,30 @@ if st.session_state.page == "main":
             lease_col = next((col for col in lease_programs.columns if col.strip().lower() == "modelnumber"), None)
             if not lease_col:
                 st.error("ModelNumber column not found in lease program file.")
-                st.stop()
-
-            matching_programs = lease_programs[lease_programs[lease_col] == model_number]
-            if matching_programs.empty:
-                st.error("No lease programs found for this vehicle.")
             else:
-                tier_num = int(selected_tier.split(" ")[1])
-                rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-                tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
+                matching_programs = lease_programs[lease_programs[lease_col] == model_number]
+                if matching_programs.empty:
+                    st.error("No lease programs found for this vehicle.")
+                else:
+                    tier_num = int(selected_tier.split(" ")[1])
+                    rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
+                    tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
 
-                for _, row in matching_programs.iterrows():
-                    term_col = next((col for col in ["LeaseTerm", "Lease_Term", "Term"] if col in row), None)
-                    if not term_col:
-                        continue
+                    for _, row in matching_programs.iterrows():
+                        term_col = next((col for col in ["LeaseTerm", "Lease_Term", "Term"] if col in row), None)
+                        if not term_col:
+                            continue
 
-                    term_months = row[term_col]
-                    mf_col = f"Tier {tier_num}"
-                    if mf_col not in row or pd.isna(row[mf_col]):
-                        continue
+                        term_months = row[term_col]
+                        mf_col = f"Tier {tier_num}"
+                        if mf_col not in row or pd.isna(row[mf_col]):
+                            continue
 
-                    mf_to_use = float(row[mf_col])
-                    residual_percent = float(row["Residual"])
-                    residual_value = round(msrp * residual_percent, 2)
-                    lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                    rebates = float(row["Rebates"]) if "Rebates" in row else 0.0
+                        mf_to_use = float(row[mf_col])
+                        residual_percent = float(row["Residual"])
+                        residual_value = round(msrp * residual_percent, 2)
+                        lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                        rebates = float(row["Rebates"]) if "Rebates" in row else 0.0
 
                     with st.expander(f"{term_months}-Month Lease"):
                         col1, col2, col3 = st.columns([1, 2, 2])
@@ -146,7 +173,13 @@ if st.session_state.page == "main":
                             st.markdown(f"<span class='gray-text'>(Available: ${lease_cash:,.2f})</span>", unsafe_allow_html=True)
 
                         if apply_lease_cash:
-                            lease_cash_to_use = st.number_input("Lease Cash Amount", value=lease_cash, key=f"lease_cash_{term_months}", min_value=0.0)
+                            lease_cash_to_use = st.number_input(
+                                "Lease Cash Amount",
+                                value=lease_cash,
+                                key=f"lease_cash_{term_months}",
+                                min_value=0.0,
+                                max_value=lease_cash
+                            )
                         else:
                             lease_cash_to_use = 0.0
 
