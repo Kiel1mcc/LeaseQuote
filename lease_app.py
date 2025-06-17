@@ -1,93 +1,98 @@
-# lease_app.py
 import streamlit as st
 import pandas as pd
-from lease_calculations import calculate_base_and_monthly_payment as calculate_payment
+from lease_calculations import calculate_base_and_monthly_payment
 
-@st.cache_data
-def load_counties():
-    """Load the CSV that contains each county's total sales-tax rate."""
-    df = pd.read_csv("County_Tax_Rates.csv")
-    # Expecting columns: "County" and "Total Local & State Sales Tax Rate"
-    return df
+st.title("Lease Quote Calculator")
 
-@st.cache_data
-def load_lease_programs():
-    """Load the CSV that contains all lease programs / credit tiers."""
-    df = pd.read_csv("All_Lease_Programs_Database.csv")
-    # Expecting columns: "Credit_Tier", "Money_Factor", "Residual_Pct", "Term"
-    return df
+# Load Data
+lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
+vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+county_rates = pd.read_csv("County_Tax_Rates.csv")
 
-def show_quote_page():
-    st.title("🔑 Lease Quote")
+# Input Section
+vin_input = st.text_input("Enter VIN:")
+selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
+county_column = county_rates.columns[0]
+selected_county = st.selectbox("Select County:", county_rates[county_column])
+rebates = st.number_input("Rebates/Credits ($)", min_value=0.0, value=0.0)
+money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
+inception_fees = st.number_input("Lease Inception Fees ($)", min_value=0.0, value=0.0)
+non_cash_ccr = st.number_input("Non-cash CCR ($)", min_value=0.0, value=0.0)
 
-    # --- Inputs ---
-    vin = st.text_input("Enter VIN or Stock #")
+if vin_input:
+    vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
+    if vin_data.empty:
+        st.error("VIN not found in inventory.")
+    else:
+        if not all(col in vin_data.columns for col in ["ModelNumber", "Model", "Trim", "MSRP"]):
+            st.error("Missing required vehicle columns.")
+            st.stop()
 
-    msrp = st.number_input(
-        "MSRP (Selling Price)", 
-        min_value=0.0, step=100.0, value=0.0, format="%.2f"
-    )
-    money_down = st.number_input(
-        "Down Payment", 
-        min_value=0.0, step=100.0, value=0.0, format="%.2f"
-    )
-    rebate = st.number_input(
-        "Rebate", 
-        min_value=0.0, step=100.0, value=0.0, format="%.2f"
-    )
+        model_number = vin_data["ModelNumber"].values[0]
+        model = vin_data["Model"].values[0]
+        trim = vin_data["Trim"].values[0]
+        msrp = vin_data["MSRP"].values[0]
 
-    # County → look up tax rate
-    df_counties = load_counties()
-    county = st.selectbox("Select Tax County", df_counties["County"].tolist())
-    tax_pct = (
-        df_counties
-        .loc[df_counties["County"] == county, "Total Local & State Sales Tax Rate"]
-        .iat[0]
-        / 100.0
-    )
+        st.markdown(f"**Model Number:** {model_number}<br>**Model:** {model}<br>**Trim:** {trim}<br>**MSRP:** ${msrp:,.2f}", unsafe_allow_html=True)
 
-    # Credit‐tier → look up money factor & residual
-    df_programs = load_lease_programs()
-    tier = st.selectbox("Select Credit Tier", df_programs["Credit_Tier"].unique())
-    tier_row = df_programs[df_programs["Credit_Tier"] == tier].iloc[0]
-    money_factor = float(tier_row["Money_Factor"])
-    residual_pct = float(tier_row["Residual_Pct"])  # e.g. 0.60 for 60%
+        lease_col = next((col for col in lease_programs.columns if col.strip().lower() == "modelnumber"), None)
+        if not lease_col:
+            st.error("ModelNumber column not found in lease program file.")
+            st.stop()
 
-    # Term & mileage
-    term = st.selectbox(
-        "Term (months)", 
-        sorted(df_programs["Term"].unique().astype(int).tolist())
-    )
-    mileage = st.selectbox(
-        "Annual Mileage", 
-        ["10,000", "12,000", "15,000"]
-    )
+        matching_programs = lease_programs[lease_programs[lease_col] == model_number]
+        if matching_programs.empty:
+            st.error("No lease programs found for this vehicle.")
+        else:
+            tier_num = int(selected_tier.split(" ")[1])
+            rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
+            tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
 
-    # (Optional) credit‐score slider if you use it in your logic
-    credit_score = st.slider(
-        "Estimated Credit Score", 
-        min_value=300, max_value=850, value=700
-    )
+            for _, row in matching_programs.iterrows():
+                term_col = next((col for col in ["LeaseTerm", "Lease_Term", "Term"] if col in row), None)
+                if not term_col:
+                    continue
 
-    # --- Calculate & Output ---
-    if st.button("Calculate"):
-        base_pay, monthly_pay = calculate_payment(
-            msrp=msrp,
-            money_factor=money_factor,
-            term=int(term),
-            residual_pct=residual_pct,
-            tax_rate=tax_pct,
-            down_payment=money_down,
-            rebate=rebate,
-        )
+                term_months = row[term_col]
+                mf_col = f"Tier {tier_num}"
+                if mf_col not in row or pd.isna(row[mf_col]):
+                    continue
 
-        st.success("✅ Calculation complete!")
-        col1, col2 = st.columns(2)
-        col1.metric("Base Payment", f"${base_pay:,.2f}")
-        col2.metric("Monthly Payment", f"${monthly_pay:,.2f}")
+                mf_to_use = float(row[mf_col])
+                residual_percent = float(row["Residual"])
+                residual_value = round(msrp * residual_percent, 2)
+                lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
 
-def main():
-    show_quote_page()
+                total_ccr = money_down + rebates + lease_cash
 
-if __name__ == "__main__":
-    main()
+                payment_calc = calculate_base_and_monthly_payment(
+                    S=msrp,
+                    RES=residual_value,
+                    W=term_months,
+                    F=mf_to_use,
+                    M=962.50,
+                    Q=0,
+                    B=total_ccr,
+                    K=inception_fees,
+                    U=non_cash_ccr,
+                    tau=tax_rate
+                )
+
+                st.markdown(f"""
+                ### {term_months}-Month Lease
+                **Money Factor:** {mf_to_use:.5f}  
+                **Residual Value:** ${residual_value:,.2f} ({residual_percent:.0%})  
+                **Cap Cost Reduction (CCR):** ${payment_calc['Cap Cost Reduction']:,.2f}  
+                **Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}  
+                **Average Monthly Depreciation (AMD):** ${payment_calc['Average Monthly Depreciation']:,.2f}  
+                **Average Lease Charge (ALC):** ${payment_calc['Average Lease Charge']:,.2f}  
+                **Base Payment:** ${payment_calc['Base Payment']:,.2f}  
+                **Monthly Payment (w/ tax):** ${payment_calc['Monthly Payment']:,.2f}  
+                **Total Sales Tax (over term):** ${payment_calc['Total Sales Tax']:,.2f}  
+                **Lease Cash Applied:** ${lease_cash:,.2f}  
+                **Rebates/Credits:** ${rebates:,.2f}  
+                **Down Payment:** ${money_down:,.2f}  
+                **Inception Fees:** ${inception_fees:,.2f}  
+                **Non-cash CCR:** ${non_cash_ccr:,.2f}  
+                ---
+                """)
