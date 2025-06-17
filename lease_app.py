@@ -22,6 +22,8 @@ st.markdown("""
     .stButton>button {background-color: #0066cc; color: white; border-radius: 5px;}
     .stButton>button:hover {background-color: #0055b3;}
     .vehicle-info {background-color: #e6f0fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;}
+    .vehicle-row {display: flex; flex-wrap: wrap; gap: 2rem;}
+    .vehicle-row div {flex: 1; min-width: 150px; font-size: 0.95rem; margin-bottom: 0.5rem;}
     .lease-details {background-color: #ffffff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;}
     .error {color: #d32f2f; font-weight: bold;}
     h1 {color: #003087; font-size: 2rem;}
@@ -50,18 +52,26 @@ if vin_input:
     if vin_data.empty:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
     else:
-        model_number = vin_data["ModelNumber"].values[0]
+        vin = vin_data["VIN"].values[0]
+        year = vin_data["ModelYear"].values[0] if "ModelYear" in vin_data.columns else "N/A"
+        make = vin_data["Make"].values[0] if "Make" in vin_data.columns else "N/A"
         model = vin_data["Model"].values[0]
         trim = vin_data["Trim"].values[0]
+        model_number = vin_data["ModelNumber"].values[0]
         msrp = vin_data["MSRP"].values[0]
 
         st.markdown("### Vehicle Information")
         st.markdown(f"""
         <div class="vehicle-info">
-            <p><b>Model Number:</b> {model_number}</p>
-            <p><b>Model:</b> {model}</p>
-            <p><b>Trim:</b> {trim}</p>
-            <p><b>MSRP:</b> ${msrp:,.2f}</p>
+            <div class="vehicle-row">
+                <div><b>VIN:</b> {vin}</div>
+                <div><b>Year:</b> {year}</div>
+                <div><b>Make:</b> {make}</div>
+                <div><b>Model:</b> {model}</div>
+                <div><b>Trim:</b> {trim}</div>
+                <div><b>Model Number:</b> {model_number}</div>
+                <div><b>MSRP:</b> ${msrp:,.2f}</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
