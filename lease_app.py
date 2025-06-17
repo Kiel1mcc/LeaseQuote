@@ -24,6 +24,10 @@ st.markdown("""
         border-radius: 5px;
         margin-bottom: 20px;
     }
+    .gray-text {
+        color: gray;
+        font-size: 0.9em;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -44,6 +48,7 @@ selected_county = st.selectbox("Select County:", county_rates[county_column])
 # Section: Financial Details
 st.subheader("Financial Details")
 money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
+cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)  # New Cash Down field
 apply_rebates = st.checkbox("Apply Rebates", help="Check to apply available rebates to the lease calculation.")
 
 if vin_input:
@@ -100,15 +105,27 @@ if vin_input:
                 rebates = float(row["Rebates"]) if "Rebates" in row else 0.0
 
                 with st.expander(f"{term_months}-Month Lease"):
-                    # Lease cash toggle with help text
-                    apply_lease_cash = st.checkbox(f"Apply Lease Cash for {term_months} months", key=f"lease_cash_{term_months}")
-                    st.caption("Lease cash is a manufacturer incentive that can reduce your lease cost.")
+                    # Lease cash toggle with dynamic label and grayed-out available amount
+                    col1, col2, col3 = st.columns([1, 2, 2])
+                    with col1:
+                        apply_lease_cash = st.checkbox("", key=f"toggle_{term_months}")
+                    with col2:
+                        if apply_lease_cash:
+                            st.write("Remove Lease Cash")
+                        else:
+                            st.write("Apply Lease Cash")
+                    with col3:
+                        st.markdown(f"<span class='gray-text'>(Available: ${lease_cash:,.2f})</span>", unsafe_allow_html=True)
 
-                    lease_cash_to_use = lease_cash if apply_lease_cash else 0
+                    if apply_lease_cash:
+                        lease_cash_to_use = st.number_input("Lease Cash Amount", value=lease_cash, key=f"lease_cash_{term_months}", min_value=0.0)
+                    else:
+                        lease_cash_to_use = 0
+
                     rebates_to_use = rebates if apply_rebates else 0
 
-                    # Calculate total CCR
-                    total_ccr = money_down + rebates_to_use + lease_cash_to_use
+                    # Calculate total CCR including Cash Down
+                    total_ccr = money_down + cash_down + rebates_to_use + lease_cash_to_use
 
                     payment_calc = calculate_base_and_monthly_payment(
                         S=msrp,
@@ -139,7 +156,7 @@ if vin_input:
                     with col3:
                         st.metric("Base Payment", f"${payment_calc['Base Payment']:,.2f}")
                         st.metric("Total Sales Tax (over term)", f"${payment_calc['Total Sales Tax']:,.2f}")
-                        st.metric("Down Payment", f"${money_down:,.2f}")
+                        st.metric("Down Payment", f"${money_down + cash_down:,.2f}")
 
                     # Additional information
                     st.write(f"**Lease Cash Applied:** {'Yes' if apply_lease_cash else 'No'}")
