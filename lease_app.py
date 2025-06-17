@@ -116,9 +116,24 @@ if vin_input:
                 mf_to_use = float(row[mf_col])
                 residual_percent = float(row["Residual"])
                 residual_value = round(msrp * residual_percent, 2)
-                lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                default_lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
 
-                total_ccr = money_down + lease_cash
+                st.markdown(f"#### {term_months}-Month Lease")
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    lease_cash_enabled = st.toggle("Apply Lease Cash", value=False, key=f"toggle_{term_months}")
+                with col2:
+                    lease_cash_input = st.number_input(
+                        "Lease Cash ($)",
+                        value=default_lease_cash,
+                        min_value=0.0,
+                        step=100.0,
+                        disabled=not lease_cash_enabled,
+                        key=f"lease_cash_{term_months}"
+                    )
+
+                applied_lease_cash = lease_cash_input if lease_cash_enabled else 0.0
+                total_ccr = money_down + applied_lease_cash
 
                 payment_calc = calculate_base_and_monthly_payment(
                     S=msrp,
@@ -133,7 +148,6 @@ if vin_input:
                     tau=tax_rate
                 )
 
-                st.markdown(f"<h3>{term_months}-Month Lease</h3>", unsafe_allow_html=True)
                 st.markdown("<div class='lease-details'><div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;'>", unsafe_allow_html=True)
 
                 if show_money_factor:
@@ -155,7 +169,7 @@ if vin_input:
                 if show_tax:
                     st.markdown(f"<div><p class='metric-label'>Total Sales Tax (over term)</p><p class='metric-value'>{payment_calc['Total Sales Tax']}</p></div>", unsafe_allow_html=True)
                 if show_lease_cash:
-                    st.markdown(f"<div><p class='metric-label'>Lease Cash Applied</p><p class='metric-value'>${lease_cash:,.2f}</p></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div><p class='metric-label'>Lease Cash Applied</p><p class='metric-value'>${applied_lease_cash:,.2f}</p></div>", unsafe_allow_html=True)
                 if show_down_payment:
                     st.markdown(f"<div><p class='metric-label'>Down Payment</p><p class='metric-value'>${money_down:,.2f}</p></div>", unsafe_allow_html=True)
 
