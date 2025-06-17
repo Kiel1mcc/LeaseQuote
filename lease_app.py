@@ -108,7 +108,9 @@ if vin_input:
             tax_rate = tax_row[rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
-            for _, row in matching_programs.iterrows():
+            grouped = matching_programs.groupby("LeaseTerm")
+            grouped = matching_programs.groupby("LeaseTerm")
+            for term_months, group in grouped:
                 mf_col = f"Tier {tier_num}"
                 if 'Residual' not in row or mf_col not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
                     st.info("The mileage and term combination is not available on the selected model.")
