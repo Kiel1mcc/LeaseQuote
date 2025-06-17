@@ -127,7 +127,7 @@ if vin_input:
 
                 st.markdown(f"#### {term_months}-Month Lease")
 
-                selling_price = st.number_input("Selling Price ($)", value=msrp, step=100.0, key=f"selling_price_{term_months}")
+                selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"selling_price_{term_months}")
 
                 col1, col2 = st.columns([1, 1])
                 with col1:
