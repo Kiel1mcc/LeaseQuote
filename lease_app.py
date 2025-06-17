@@ -86,7 +86,7 @@ if vin_input:
         else:
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-            tax_rate = county_rates[county_column == selected_county][rate_column].values[0] / 100
+            tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
             for _, row in matching_programs.iterrows():
