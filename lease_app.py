@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from lease_calculations import calculate_base_and_monthly_payment
 
+st.write("App started")  # Debug message
+
 # Set page configuration for a professional look
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
