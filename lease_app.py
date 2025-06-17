@@ -79,6 +79,10 @@ if vin_input:
             st.error("No lease programs found for this vehicle.")
         else:
             tier_num = int(selected_tier.split(" ")[1])
+            if tier_num < 1 or tier_num > 8:
+                st.error("Invalid tier selected. Please choose a tier between 1 and 8.")
+                st.stop()
+
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
             tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
 
@@ -92,6 +96,7 @@ if vin_input:
                 term_months = row[term_col]
                 mf_col = f"Tier {tier_num}"
                 if mf_col not in row or pd.isna(row[mf_col]):
+                    st.warning(f"No money factor data available for {selected_tier} for this term.")
                     continue
 
                 mf_to_use = float(row[mf_col])
