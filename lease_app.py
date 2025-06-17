@@ -171,7 +171,7 @@ if st.session_state.page == "main":
                             st.write(f"**Money Factor (adjusted):** {mf_to_use_adjusted:.5f}")
                             st.write(f"**Residual Percentage:** {residual_percent:.0%}")
                             st.write(f"**Monthly Payment:** ${payment_calc['Monthly Payment']:,.2f}")
-                           >                            st.write(f"**Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}")
+                            st.write(f"**Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}")
                             st.write(f"**Base Payment:** ${payment_calc['Base Payment']:,.2f}")
                             st.write(f"**Residual Value:** ${residual_value:,.2f}")
                         else:
