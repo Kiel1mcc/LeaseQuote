@@ -38,18 +38,25 @@ lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
 
-# Form for inputs
-with st.form(key='lease_form'):
-    st.subheader("Vehicle and Lease Information")
-    vin_input = st.text_input("Enter VIN:")
-    selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-    county_column = county_rates.columns[0]
-    selected_county = st.selectbox("Select County:", county_rates[county_column])
-    cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)
-    apply_rebates = st.checkbox("Apply Rebates", help="Check to apply available rebates to the lease calculation.")
-    submit_button = st.form_submit_button(label='Calculate Lease Quote')
+# Initialize session state for calculation
+if 'calculated' not in st.session_state:
+    st.session_state.calculated = False
 
-if submit_button and vin_input:
+# Inputs
+st.subheader("Vehicle and Lease Information")
+vin_input = st.text_input("Enter VIN:")
+selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
+county_column = county_rates.columns[0]
+selected_county = st.selectbox("Select County:", county_rates[county_column])
+cash_down = st.number_input("Cash Down ($)", min_value=0.0, value=0.0)
+apply_rebates = st.checkbox("Apply Rebates", help="Check to apply available rebates to the lease calculation.")
+
+# Calculate button
+if st.button("Calculate Lease Quote"):
+    st.session_state.calculated = True
+
+# Perform calculations only if calculated is True and VIN is provided
+if st.session_state.calculated and vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
@@ -118,9 +125,9 @@ if submit_button and vin_input:
                     if apply_lease_cash:
                         lease_cash_to_use = st.number_input("Lease Cash Amount", value=lease_cash, key=f"lease_cash_{term_months}", min_value=0.0)
                     else:
-                        lease_cash_to_use = 0
+                        lease_cash_to_use = 0.0
 
-                    rebates_to_use = rebates if apply_rebates else 0
+                    rebates_to_use = rebates if apply_rebates else 0.0
 
                     # Calculate total CCR including Cash Down
                     total_ccr = cash_down + rebates_to_use + lease_cash_to_use
