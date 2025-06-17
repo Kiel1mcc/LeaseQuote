@@ -119,9 +119,12 @@ if vin_input:
                     tau=tax_rate
                 )
 
-                # Display Lease Details
+                # Display Lease Details with error checking
                 with st.container():
                     st.markdown(f"#### {term_months}-Month Lease")
+                    if not all(key in payment_calc for key in ['Cap Cost Reduction', 'Total Advance', 'Average Monthly Depreciation', 'Average Lease Charge', 'Base Payment', 'Monthly Payment', 'Total Sales Tax']):
+                        st.error(f"Calculation error for {term_months}-month lease. Please check input data or contact support.")
+                        continue
                     st.markdown(f"""
                     <div class="lease-details">
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
