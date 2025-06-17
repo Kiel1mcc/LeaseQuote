@@ -1,8 +1,15 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 
-from lease_calculations import calculate_base_and_monthly_payment
+# Diagnostic import check
+try:
+    from lease_calculations import calculate_base_and_monthly_payment
+    st.write("Import successful")
+except ImportError as e:
+    st.error(f"Import failed: {e}")
+    st.stop()
 
 # Set page configuration must be the first Streamlit command
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
