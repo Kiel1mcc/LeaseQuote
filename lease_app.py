@@ -1,6 +1,19 @@
 import streamlit as st
 import pandas as pd
-from lease_calculations import calculate_base_and_monthly_payment
+import numpy as np
+import os
+
+# Diagnostic import check
+try:
+    from lease_calculations import calculate_base_and_monthly_payment
+    st.write("Import successful. Current directory:", os.getcwd())
+    # Test the function with dummy values to ensure it works
+    test_result = calculate_base_and_monthly_payment(25040, 12520, 24, 0.001, 962.50, 0, 0, 0, 0, 0.05)
+    st.write("Test function result:", test_result)
+except ImportError as e:
+    st.error(f"Import failed: {e}")
+    st.write("Current directory:", os.getcwd())
+    st.stop()
 
 # Set page configuration must be the first Streamlit command
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
@@ -122,7 +135,7 @@ if vin_input:
                 # Debug output of payment_calc
                 st.write(f"Debug - payment_calc for {term_months}-month lease: {payment_calc}")
 
-                # Display Lease Details with detailed error checking
+                # Display Lease Details with string parsing
                 with st.container():
                     st.markdown(f"#### {term_months}-Month Lease")
                     required_keys = ['Cap Cost Reduction', 'Total Advance', 'Average Monthly Depreciation', 'Average Lease Charge', 'Base Payment', 'Monthly Payment', 'Total Sales Tax']
@@ -130,10 +143,11 @@ if vin_input:
                         missing_keys = [key for key in required_keys if key not in payment_calc]
                         st.error(f"Calculation error for {term_months}-month lease. Missing keys: {missing_keys}. Please check input data.")
                         continue
-                    if not all(isinstance(payment_calc[key], (int, float)) for key in required_keys):
-                        invalid_keys = [key for key in required_keys if not isinstance(payment_calc[key], (int, float))]
-                        st.error(f"Calculation error for {term_months}-month lease. Invalid values for keys: {invalid_keys}. Please check input data.")
-                        continue
+                    # Parse string values to extract numbers
+                    safe_payment_calc = {}
+                    for key in required_keys:
+                        value = payment_calc[key].replace('$', '').replace(',', '')
+                        safe_payment_calc[key] = float(value) if value else 0.0
                     st.markdown(f"""
                     <div class="lease-details">
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
@@ -147,31 +161,31 @@ if vin_input:
                             </div>
                             <div>
                                 <p class="metric-label">Cap Cost Reduction (CCR)</p>
-                                <p class="metric-value">${payment_calc['Cap Cost Reduction']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Cap Cost Reduction']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Total Advance (TA)</p>
-                                <p class="metric-value">${payment_calc['Total Advance']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Total Advance']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Average Monthly Depreciation (AMD)</p>
-                                <p class="metric-value">${payment_calc['Average Monthly Depreciation']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Average Monthly Depreciation']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Average Lease Charge (ALC)</p>
-                                <p class="metric-value">${payment_calc['Average Lease Charge']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Average Lease Charge']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Base Payment</p>
-                                <p class="metric-value">${payment_calc['Base Payment']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Base Payment']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Monthly Payment (w/ tax)</p>
-                                <p class="metric-value">${payment_calc['Monthly Payment']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Monthly Payment']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Total Sales Tax (over term)</p>
-                                <p class="metric-value">${payment_calc['Total Sales Tax']:,.2f}</p>
+                                <p class="metric-value">${safe_payment_calc['Total Sales Tax']:,.2f}</p>
                             </div>
                             <div>
                                 <p class="metric-label">Lease Cash Applied</p>
