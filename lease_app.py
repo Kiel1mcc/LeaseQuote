@@ -60,6 +60,7 @@ with st.sidebar:
     show_base = st.checkbox("Base Payment", value=False)
     show_tax = st.checkbox("Total Sales Tax", value=False)
     show_lease_cash = st.checkbox("Lease Cash Applied", value=False)
+    show_selling_price = st.checkbox("Selling Price (Editable)", value=True)
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -100,7 +101,7 @@ if vin_input:
         else:
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-            tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
+            tax_rate = county_rates[county_column][county_rates[county_column] == selected_county].values[0] / 100
 
             st.markdown("### Lease Options")
             for _, row in matching_programs.iterrows():
@@ -121,6 +122,9 @@ if vin_input:
                 default_lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
 
                 st.markdown(f"#### {term_months}-Month Lease")
+
+                selling_price = st.number_input("Selling Price ($)", value=msrp, step=100.0, key=f"selling_price_{term_months}")
+
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     lease_cash_enabled = st.toggle("Apply Lease Cash", value=False, key=f"toggle_{term_months}")
@@ -138,7 +142,7 @@ if vin_input:
                 total_ccr = money_down + applied_lease_cash
 
                 payment_calc = calculate_base_and_monthly_payment(
-                    S=msrp,
+                    S=selling_price,
                     RES=residual_value,
                     W=term_months,
                     F=mf_to_use,
@@ -176,5 +180,7 @@ if vin_input:
                     st.markdown(f"<div><p class='metric-label'>Lease Cash Applied</p><p class='metric-value'>${applied_lease_cash:,.2f}</p></div>", unsafe_allow_html=True)
                 if show_down_payment:
                     st.markdown(f"<div><p class='metric-label'>Down Payment</p><p class='metric-value'>${money_down:,.2f}</p></div>", unsafe_allow_html=True)
+                if show_selling_price:
+                    st.markdown(f"<div><p class='metric-label'>Selling Price</p><p class='metric-value'>${selling_price:,.2f}</p></div>", unsafe_allow_html=True)
 
                 st.markdown("</div></div>", unsafe_allow_html=True)
