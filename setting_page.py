@@ -1,50 +1,48 @@
 import streamlit as st
 
 def show_settings() -> None:
-    # Initialize defaults if first run
-    if "settings" not in st.session_state:
-        st.session_state.settings = {
-            "default_county": "Adams",
-            "counties": ["Adams", "Boulder", "Denver"],    # ← replace with your real list
-            "default_tier": "Tier 1",
-            "credit_tiers": ["Tier 1", "Tier 2", "Tier 3"],
-            "auto_apply_lease_cash": False,
-            "money_factor_markup": 0.0,
-            "enable_debug": False,
-        }
+    """Display the settings sidebar and handle reset functionality."""
+    # default values
+    defaults = {
+        "default_county": "Adams",
+        "counties": [
+            "Adams", "Allen", "Ashland", "Ashtabula", "Athens", # …and all your counties
+        ],
+        "tax_rates": {
+            "Adams": 7.25, "Allen": 6.85, "Ashland": 7.00, # …
+        },
+        "money_factors": {
+            # (term, mileage): base money factor
+            (36, 10000): 0.00256,
+            (36, 12000): 0.00275,
+            # …
+        },
+        "residuals": {
+            (36, 10000): 60,    # percent
+            (36, 12000): 58,    # percent
+            # …
+        },
+        "money_factor_markup": 0.0000,
+    }
 
-    # Now render the controls into the main pane
-    st.selectbox(
-        "Default Tax County",
-        st.session_state.settings["counties"],
-        index=st.session_state.settings["counties"].index(
-            st.session_state.settings["default_county"]
-        ),
-        key="default_county",
+    # Initialize session state for settings if not already present
+    if "settings" not in st.session_state or not st.session_state.settings:
+        st.session_state.settings = defaults.copy()
+
+    st.header("⚙️ Settings")
+    s = st.session_state.settings
+
+    s["default_county"] = st.selectbox(
+        "Default County", s["counties"], index=s["counties"].index(s["default_county"])
     )
-    st.selectbox(
-        "Default Credit Tier",
-        st.session_state.settings["credit_tiers"],
-        index=st.session_state.settings["credit_tiers"].index(
-            st.session_state.settings["default_tier"]
-        ),
-        key="default_tier",
-    )
-    st.checkbox(
-        "Auto-apply Lease Cash",
-        value=st.session_state.settings["auto_apply_lease_cash"],
-        key="auto_apply_lease_cash",
-    )
-    st.number_input(
-        "Money Factor Markup",
+    s["money_factor_markup"] = st.number_input(
+        "Global Money Factor Mark-up",
         min_value=0.0,
-        max_value=1.0,
-        step=0.0001,
-        value=st.session_state.settings["money_factor_markup"],
-        key="money_factor_markup",
+        format="%.4f",
+        value=s["money_factor_markup"],
     )
-    st.checkbox(
-        "Enable Debug Logging",
-        value=st.session_state.settings["enable_debug"],
-        key="enable_debug",
-    )
+
+    st.markdown("---")
+    if st.button("Reset to Defaults"):
+        st.session_state.settings = {}
+        st.experimental_rerun()
