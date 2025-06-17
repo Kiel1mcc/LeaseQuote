@@ -1,5 +1,9 @@
-import os
+import streamlit as st
+import pandas as pd
+import os  # ✅ ADD THIS
+
 st.write("Files loaded:", os.listdir())
+
 try:
     from lease_calculations import calculate_base_and_monthly_payment
     st.success("Imported lease calculation module successfully.")
