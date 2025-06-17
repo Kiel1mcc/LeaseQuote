@@ -22,8 +22,8 @@ st.markdown("""
     .stButton>button {background-color: #0066cc; color: white; border-radius: 5px;}
     .stButton>button:hover {background-color: #0055b3;}
     .vehicle-info {background-color: #e6f0fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;}
-    .vehicle-row {display: flex; flex-wrap: wrap; gap: 2rem;}
-    .vehicle-row div {flex: 1; min-width: 150px; font-size: 0.95rem; margin-bottom: 0.5rem;}
+    .vehicle-row {display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 1.5rem; font-size: 0.95rem;}
+    .vehicle-row div {white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
     .lease-details {background-color: #ffffff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;}
     .error {color: #d32f2f; font-weight: bold;}
     h1 {color: #003087; font-size: 2rem;}
@@ -86,7 +86,7 @@ if vin_input:
         else:
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-            tax_rate = county_rates[county_rates[county_column] == selected_county][rate_column].values[0] / 100
+            tax_rate = county_rates[county_column == selected_county][rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
             for _, row in matching_programs.iterrows():
