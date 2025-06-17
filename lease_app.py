@@ -24,10 +24,6 @@ if vin_input:
     if vin_data.empty:
         st.error("VIN not found in inventory.")
     else:
-        if not all(col in vin_data.columns for col in ["ModelNumber", "Model", "Trim", "MSRP"]):
-            st.error("Missing required vehicle columns.")
-            st.stop()
-
         model_number = vin_data["ModelNumber"].values[0]
         model = vin_data["Model"].values[0]
         trim = vin_data["Trim"].values[0]
@@ -79,20 +75,19 @@ if vin_input:
                 )
 
                 st.markdown(f"""
-                ### {term_months}-Month Lease
-                **Money Factor:** {mf_to_use:.5f}  
-                **Residual Value:** ${residual_value:,.2f} ({residual_percent:.0%})  
-                **Cap Cost Reduction (CCR):** ${payment_calc['Cap Cost Reduction']:,.2f}  
-                **Total Advance (TA):** ${payment_calc['Total Advance']:,.2f}  
-                **Average Monthly Depreciation (AMD):** ${payment_calc['Average Monthly Depreciation']:,.2f}  
-                **Average Lease Charge (ALC):** ${payment_calc['Average Lease Charge']:,.2f}  
-                **Base Payment:** ${payment_calc['Base Payment']:,.2f}  
-                **Monthly Payment (w/ tax):** ${payment_calc['Monthly Payment']:,.2f}  
-                **Total Sales Tax (over term):** ${payment_calc['Total Sales Tax']:,.2f}  
-                **Lease Cash Applied:** ${lease_cash:,.2f}  
-                **Rebates/Credits:** ${rebates:,.2f}  
-                **Down Payment:** ${money_down:,.2f}  
-                **Inception Fees:** ${inception_fees:,.2f}  
-                **Non-cash CCR:** ${non_cash_ccr:,.2f}  
-                ---
-                """)
+### {term_months}-Month Lease
+**Money Factor:** {mf_to_use:.5f}  
+**Residual Value:** ${residual_value:,.2f} ({residual_percent:.0%})  
+**Cap Cost Reduction (CCR):** {payment_calc['Cap Cost Reduction']}  
+**Total Advance (TA):** {payment_calc['Total Advance']}  
+**Average Monthly Depreciation (AMD):** {payment_calc['Average Monthly Depreciation']}  
+**Average Lease Charge (ALC):** {payment_calc['Average Lease Charge']}  
+**Base Payment:** {payment_calc['Base Payment']}  
+**Monthly Payment (w/ tax):** {payment_calc['Monthly Payment']}  
+**Total Sales Tax (over term):** {payment_calc['Total Sales Tax']}  
+**Lease Cash Applied:** ${lease_cash:,.2f}  
+**Rebates/Credits:** ${rebates:,.2f}  
+**Down Payment:** ${money_down:,.2f}  
+**Inception Fees:** ${inception_fees:,.2f}  
+**Non-cash CCR:** ${non_cash_ccr:,.2f}  
+---""")
