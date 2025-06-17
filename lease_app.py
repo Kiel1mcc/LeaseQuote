@@ -1,6 +1,5 @@
 import streamlit as st
-st.write("🔥 Loaded lease_app.py v2 at", __file__)
-import streamlit as st
+# st.write("🔥 Loaded lease_app.py v2 at", __file__)
 from setting_page import show_settings
 from lease_calculations import calculate_payment
 
