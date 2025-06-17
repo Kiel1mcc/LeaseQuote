@@ -119,11 +119,17 @@ if vin_input:
                     tau=tax_rate
                 )
 
-                # Display Lease Details with error checking
+                # Display Lease Details with detailed error checking
                 with st.container():
                     st.markdown(f"#### {term_months}-Month Lease")
-                    if not all(key in payment_calc for key in ['Cap Cost Reduction', 'Total Advance', 'Average Monthly Depreciation', 'Average Lease Charge', 'Base Payment', 'Monthly Payment', 'Total Sales Tax']):
-                        st.error(f"Calculation error for {term_months}-month lease. Please check input data or contact support.")
+                    required_keys = ['Cap Cost Reduction', 'Total Advance', 'Average Monthly Depreciation', 'Average Lease Charge', 'Base Payment', 'Monthly Payment', 'Total Sales Tax']
+                    if not all(key in payment_calc for key in required_keys):
+                        missing_keys = [key for key in required_keys if key not in payment_calc]
+                        st.error(f"Calculation error for {term_months}-month lease. Missing keys: {missing_keys}. Please check input data or contact support.")
+                        continue
+                    if not all(isinstance(payment_calc[key], (int, float)) for key in required_keys):
+                        invalid_keys = [key for key in required_keys if not isinstance(payment_calc[key], (int, float))]
+                        st.error(f"Calculation error for {term_months}-month lease. Invalid values for keys: {invalid_keys}. Please check input data.")
                         continue
                     st.markdown(f"""
                     <div class="lease-details">
