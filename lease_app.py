@@ -1,117 +1,93 @@
 # lease_app.py
 import streamlit as st
-from setting_page import show_settings
+import pandas as pd
 from lease_calculations import calculate_base_and_monthly_payment as calculate_payment
 
-def init_session_settings():
-    """
-    Ensure we always have a settings dict in session_state
-    and all the keys we expect.
-    """
-    if "settings" not in st.session_state:
-        st.session_state.settings = {}
+@st.cache_data
+def load_counties():
+    """Load the CSV that contains each county's total sales-tax rate."""
+    df = pd.read_csv("County_Tax_Rates.csv")
+    # Expecting columns: "County" and "Total Local & State Sales Tax Rate"
+    return df
 
-    # default to empty lists / sensible defaults so we never KeyError
-    st.session_state.settings.setdefault("counties", [])
-    st.session_state.settings.setdefault("credit_tiers", [])
-    st.session_state.settings.setdefault("default_county", 0)
-    st.session_state.settings.setdefault("default_tier", 0)
-    st.session_state.settings.setdefault("auto_apply_lease_cash", False)
+@st.cache_data
+def load_lease_programs():
+    """Load the CSV that contains all lease programs / credit tiers."""
+    df = pd.read_csv("All_Lease_Programs_Database.csv")
+    # Expecting columns: "Credit_Tier", "Money_Factor", "Residual_Pct", "Term"
+    return df
 
 def show_quote_page():
-    """
-    Main quote page: gather inputs and display results.
-    """
     st.title("🔑 Lease Quote")
 
-    # If the user hasn't picked any counties yet, prompt them:
-    if not st.session_state.settings["counties"]:
-        st.warning("⚠️ No tax‐counties configured yet. Please go to **Settings** and select at least one county.")
-        return
-
+    # --- Inputs ---
     vin = st.text_input("Enter VIN or Stock #")
 
-    county = st.selectbox(
-        "Select Tax County",
-        st.session_state.settings["counties"],
-        index=st.session_state.settings["default_county"],
+    msrp = st.number_input(
+        "MSRP (Selling Price)", 
+        min_value=0.0, step=100.0, value=0.0, format="%.2f"
     )
-
-    credit_tier = st.selectbox(
-        "Credit Tier",
-        st.session_state.settings["credit_tiers"],
-        index=st.session_state.settings["default_tier"],
+    money_down = st.number_input(
+        "Down Payment", 
+        min_value=0.0, step=100.0, value=0.0, format="%.2f"
     )
-
-    lease_cash = st.checkbox(
-        "Apply Lease Cash",
-        value=st.session_state.settings["auto_apply_lease_cash"],
-    )
-
-    down = st.number_input(
-        "Down Payment",
-        min_value=0.0,
-        step=100.0,
-        value=0.0,
-    )
-
     rebate = st.number_input(
-        "Rebate",
-        min_value=0.0,
-        step=100.0,
-        value=0.0,
+        "Rebate", 
+        min_value=0.0, step=100.0, value=0.0, format="%.2f"
     )
 
+    # County → look up tax rate
+    df_counties = load_counties()
+    county = st.selectbox("Select Tax County", df_counties["County"].tolist())
+    tax_pct = (
+        df_counties
+        .loc[df_counties["County"] == county, "Total Local & State Sales Tax Rate"]
+        .iat[0]
+        / 100.0
+    )
+
+    # Credit‐tier → look up money factor & residual
+    df_programs = load_lease_programs()
+    tier = st.selectbox("Select Credit Tier", df_programs["Credit_Tier"].unique())
+    tier_row = df_programs[df_programs["Credit_Tier"] == tier].iloc[0]
+    money_factor = float(tier_row["Money_Factor"])
+    residual_pct = float(tier_row["Residual_Pct"])  # e.g. 0.60 for 60%
+
+    # Term & mileage
     term = st.selectbox(
-        "Term (months)",
-        [36, 39, 48, 60],
-        index=0,
+        "Term (months)", 
+        sorted(df_programs["Term"].unique().astype(int).tolist())
     )
-
     mileage = st.selectbox(
-        "Annual Mileage",
-        [10_000, 12_000, 15_000, 20_000],
-        index=0,
+        "Annual Mileage", 
+        ["10,000", "12,000", "15,000"]
     )
 
+    # (Optional) credit‐score slider if you use it in your logic
     credit_score = st.slider(
-        "Estimated Credit Score",
-        min_value=300,
-        max_value=850,
-        value=700,
+        "Estimated Credit Score", 
+        min_value=300, max_value=850, value=700
     )
 
+    # --- Calculate & Output ---
     if st.button("Calculate"):
-        # Call your calculation function
-        base_payment, monthly_payment = calculate_payment(
-            vin,
-            county,
-            credit_tier,
-            lease_cash,
-            down,
-            rebate,
-            term,
-            mileage,
-            credit_score,
+        base_pay, monthly_pay = calculate_payment(
+            msrp=msrp,
+            money_factor=money_factor,
+            term=int(term),
+            residual_pct=residual_pct,
+            tax_rate=tax_pct,
+            down_payment=money_down,
+            rebate=rebate,
         )
 
-        # Display metrics
-        st.metric("Base Payment", f"${base_payment:,.2f}")
-        st.metric("Monthly Payment", f"${monthly_payment:,.2f}")
+        st.success("✅ Calculation complete!")
+        col1, col2 = st.columns(2)
+        col1.metric("Base Payment", f"${base_pay:,.2f}")
+        col2.metric("Monthly Payment", f"${monthly_pay:,.2f}")
 
 def main():
-    # 1) Bootstrap our session_state.settings
-    init_session_settings()
-
-    # 2) Sidebar nav
-    st.sidebar.title("Main Menu")
-    page = st.sidebar.radio("Go to", ["Quote", "Settings"])
-
-    # 3) Dispatch
-    if page == "Settings":
-        show_settings()
-    else:
-        show_quote_page()
+    show_quote_page()
 
 if __name__ == "__main__":
     main()
