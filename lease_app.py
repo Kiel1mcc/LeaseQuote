@@ -1,7 +1,7 @@
 import streamlit as st
 st.write("🔥 Loaded lease_app.py v2 at", __file__)
 import streamlit as st
-from setting_page import show_settings
+from setting_page import show_settings, DEFAULT_SETTINGS
 from lease_calculations import calculate_payment
 
 def show_quote_page():
@@ -52,8 +52,8 @@ def show_quote_page():
 
 def main():
     # initialize settings on first run
-    if "settings" not in st.session_state:
-        st.session_state.settings = {}
+    if "settings" not in st.session_state or not st.session_state.settings:
+        st.session_state.settings = DEFAULT_SETTINGS.copy()
     # sidebar navigation
     st.sidebar.title("Main Menu")
     page = st.sidebar.radio("Go to", ["Quote", "Settings"])
