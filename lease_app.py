@@ -216,48 +216,11 @@ if st.session_state.page == "main":
         st.session_state.page = "settings"
 
 elif st.session_state.page == "settings":
-    st.subheader("Settings")
+    # Display settings page using the dedicated module
+    import setting_page
 
-    # Temporary variables for settings
-    temp_settings = st.session_state.settings.copy()
+    setting_page.show_settings()
 
-    counties = county_rates[county_column].tolist()
-    temp_settings["default_county"] = st.selectbox(
-        "Default Tax County",
-        counties,
-        index=counties.index(st.session_state.settings["default_county"]) if st.session_state.settings["default_county"] in counties else 0
-    )
-
-    tiers = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
-    temp_settings["default_tier"] = st.selectbox(
-        "Default Tier",
-        tiers,
-        index=tiers.index(st.session_state.settings["default_tier"])
-    )
-
-    temp_settings["default_apply_rebates"] = st.checkbox(
-        "Default Apply Rebates",
-        value=st.session_state.settings["default_apply_rebates"]
-    )
-
-    temp_settings["auto_apply_lease_cash"] = st.checkbox(
-        "Auto-apply Lease Cash",
-        value=st.session_state.settings["auto_apply_lease_cash"]
-    )
-
-    temp_settings["money_factor_markup"] = st.number_input(
-        "Money Factor Markup",
-        min_value=0.0,
-        value=st.session_state.settings["money_factor_markup"],
-        step=0.0001
-    )
-
-    temp_settings["enable_debug"] = st.checkbox(
-        "Enable Debug Display",
-        value=st.session_state.settings["enable_debug"]
-    )
-
-    # Save and Return button
-    if st.button("Save and Return"):
-        st.session_state.settings = temp_settings
+    # Button to return to the main page
+    if st.button("Return"):
         st.session_state.page = "main"

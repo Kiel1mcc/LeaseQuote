@@ -1,79 +1,85 @@
 import streamlit as st
 
-# Initialize session state for settings if not already present
-if 'settings' not in st.session_state:
-    st.session_state.settings = {
-        "default_county": "Adams",
-        "default_tier": "Tier 1",
-        "auto_apply_lease_cash": False,
-        "money_factor_markup": 0.0,
-        "enable_debug": False
-    }
 
-# Sidebar for settings page
-st.sidebar.title("Settings")
+def show_settings() -> None:
+    """Display the settings sidebar and handle reset functionality."""
 
-# Tax County dropdown
-counties = ["Adams", "Boulder", "Denver"]  # Replace with your actual list
-default_county = st.sidebar.selectbox(
-    "Default Tax County",
-    counties,
-    index=counties.index(st.session_state.settings["default_county"]),
-    help="Select the default county for tax calculations."
-)
+    # Initialize session state for settings if not already present
+    if "settings" not in st.session_state:
+        st.session_state.settings = {
+            "default_county": "Adams",
+            "default_tier": "Tier 1",
+            "auto_apply_lease_cash": False,
+            "money_factor_markup": 0.0,
+            "enable_debug": False,
+        }
 
-# Tier dropdown
-tiers = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
-default_tier = st.sidebar.selectbox(
-    "Default Tier",
-    tiers,
-    index=tiers.index(st.session_state.settings["default_tier"]),
-    help="Select the default tier for lease calculations."
-)
+    # Sidebar for settings page
+    st.sidebar.title("Settings")
 
-# Auto-apply lease cash checkbox
-auto_apply_lease_cash = st.sidebar.checkbox(
-    "Auto-apply Lease Cash",
-    value=st.session_state.settings["auto_apply_lease_cash"],
-    help="If checked, lease cash will be automatically applied."
-)
+    # Tax County dropdown
+    counties = ["Adams", "Boulder", "Denver"]  # Replace with your actual list
+    default_county = st.sidebar.selectbox(
+        "Default Tax County",
+        counties,
+        index=counties.index(st.session_state.settings["default_county"]),
+        help="Select the default county for tax calculations.",
+    )
 
-# Money Factor Markup input
-money_factor_markup = st.sidebar.number_input(
-    "Money Factor Markup",
-    min_value=0.0,
-    max_value=0.1,
-    value=st.session_state.settings["money_factor_markup"],
-    step=0.0001,
-    help="Add a markup to the base money factor (e.g., 0.001 increases the rate)."
-)
+    # Tier dropdown
+    tiers = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"]
+    default_tier = st.sidebar.selectbox(
+        "Default Tier",
+        tiers,
+        index=tiers.index(st.session_state.settings["default_tier"]),
+        help="Select the default tier for lease calculations.",
+    )
 
-# Enable Debug Display checkbox
-enable_debug = st.sidebar.checkbox(
-    "Enable Debug Display",
-    value=st.session_state.settings["enable_debug"],
-    help="If checked, additional debug information will be displayed."
-)
+    # Auto-apply lease cash checkbox
+    auto_apply_lease_cash = st.sidebar.checkbox(
+        "Auto-apply Lease Cash",
+        value=st.session_state.settings["auto_apply_lease_cash"],
+        help="If checked, lease cash will be automatically applied.",
+    )
 
-# Save settings to session state
-st.session_state.settings.update({
-    "default_county": default_county,
-    "default_tier": default_tier,
-    "auto_apply_lease_cash": auto_apply_lease_cash,
-    "money_factor_markup": money_factor_markup,
-    "enable_debug": enable_debug
-})
+    # Money Factor Markup input
+    money_factor_markup = st.sidebar.number_input(
+        "Money Factor Markup",
+        min_value=0.0,
+        max_value=0.1,
+        value=st.session_state.settings["money_factor_markup"],
+        step=0.0001,
+        help="Add a markup to the base money factor (e.g., 0.001 increases the rate).",
+    )
 
-# Reset to defaults button
-if st.sidebar.button("Reset to Defaults"):
-    st.session_state.settings = {
-        "default_county": "Adams",
-        "default_tier": "Tier 1",
-        "auto_apply_lease_cash": False,
-        "money_factor_markup": 0.0,
-        "enable_debug": False
-    }
-    st.experimental_rerun()
+    # Enable Debug Display checkbox
+    enable_debug = st.sidebar.checkbox(
+        "Enable Debug Display",
+        value=st.session_state.settings["enable_debug"],
+        help="If checked, additional debug information will be displayed.",
+    )
+
+    # Save settings to session state
+    st.session_state.settings.update(
+        {
+            "default_county": default_county,
+            "default_tier": default_tier,
+            "auto_apply_lease_cash": auto_apply_lease_cash,
+            "money_factor_markup": money_factor_markup,
+            "enable_debug": enable_debug,
+        }
+    )
+
+    # Reset to defaults button
+    if st.sidebar.button("Reset to Defaults"):
+        st.session_state.settings = {
+            "default_county": "Adams",
+            "default_tier": "Tier 1",
+            "auto_apply_lease_cash": False,
+            "money_factor_markup": 0.0,
+            "enable_debug": False,
+        }
+        st.experimental_rerun()
 
 # Example main app integration (uncomment and adapt as needed)
 """
