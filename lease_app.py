@@ -101,7 +101,11 @@ if vin_input:
         else:
             tier_num = int(selected_tier.split(" ")[1])
             rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
-            tax_rate = county_rates[county_column][county_rates[county_column] == selected_county].values[0] / 100
+            tax_row = county_rates[county_rates[county_column] == selected_county]
+            if tax_row.empty:
+                st.error(f"Tax rate not found for selected county: {selected_county}")
+                st.stop()
+            tax_rate = tax_row[rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
             for _, row in matching_programs.iterrows():
