@@ -100,13 +100,73 @@ if vin_input:
                 st.error("Missing LeaseTerm or Mileage column in the data.")
             else:
                 grouped = matching_programs.groupby([term_col, mileage_col])
-                for (term, mileage), group in grouped:
-                    st.subheader(f"{term}-Month / {mileage}mi Lease")
-                    row = group.iloc[0]  # take the first available
+                sorted_terms = sorted(set(matching_programs[term_col].unique()))
 
-                    mf_col = f"Tier {tier_num}"
-                    if 'Residual' not in row or mf_col not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
-                        st.info("This mileage and term combination is not available on the selected model.")
-                        continue
+                for term in sorted_terms:
+                    term_programs = matching_programs[matching_programs[term_col] == term]
+                    mileage_groups = term_programs.groupby(mileage_col)
+                    st.subheader(f"{term}-Month Lease")
 
-                    st.write("(Quote details would go here)")
+                    cols = st.columns(len(mileage_groups))
+
+                    for (mileage, group), col in zip(mileage_groups, cols):
+                        with col:
+                            row = group.iloc[0]
+                            mf_col = f"Tier {tier_num}"
+                            if 'Residual' not in row or mf_col not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                                st.info("This mileage and term combination is not available on the selected model.")
+                                continue
+
+                            selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
+                            apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"markup_{term}_{mileage}")
+                            mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
+
+                            lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                            col1, col2 = st.columns([1,1])
+                            with col1:
+                                apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"applycash_{term}_{mileage}")
+                            with col2:
+                                custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
+
+                            total_ccr = money_down + (custom_cash if apply_cash else 0.0)
+                            residual_value = round(float(msrp) * float(row["Residual"]), 2)
+
+                            payment_calc = calculate_base_and_monthly_payment(
+                                S=selling_price,
+                                RES=residual_value,
+                                W=term,
+                                F=mf,
+                                M=962.50,
+                                Q=0,
+                                B=total_ccr,
+                                K=0,
+                                U=0,
+                                tau=tax_rate
+                            )
+
+                            st.markdown(f"""
+                            <div class="lease-details">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                    <div>
+                                        <p class="metric-label">Mileage</p>
+                                        <p class="metric-value">{mileage:,} mi/year</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">Money Factor</p>
+                                        <p class="metric-value">{mf:.5f}</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">Residual Value</p>
+                                        <p class="metric-value">${residual_value:,.2f}</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">Monthly Payment (w/ tax)</p>
+                                        <p class="metric-value">{payment_calc['Monthly Payment']}</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">Down Payment</p>
+                                        <p class="metric-value">${money_down:,.2f}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
