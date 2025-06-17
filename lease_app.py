@@ -1,3 +1,11 @@
+import os
+st.write("Files loaded:", os.listdir())
+try:
+    from lease_calculations import calculate_base_and_monthly_payment
+    st.success("Imported lease calculation module successfully.")
+except Exception as e:
+    st.error(f"Import failed: {e}")
+
 import streamlit as st
 import pandas as pd
 from lease_calculations import calculate_base_and_monthly_payment
