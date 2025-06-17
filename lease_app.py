@@ -14,10 +14,8 @@ vin_input = st.text_input("Enter VIN:")
 selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
 county_column = county_rates.columns[0]
 selected_county = st.selectbox("Select County:", county_rates[county_column])
-rebates = st.number_input("Rebates/Credits ($)", min_value=0.0, value=0.0)
 money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0)
-inception_fees = st.number_input("Lease Inception Fees ($)", min_value=0.0, value=0.0)
-non_cash_ccr = st.number_input("Non-cash CCR ($)", min_value=0.0, value=0.0)
+
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
