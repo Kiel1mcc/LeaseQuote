@@ -113,7 +113,9 @@ if vin_input:
                 if mf_col not in row or pd.isna(row[mf_col]):
                     continue
 
-                mf_to_use = float(row[mf_col])
+                markup_enabled = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"markup_{term_months}")
+                base_mf = float(row[mf_col])
+                mf_to_use = base_mf + 0.00040 if markup_enabled else base_mf
                 residual_percent = float(row["Residual"])
                 residual_value = round(msrp * residual_percent, 2)
                 default_lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
@@ -152,6 +154,8 @@ if vin_input:
 
                 if show_money_factor:
                     st.markdown(f"<div><p class='metric-label'>Money Factor</p><p class='metric-value'>{mf_to_use:.5f}</p></div>", unsafe_allow_html=True)
+                    if markup_enabled:
+                        st.markdown(f"<div><p class='metric-label' style='color:#999;'>Includes +0.00040 markup</p></div>", unsafe_allow_html=True)
                 if show_residual_value:
                     st.markdown(f"<div><p class='metric-label'>Residual Value</p><p class='metric-value'>${residual_value:,.2f} ({residual_percent:.0%})</p></div>", unsafe_allow_html=True)
                 if show_ccr:
