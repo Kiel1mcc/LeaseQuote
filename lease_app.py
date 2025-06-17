@@ -43,10 +43,7 @@ with st.sidebar:
     selected_tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8"])
     county_column = county_rates.columns[0]
     selected_county = st.selectbox("Select County:", county_rates[county_column])
-    rebates = st.number_input("Rebates/Credits ($)", min_value=0.0, value=0.0, step=100.0)
     money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
-    inception_fees = st.number_input("Lease Inception Fees ($)", min_value=0.0, value=0.0, step=100.0)
-    non_cash_ccr = st.number_input("Non-cash CCR ($)", min_value=0.0, value=0.0, step=100.0)
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -97,7 +94,7 @@ if vin_input:
                 residual_value = round(msrp * residual_percent, 2)
                 lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
 
-                total_ccr = money_down + rebates + lease_cash
+                total_ccr = money_down + lease_cash
 
                 payment_calc = calculate_base_and_monthly_payment(
                     S=msrp,
@@ -107,8 +104,8 @@ if vin_input:
                     M=962.50,
                     Q=0,
                     B=total_ccr,
-                    K=inception_fees,
-                    U=non_cash_ccr,
+                    K=0,
+                    U=0,
                     tau=tax_rate
                 )
 
@@ -125,10 +122,7 @@ if vin_input:
                         <div><p class="metric-label">Monthly Payment (w/ tax)</p><p class="metric-value">{payment_calc['Monthly Payment']}</p></div>
                         <div><p class="metric-label">Total Sales Tax (over term)</p><p class="metric-value">{payment_calc['Total Sales Tax']}</p></div>
                         <div><p class="metric-label">Lease Cash Applied</p><p class="metric-value">${lease_cash:,.2f}</p></div>
-                        <div><p class="metric-label">Rebates/Credits</p><p class="metric-value">${rebates:,.2f}</p></div>
                         <div><p class="metric-label">Down Payment</p><p class="metric-value">${money_down:,.2f}</p></div>
-                        <div><p class="metric-label">Inception Fees</p><p class="metric-value">${inception_fees:,.2f}</p></div>
-                        <div><p class="metric-label">Non-cash CCR</p><p class="metric-value">${non_cash_ccr:,.2f}</p></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
