@@ -8,7 +8,7 @@ import importlib.util
 # Set page configuration must be the first Streamlit command
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
-# Custom CSS for styling (based on professional look from earlier)
+# Custom CSS for styling
 st.markdown("""
 <style>
     .main {background-color: #f9f9f9;}
@@ -25,16 +25,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Title
+# Title and run check
 st.title("Lease Quote Calculator")
+if __file__ != os.path.join(os.getcwd(), "lease_app.py"):
+    st.error("This app should be run with 'streamlit run lease_app.py'. Please correct the run command.")
+    st.stop()
 
-# Load Data
+# Load Data (adjust path if necessary)
 try:
+    os.chdir("/mount/src/leasequote")  # Change to the mounted directory
+    st.write("Changed working directory to:", os.getcwd())
     lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
     vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
     county_rates = pd.read_csv("County_Tax_Rates.csv")
 except FileNotFoundError:
-    st.error("Required data files are missing. Please ensure all files are available.")
+    st.error("Required data files are missing. Please ensure all files are available in /mount/src/leasequote/.")
+    st.stop()
+except Exception as e:
+    st.error(f"Error changing directory or loading files: {e}")
     st.stop()
 
 # Sidebar for Inputs
@@ -167,7 +175,7 @@ def process_lease_data():
                             missing_keys = [key for key in required_keys if key not in payment_calc]
                             st.error(f"Calculation error for {term_months}-month lease. Missing keys: {missing_keys}. Please check input data.")
                             continue
-                        # Parse string values to extract numbers
+                        # Parse string values to extract numbers (though pre-formatted, kept for consistency)
                         safe_payment_calc = {}
                         for key in required_keys:
                             value = payment_calc[key].replace('$', '').replace(',', '')
