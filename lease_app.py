@@ -22,7 +22,7 @@ st.markdown("""
     .stButton>button {background-color: #0066cc; color: white; border-radius: 5px;}
     .stButton>button:hover {background-color: #0055b3;}
     .vehicle-info {background-color: #e6f0fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;}
-    .lease-details {background-color: #ffffff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+    .lease-details {background-color: #ffffff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;}
     .error {color: #d32f2f; font-weight: bold;}
     h1 {color: #003087; font-size: 2rem;}
     h3 {color: #003087; margin-top: 1.5rem;}
@@ -110,6 +110,7 @@ if vin_input:
                 )
 
                 st.markdown(f"""
+                <h3>{term_months}-Month Lease</h3>
                 <div class="lease-details">
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
                         <div><p class="metric-label">Money Factor</p><p class="metric-value">{mf_to_use:.5f}</p></div>
