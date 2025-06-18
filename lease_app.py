@@ -322,7 +322,7 @@ if vin_input:
                         total_ccr = money_down + (lease_cash if apply_cash else 0.0)
 
                         with cols[i + 1]:
-    monthly_placeholder = st.empty()
+                            monthly_placeholder = st.empty()
 
     with st.expander("View Details"):
         selling_price_adjusted = st.number_input(
@@ -354,26 +354,9 @@ if vin_input:
 
         monthly_placeholder.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
 
-                            residual_value = round(selling_price_adjusted * adjusted_residual, 2)
-                            payment_calc = calculate_base_and_monthly_payment(
-                                S=selling_price_adjusted,
-                                RES=residual_value,
-                                W=term,
-                                F=mf,
-                                M=962.50,
-                                Q=0,
-                                B=total_ccr,
-                                K=0,
-                                U=0,
-                                tau=tax_rate
-                            )
 
-                            monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
-                            cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
-                            initial_monthly_payment = float(cleaned)
-                            title = f"${initial_monthly_payment:,.2f}"
 
-                            st.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
+
 
                             with st.expander("View Details"):
                                 st.markdown(f"""
