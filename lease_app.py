@@ -16,23 +16,22 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 st.markdown("""
 <style>
     .main {
-        background: linear-gradient(135deg, #0a192f, #1e3a8a);
-        color: #e2e8f0;
+        background-color: #ffffff;
+        color: #1a1a1a;
         padding: 3rem 4rem;
         min-height: 100vh;
         font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
         margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        background-color: #f8fafc;
+        border-radius: 10px;
         padding: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(5px);
-        transition: border-color 0.3s, background 0.3s;
+        border: 1px solid #e0e7ff;
+        transition: border-color 0.3s;
     }
     .sidebar .stTextInput input, .sidebar .stSelectbox select, .sidebar .stNumberInput input {
-        color: #e2e8f0;
+        color: #1a1a1a;
         background: transparent;
         border: none;
         font-size: 1.1rem;
@@ -42,41 +41,40 @@ st.markdown("""
         border-color: #60a5fa;
     }
     .stButton>button {
-        background: linear-gradient(90deg, #3b82f6, #9333ea);
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
         color: white;
         border: none;
-        border-radius: 15px;
+        border-radius: 12px;
         padding: 1rem 2.5rem;
         font-weight: 600;
         font-size: 1.2rem;
         text-transform: uppercase;
-        letter-spacing: 0.1rem;
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        letter-spacing: 0.05rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         transition: transform 0.3s, box-shadow 0.3s;
     }
     .stButton>button:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
     }
     .vehicle-info {
-        background: rgba(255, 255, 255, 0.05);
+        background-color: #ffffff;
         padding: 2.5rem;
-        border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e0e7ff;
         margin-bottom: 3rem;
         transition: transform 0.3s;
     }
     .vehicle-info:hover {
-        transform: translateY(-5px);
+        transform: translateY(-4px);
     }
     .vehicle-row {
         display: grid;
         grid-template-columns: repeat(7, minmax(150px, 1fr));
         gap: 3.5rem;
         font-size: 1.1rem;
-        color: #e2e8f0;
+        color: #1a1a1a;
         font-weight: 500;
     }
     .vehicle-row div {
@@ -87,38 +85,37 @@ st.markdown("""
     .lease-options-table {
         display: grid;
         grid-template-columns: 1fr repeat(3, minmax(180px, 1fr));
-        gap: 1.5rem;
+        gap: 1rem;
         margin-top: 2.5rem;
     }
     .lease-term, .mileage-header {
         font-size: 1.3rem;
         font-weight: 600;
-        padding: 1.2rem;
+        padding: 1rem;
         text-align: center;
-        border-radius: 10px;
+        border-radius: 8px;
     }
     .lease-term {
-        color: #e2e8f0;
-        background: rgba(255, 255, 255, 0.1);
+        color: #64748b;
+        background: #f1f5f9;
     }
     .mileage-header {
-        color: #60a5fa;
-        background: rgba(96, 165, 250, 0.2);
+        color: #2563eb;
+        background: #e0e7ff;
     }
     .payment-value {
         font-size: 1.6rem;
         font-weight: 700;
-        color: #e2e8f0;
+        color: #1a1a1a;
         text-align: center;
-        padding: 1.2rem;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s, background 0.3s;
+        padding: 1rem;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s;
     }
     .payment-value:hover {
-        transform: translateY(-3px);
-        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
     }
     .payment-value.lowest {
         background: #dc2626;
@@ -126,43 +123,27 @@ st.markdown("""
         font-weight: 800;
     }
     .lease-details {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        margin-top: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px);
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        margin-top: 1rem;
+        border: 1px solid #e0e7ff;
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
+        gap: 1.5rem;
     }
     .detail-item {
-        padding: 1.5rem;
-        border-radius: 10px;
+        padding: 1rem;
+        border-radius: 8px;
         text-align: center;
-        transition: transform 0.3s;
-    }
-    .detail-item.mileage {
-        background: rgba(34, 197, 94, 0.1);
-    }
-    .detail-item.money-factor {
-        background: rgba(59, 130, 246, 0.1);
-    }
-    .detail-item.residual-value {
-        background: rgba(234, 179, 8, 0.1);
-    }
-    .detail-item.monthly-payment {
-        background: rgba(239, 68, 68, 0.1);
-    }
-    .detail-item:hover {
-        transform: translateY(-2px);
+        background: #f8fafc;
     }
     .metric-label {
         font-size: 1.1rem;
-        color: #a3bffa;
+        color: #64748b;
         font-weight: 600;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.05rem;
         white-space: nowrap;
@@ -170,55 +151,55 @@ st.markdown("""
         text-overflow: ellipsis;
     }
     .metric-value {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: #e2e8f0;
-        margin-bottom: 0.75rem;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .option-panel {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 2rem;
-        border-radius: 15px;
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
         margin-top: 1.5rem;
         display: flex;
-        gap: 2rem;
+        gap: 1.5rem;
         flex-wrap: wrap;
         justify-content: flex-start;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e0e7ff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
     .option-panel .stToggle, .option-panel .stNumberInput {
-        margin: 1rem 0;
-        color: #e2e8f0;
+        margin: 0.75rem 0;
+        color: #1a1a1a;
     }
     .option-panel .stNumberInput input {
-        background: rgba(255, 255, 255, 0.1);
-        color: #e2e8f0;
+        background: #ffffff;
+        color: #1a1a1a;
         border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid #e0e7ff;
     }
     .stExpander {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s;
+        border: 1px solid #e0e7ff;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        transition: all 0.2s;
     }
     .stExpander summary {
         font-weight: 600;
-        color: #60a5fa;
-        padding: 1rem;
+        color: #2563eb;
+        padding: 0.75rem;
         cursor: pointer;
-        border-radius: 12px;
+        border-radius: 8px;
     }
     .stExpander summary:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: #f1f5f9;
     }
     .sidebar .stHeader {
-        color: #60a5fa;
+        color: #1e40af;
         font-size: 2rem;
         font-weight: 700;
         margin-bottom: 2.5rem;
@@ -226,15 +207,15 @@ st.markdown("""
         letter-spacing: 0.1rem;
     }
     ::-webkit-scrollbar {
-        width: 12px;
+        width: 10px;
     }
     ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
+        background: #f8fafc;
+        border-radius: 5px;
     }
     ::-webkit-scrollbar-thumb {
         background: #60a5fa;
-        border-radius: 6px;
+        border-radius: 5px;
     }
     ::-webkit-scrollbar-thumb:hover {
         background: #3b82f6;
@@ -375,19 +356,19 @@ if vin_input:
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
-                                    <div class="detail-item mileage">
+                                    <div class="detail-item">
                                         <p class="metric-label">Mileage</p>
                                         <p class="metric-value">{mileage:,} mi/year</p>
                                     </div>
-                                    <div class="detail-item money-factor">
+                                    <div class="detail-item">
                                         <p class="metric-label">Money Factor</p>
                                         <p class="metric-value">{mf:.5f}</p>
                                     </div>
-                                    <div class="detail-item residual-value">
+                                    <div class="detail-item">
                                         <p class="metric-label">Residual Value</p>
                                         <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
                                     </div>
-                                    <div class="detail-item monthly-payment">
+                                    <div class="detail-item">
                                         <p class="metric-label">Monthly Payment</p>
                                         <p class="metric-value">{payment_calc['Monthly Payment']}</p>
                                     </div>
