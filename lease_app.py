@@ -16,51 +16,66 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 st.markdown("""
 <style>
     .main {
-        background-color: #1a202c;
-        color: #e2e8f0;
-        padding: 2rem;
+        background-color: #ffffff;
+        color: #1a1a1a;
+        padding: 2.5rem;
         min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
-        margin-bottom: 1.5rem;
-        background-color: #2d3748;
-        border-radius: 8px;
-        padding: 0.5rem;
-        color: #e2e8f0;
+        margin-bottom: 1.75rem;
+        background-color: #f7f9fc;
+        border-radius: 10px;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        transition: border-color 0.2s;
     }
     .sidebar .stTextInput input, .sidebar .stSelectbox select, .sidebar .stNumberInput input {
-        color: #e2e8f0;
+        color: #1a1a1a;
         background-color: transparent;
         border: none;
+        font-size: 1rem;
+    }
+    .sidebar .stTextInput input:focus, .sidebar .stSelectbox select:focus, .sidebar .stNumberInput input:focus {
+        outline: none;
+        border-color: #2563eb;
     }
     .stButton>button {
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
         color: white;
         border: none;
-        border-radius: 10px;
-        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        padding: 0.9rem 2.5rem;
         font-weight: 600;
-        font-size: 1rem;
-        transition: transform 0.2s, box-shadow 0.2s;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
     }
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+        background: linear-gradient(90deg, #1d4ed8, #2563eb);
     }
     .vehicle-info {
-        background-color: #2d3748;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        margin-bottom: 2rem;
-        border: 1px solid #4b5563;
+        background-color: #ffffff;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2.5rem;
+        border: 1px solid #e5e7eb;
+        transition: transform 0.3s;
+    }
+    .vehicle-info:hover {
+        transform: translateY(-4px);
     }
     .vehicle-row {
         display: grid;
-        grid-template-columns: repeat(7, minmax(130px, 1fr));
-        gap: 2.5rem;
-        font-size: 1rem;
-        color: #e2e8f0;
+        grid-template-columns: repeat(7, minmax(140px, 1fr));
+        gap: 3rem;
+        font-size: 1.05rem;
+        color: #1a1a1a;
+        font-weight: 500;
     }
     .vehicle-row div {
         white-space: nowrap;
@@ -68,109 +83,136 @@ st.markdown("""
         text-overflow: ellipsis;
     }
     .lease-details {
-        background-color: #2d3748;
-        padding: 2.5rem;
-        border-radius: 14px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        margin-top: 2rem;
-        border: 1px solid #4b5563;
+        background-color: #ffffff;
+        padding: 3rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+        margin-top: 2.5rem;
+        border: 1px solid #e5e7eb;
+        transition: transform 0.3s;
+    }
+    .lease-details:hover {
+        transform: translateY(-4px);
     }
     .error {
-        color: #fef2f2;
+        color: #7f1d1d;
         font-weight: 600;
-        background-color: #7f1d1d;
-        padding: 1.25rem;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        background-color: #fef2f2;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid #fee2e2;
     }
     h1 {
-        color: #60a5fa;
-        font-size: 2.5rem;
+        color: #1e40af;
+        font-size: 2.75rem;
         font-weight: 800;
+        margin-bottom: 2.5rem;
+        letter-spacing: -0.025rem;
+        text-align: center;
+    }
+    h3 {
+        color: #1e40af;
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin-top: 3rem;
+        margin-bottom: 2rem;
+        letter-spacing: -0.015rem;
+    }
+    .metric-label {
+        font-size: 1rem;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+    }
+    .metric-value {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 1.75rem;
+        letter-spacing: -0.025rem;
+    }
+    .option-panel {
+        background-color: #f7f9fc;
+        padding: 2.5rem;
+        border-radius: 14px;
+        margin-top: 2.5rem;
+        display: flex;
+        gap: 2.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    }
+    .option-panel .stToggle, .option-panel .stNumberInput {
+        margin: 1rem 0;
+        color: #1a1a1a;
+    }
+    .option-panel .stNumberInput input {
+        background-color: #ffffff;
+        color: #1a1a1a;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+    }
+    .mileage-header {
+        text-align: center;
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #1e40af;
         margin-bottom: 2rem;
         text-transform: uppercase;
         letter-spacing: 0.05rem;
     }
-    h3 {
-        color: #60a5fa;
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin-top: 2.5rem;
-        margin-bottom: 1.5rem;
-    }
-    .metric-label {
-        font-size: 0.95rem;
-        color: #9ca3af;
-        font-weight: 500;
-        margin-bottom: 0.6rem;
-        text-transform: uppercase;
-    }
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #e2e8f0;
-        margin-bottom: 1.5rem;
-    }
-    .option-panel {
-        background-color: #374151;
-        padding: 2rem;
-        border-radius: 12px;
-        margin-top: 2rem;
-        display: flex;
-        gap: 2rem;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        border: 1px solid #4b5563;
-    }
-    .option-panel .stToggle, .option-panel .stNumberInput {
-        margin: 0.8rem 0;
-        color: #e2e8f0;
-    }
-    .option-panel .stNumberInput input {
-        background-color: #2d3748;
-        color: #e2e8f0;
-        border-radius: 8px;
-    }
-    .mileage-header {
-        text-align: center;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #60a5fa;
-        margin-bottom: 1.5rem;
-        text-transform: uppercase;
-    }
     .stExpander {
-        border: 1px solid #4b5563;
-        border-radius: 10px;
-        background-color: #2d3748;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background-color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         transition: all 0.3s;
     }
     .stExpander summary {
         font-weight: 600;
-        color: #3b82f6;
-        padding: 1rem;
+        color: #2563eb;
+        padding: 1.25rem;
         cursor: pointer;
+        border-radius: 12px;
     }
     .stExpander summary:hover {
-        background-color: #374151;
+        background-color: #f7f9fc;
     }
     .sidebar .stHeader {
-        color: #60a5fa;
-        font-size: 1.75rem;
+        color: #1e40af;
+        font-size: 1.875rem;
         font-weight: 700;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
         text-transform: uppercase;
+        letter-spacing: 0.05rem;
     }
     ::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
     ::-webkit-scrollbar-track {
-        background: #2d3748;
+        background: #f7f9fc;
+        border-radius: 5px;
     }
     ::-webkit-scrollbar-thumb {
-        background: #60a5fa;
-        border-radius: 4px;
+        background: #2563eb;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #1d4ed8;
+    }
+    @media (max-width: 768px) {
+        .vehicle-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        .lease-details div {
+            grid-template-columns: 1fr !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -181,11 +223,11 @@ county_rates = pd.read_csv("County_Tax_Rates.csv")
 
 with st.sidebar:
     st.header("Lease Parameters")
-    vin_input = st.text_input("Enter VIN:", value="")
-    selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
+    vin_input = st.text_input("Enter VIN:", value="", placeholder="Enter 17-digit VIN")
+    selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)], help="Select credit tier for lease terms")
     county_column = county_rates.columns[0]
-    selected_county = st.selectbox("Select County:", county_rates[county_column])
-    money_down = st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
+    selected_county = st.selectbox("Select County:", county_rates[county_column], help="Select county for tax rate")
+    money_down = st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0, help="Enter down payment amount")
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -291,7 +333,7 @@ if vin_input:
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3.5rem;">
                                         <div>
                                             <p class="metric-label">📈 Mileage</p>
                                             <p class="metric-value">{mileage:,} mi/year</p>
