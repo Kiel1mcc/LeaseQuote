@@ -297,13 +297,11 @@ if vin_input:
 
                 st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
                 cols = st.columns([1] + [1] * len(mileage_options))
-                for i, mileage in enumerate([None] + mileage_options):
-                    if i == 0:
-                        cols[i].markdown(f"<div class='lease-term'></div>", unsafe_allow_html=True)
-                    else:
-                        cols[i].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
+                cols[0].markdown(f"<div class='lease-term'>{rows_for_term.keys()[0]} Mo</div>", unsafe_allow_html=True)  # Start with first term
+                for i, mileage in enumerate(mileage_options, 1):
+                    cols[i].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
 
-                for term in rows_for_term:
+                for term in list(rows_for_term.keys())[1:]:  # Skip the first term already placed
                     row_group = rows_for_term[term]
                     cols = st.columns([1] + [1] * len(mileage_options))
                     cols[0].markdown(f"<div class='lease-term'>{term} Mo</div>", unsafe_allow_html=True)
