@@ -36,32 +36,34 @@ st.markdown("""
 
 # rest of the app unchanged from your version until just this part
 
-st.markdown(f"""
-<div class="lease-details">
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
-        <div>
-            <p class="metric-label">📈 Mileage</p>
-            <p class="metric-value">{mileage:,} mi/year</p>
+title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
+with st.expander(title, key=f"expander_{term}_{mileage}"):
+    st.markdown(f"""
+    <div class="lease-details">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+            <div>
+                <p class="metric-label">📈 Mileage</p>
+                <p class="metric-value">{mileage:,} mi/year</p>
+            </div>
+            <div>
+                <p class="metric-label">💰 Money Factor</p>
+                <p class="metric-value">{mf:.5f}</p>
+            </div>
+            <div>
+                <p class="metric-label">📉 Residual Value</p>
+                <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
+            </div>
+            <div>
+                <p class="metric-label">📆 Monthly Payment</p>
+                <p class="metric-value">{payment_calc['Monthly Payment']}</p>
+            </div>
         </div>
-        <div>
-            <p class="metric-label">💰 Money Factor</p>
-            <p class="metric-value">{mf:.5f}</p>
-        </div>
-        <div>
-            <p class="metric-label">📉 Residual Value</p>
-            <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-        </div>
-        <div>
-            <p class="metric-label">📆 Monthly Payment</p>
-            <p class="metric-value">{payment_calc['Monthly Payment']}</p>
+        <div class="option-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>{st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")}</div>
+                <div>{st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")}</div>
+                <div>{st.number_input("Down Payment ($)", value=custom_cash, step=100.0, key=f"cash_input_{term}_{mileage}")}</div>
+            </div>
         </div>
     </div>
-    <div class="option-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>{st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")}</div>
-            <div>{st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")}</div>
-            <div>{st.number_input("Down Payment ($)", value=custom_cash, step=100.0, key=f"cash_input_{term}_{mileage}")}</div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
