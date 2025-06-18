@@ -136,7 +136,13 @@ if vin_input:
                             tau=tax_rate
                         )
 
-                        initial_monthly_payment = float(payment_calc.get('Monthly Payment', '$0.00').replace("$", "").replace(",", ""))
+                        monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
+                        if isinstance(monthly_raw, str):
+                            cleaned = monthly_raw.replace("$", "").replace(",", "")
+                        else:
+                            cleaned = monthly_raw
+                        initial_monthly_payment = float(cleaned)
+
                         try:
                             title = f"Monthly Payment (w/ tax): ${initial_monthly_payment:,.2f}"
                         except:
