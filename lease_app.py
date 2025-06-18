@@ -273,7 +273,29 @@ if submit_button and vin_input:
                             else:
                                 adjusted_residual = base_residual
 
-                            with st.expander(f"Monthly Payment (w/ tax): {payment_calc['Monthly Payment']}", expanded=False) as expander:
+                            # Pre-compute initial payment for expander label
+                            initial_selling_price = float(msrp)
+                            initial_apply_markup = st.session_state.default_apply_markup
+                            initial_mf = float(row[mf_col]) + (0.0004 if initial_apply_markup else 0.0)
+                            initial_apply_cash = st.session_state.default_apply_cash
+                            initial_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                            initial_total_ccr = money_down + (initial_cash if initial_apply_cash else 0.0)
+                            initial_residual_value = round(float(msrp) * adjusted_residual, 2)
+                            initial_payment_calc = calculate_base_and_monthly_payment(
+                                S=initial_selling_price,
+                                RES=initial_residual_value,
+                                W=term,
+                                F=initial_mf,
+                                M=962.50,
+                                Q=0,
+                                B=initial_total_ccr,
+                                K=0,
+                                U=0,
+                                tau=tax_rate
+                            )
+                            initial_monthly_payment = initial_payment_calc['Monthly Payment']
+
+                            with st.expander(f"Monthly Payment (w/ tax): {initial_monthly_payment}", expanded=False) as expander:
                                 selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
                                 apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
                                 mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
