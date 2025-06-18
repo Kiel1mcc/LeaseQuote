@@ -111,7 +111,13 @@ if vin_input:
                             st.markdown(f'<div class="{markup_class}">', unsafe_allow_html=True)
                             apply_markup = st.toggle(markup_label, value=markup_state, key=f"mf_markup_{term}_{mileage}")
                             st.markdown('</div>', unsafe_allow_html=True)
-                        apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"apply_cash_{term}_{mileage}")
+                        lease_cash_state = st.session_state.get(f"apply_cash_{term}_{mileage}", False)
+                        lease_cash_label = "Lease Cash Applied" if lease_cash_state else "Lease Cash Removed"
+                        lease_cash_class = "toggle-green" if lease_cash_state else "toggle-red"
+                        with st.container():
+                            st.markdown(f'<div class="{lease_cash_class}">', unsafe_allow_html=True)
+                            apply_cash = st.toggle(lease_cash_label, value=lease_cash_state, key=f"apply_cash_{term}_{mileage}")
+                            st.markdown('</div>', unsafe_allow_html=True)
                         money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
 
                         mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
