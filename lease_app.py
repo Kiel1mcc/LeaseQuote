@@ -322,7 +322,37 @@ if vin_input:
                         total_ccr = money_down + (lease_cash if apply_cash else 0.0)
 
                         with cols[i + 1]:
-                            monthly_placeholder = st.empty()
+    monthly_placeholder = st.empty()
+
+    with st.expander("View Details"):
+        selling_price_adjusted = st.number_input(
+            "Selling Price ($)",
+            min_value=0.0,
+            value=float(msrp),
+            step=100.0,
+            key=f"selling_price_{term}_{mileage}"
+        )
+
+        residual_value = round(selling_price_adjusted * adjusted_residual, 2)
+        payment_calc = calculate_base_and_monthly_payment(
+            S=selling_price_adjusted,
+            RES=residual_value,
+            W=term,
+            F=mf,
+            M=962.50,
+            Q=0,
+            B=total_ccr,
+            K=0,
+            U=0,
+            tau=tax_rate
+        )
+
+        monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
+        cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
+        initial_monthly_payment = float(cleaned)
+        title = f"${initial_monthly_payment:,.2f}"
+
+        monthly_placeholder.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
 
     with st.expander("View Details"):
         selling_price_adjusted = st.number_input(
@@ -358,34 +388,5 @@ if vin_input:
 
 
 
-                            with st.expander("View Details"):
-                                st.markdown(f"""
-                                <div class=\"lease-details\">
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Mileage</p>
-                                        <p class=\"metric-value\">{mileage:,} mi/year</p>
-                                    </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Money Factor</p>
-                                        <p class=\"metric-value\">{mf:.5f}</p>
-                                    </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Residual Value</p>
-                                        <p class=\"metric-value\">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-                                    </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Monthly Payment</p>
-                                        <p class=\"metric-value\">{payment_calc['Monthly Payment']}</p>
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-
-                                st.markdown("<div class=\"option-panel\">", unsafe_allow_html=True)
-                                col1, col2 = st.columns([1, 1])
-                                with col1:
-                                    st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}", disabled=True)
-                                with col2:
-                                    st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
-                                st.number_input("Down Payment ($)", value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}", disabled=True)
-                                st.markdown("</div>", unsafe_allow_html=True)
+                            
                 st.markdown("</div>", unsafe_allow_html=True)
