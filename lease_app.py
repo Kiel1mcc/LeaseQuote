@@ -39,9 +39,7 @@ with st.sidebar:
     show_msrp = st.checkbox("Show MSRP", value=True)
     show_mileage = st.checkbox("Show Mileage", value=True)
 
-    if vin_input and not vin_data.empty:
-        st.markdown(f"**MSRP:** ${msrp:,.2f}")
-        st.markdown(f"**Mileage Options:** 10K, 12K, 15K mi/year")
+    
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
