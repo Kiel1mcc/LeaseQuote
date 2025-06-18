@@ -82,17 +82,47 @@ st.markdown("""
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .lease-options-table {
+        display: grid;
+        grid-template-columns: 1fr repeat(3, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    .lease-term, .mileage-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        padding: 1rem;
+        text-align: center;
+    }
+    .lease-term {
+        color: #1a1a1a;
+    }
+    .mileage-header {
+        color: #2563eb;
+        background-color: #f7f9fc;
+        border-radius: 8px;
+    }
+    .payment-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        text-align: center;
+        padding: 1rem;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+    }
+    .payment-value:hover {
+        transform: translateY(-2px);
+    }
     .lease-details {
         background-color: #ffffff;
-        padding: 3rem;
-        border-radius: 16px;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-        margin-top: 2.5rem;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        margin-top: 1rem;
         border: 1px solid #e5e7eb;
-        transition: transform 0.3s;
-    }
-    .lease-details:hover {
-        transform: translateY(-4px);
     }
     .error {
         color: #7f1d1d;
@@ -127,25 +157,30 @@ st.markdown("""
         margin-bottom: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .metric-value {
-        font-size: 2.25rem;
-        font-weight: 800;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 1.75rem;
-        letter-spacing: -0.025rem;
+        margin-bottom: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .option-panel {
         background-color: #f7f9fc;
-        padding: 2.5rem;
-        border-radius: 14px;
-        margin-top: 2.5rem;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-top: 1.5rem;
         display: flex;
-        gap: 2.5rem;
+        gap: 2rem;
         flex-wrap: wrap;
         justify-content: flex-start;
         border: 1px solid #e5e7eb;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
     .option-panel .stToggle, .option-panel .stNumberInput {
         margin: 1rem 0;
@@ -154,31 +189,22 @@ st.markdown("""
     .option-panel .stNumberInput input {
         background-color: #ffffff;
         color: #1a1a1a;
-        border-radius: 10px;
+        border-radius: 8px;
         border: 1px solid #d1d5db;
-    }
-    .mileage-header {
-        text-align: center;
-        font-size: 1.375rem;
-        font-weight: 700;
-        color: #1e40af;
-        margin-bottom: 2rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05rem;
     }
     .stExpander {
         border: 1px solid #e5e7eb;
-        border-radius: 12px;
+        border-radius: 8px;
         background-color: #ffffff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        transition: all 0.2s;
     }
     .stExpander summary {
         font-weight: 600;
         color: #2563eb;
-        padding: 1.25rem;
+        padding: 1rem;
         cursor: pointer;
-        border-radius: 12px;
+        border-radius: 8px;
     }
     .stExpander summary:hover {
         background-color: #f7f9fc;
@@ -209,6 +235,9 @@ st.markdown("""
         .vehicle-row {
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
+        }
+        .lease-options-table {
+            grid-template-columns: 1fr repeat(3, minmax(120px, 1fr));
         }
         .lease-details div {
             grid-template-columns: 1fr !important;
@@ -282,15 +311,16 @@ if vin_input:
             else:
                 rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())}
 
-                header_cols = st.columns(len(mileage_options) + 1)
-                header_cols[0].markdown("#### Term")
+                st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
+                cols = st.columns([1] + [1] * len(mileage_options))
+                cols[0].markdown("<div class='lease-term'>Term</div>", unsafe_allow_html=True)
                 for i, mileage in enumerate(mileage_options):
-                    header_cols[i+1].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
+                    cols[i + 1].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
 
                 for term in rows_for_term:
                     row_group = rows_for_term[term]
-                    cols = st.columns(len(mileage_options) + 1)
-                    cols[0].markdown(f"**{term} Mo**")
+                    cols = st.columns([1] + [1] * len(mileage_options))
+                    cols[0].markdown(f"<div class='lease-term'>{term} Mo</div>", unsafe_allow_html=True)
 
                     for i, mileage in enumerate(mileage_options):
                         row = row_group.iloc[0]
@@ -328,26 +358,26 @@ if vin_input:
 
                         title = f"${initial_monthly_payment:,.2f}"
 
-                        with cols[i+1]:
-                            st.markdown(f"<div class='metric-value'>{title}</div>", unsafe_allow_html=True)
+                        with cols[i + 1]:
+                            st.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3.5rem;">
                                         <div>
-                                            <p class="metric-label">📈 Mileage</p>
+                                            <p class="metric-label">Mileage</p>
                                             <p class="metric-value">{mileage:,} mi/year</p>
                                         </div>
                                         <div>
-                                            <p class="metric-label">💰 Money Factor</p>
+                                            <p class="metric-label">Money Factor</p>
                                             <p class="metric-value">{mf:.5f}</p>
                                         </div>
                                         <div>
-                                            <p class="metric-label">📉 Residual Value</p>
+                                            <p class="metric-label">Residual Value</p>
                                             <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
                                         </div>
                                         <div>
-                                            <p class="metric-label">📆 Monthly Payment</p>
+                                            <p class="metric-label">Monthly Payment</p>
                                             <p class="metric-value">{payment_calc['Monthly Payment']}</p>
                                         </div>
                                     </div>
@@ -362,3 +392,4 @@ if vin_input:
                                     st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
                                 st.number_input("Down Payment ($)", value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}", disabled=True)
                                 st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
