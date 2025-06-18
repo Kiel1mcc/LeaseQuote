@@ -180,11 +180,18 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
     .stExpander summary {
-        color: #ffffff;
+        color: #2563eb;
         background: #e0e7ff;
+        font-weight: 600;
+        padding: 1rem;
+        text-align: center;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s, background 0.3s;
     }
     .stExpander summary:hover {
         background: #c7d2fe;
+        transform: translateY(-2px);
     }
     .sidebar .stHeader {
         color: #1e40af;
