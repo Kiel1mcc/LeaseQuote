@@ -36,7 +36,11 @@ st.markdown("""
 
 # rest of the app unchanged from your version until just this part
 
-title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
+try:
+    title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
+except:
+    title = "Monthly Payment"
+
 with st.expander(title, key=f"expander_{term}_{mileage}"):
     st.markdown(f"""
     <div class="lease-details">
