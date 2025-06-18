@@ -36,14 +36,8 @@ with st.sidebar:
     show_residual = st.checkbox("Show Residual Value", value=True)
     show_monthly = st.checkbox("Show Monthly Payment", value=True)
 
-    with st.container():
-        selected_display_options = st.multiselect(
-            "Select details to show in View Details:",
-            options=["MSRP", "Mileage"],
-            default=["MSRP", "Mileage"]
-        )
-        show_msrp = "MSRP" in selected_display_options
-        show_mileage = "Mileage" in selected_display_options
+    show_msrp = st.checkbox("Show MSRP", value=True)
+    show_mileage = st.checkbox("Show Mileage", value=True)
 
     if vin_input and not vin_data.empty:
         st.markdown(f"**MSRP:** ${msrp:,.2f}")
