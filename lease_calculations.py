@@ -22,11 +22,11 @@ def calculate_base_and_monthly_payment(S, RES, W, F, M, Q, B, K, U, tau):
     monthly_payment = round(AMD + ALC, 2)
 
     return {
-        "Cap Cost Reduction": f"${round(CCR, 2):,.2f}",
-        "Total Advance": f"${TA:,.2f}",
-        "Average Monthly Depreciation": f"${round(AMD, 2):,.2f}",
-        "Average Lease Charge": f"${round(ALC, 2):,.2f}",
-        "Base Payment": f"${BP:,.2f}",
-        "Monthly Payment": f"${monthly_payment:,.2f}",
-        "Total Sales Tax": f"${ST:,.2f}"
+        "Cap Cost Reduction": round(CCR, 2),
+        "Total Advance": TA,
+        "Average Monthly Depreciation": round(AMD, 2),
+        "Average Lease Charge": round(ALC, 2),
+        "Base Payment": BP,
+        "Monthly Payment": monthly_payment,
+        "Total Sales Tax": round(ST, 2),
     }

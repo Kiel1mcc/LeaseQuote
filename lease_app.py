@@ -284,7 +284,9 @@ if st.session_state.submitted and st.session_state.vin_input:
                         with col:
                             row = matching_programs[matching_programs[term_col] == term].iloc[0]
                             mf_col = f"Tier {tier_num}"
-                            if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                            invalid_mf = pd.isna(row[mf_col]) or str(row[mf_col]).strip() in ('', '-')
+                            invalid_res = pd.isna(row['Residual']) or str(row['Residual']).strip() in ('', '-')
+                            if mf_col not in row or 'Residual' not in row or invalid_mf or invalid_res:
                                 st.info("This mileage and term combination is not available on the selected model.")
                                 continue
 
@@ -316,10 +318,11 @@ if st.session_state.submitted and st.session_state.vin_input:
                                 U=0,
                                 tau=tax_rate
                             )
-                            initial_monthly_payment = initial_payment_calc['Monthly Payment']
+
+                            initial_monthly_payment = initial_payment_calc["Monthly Payment"]
 
                             with st.expander(
-                                f"Monthly Payment (w/ tax): {initial_monthly_payment}",
+                                f"Monthly Payment (w/ tax): ${initial_monthly_payment:,.2f}",
                                 key=f"expander_{term}_{mileage}"
                             ) as expander:
                                 selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
@@ -376,7 +379,8 @@ if st.session_state.submitted and st.session_state.vin_input:
                                     "Money Factor": f"{mf:.5f}",
                                     "Total CCR": f"${total_ccr:,.2f}",
                                     "Tax Rate": f"{tax_rate:.2%}",
-                                    "Base Payment": f"${payment_calc['Base Payment']:,.2f}"
+                                    "Base Payment": f"${payment_calc['Base Payment']:,.2f}",
+                                    "Monthly Payment": f"${payment_calc['Monthly Payment']:,.2f}"
                                 })
 elif submit_button and not st.session_state.vin_input:
     st.error("Please enter a VIN before submitting.")
