@@ -40,11 +40,8 @@ with st.sidebar:
     show_money_factor = st.checkbox("Show Money Factor", value=True)
     show_residual = st.checkbox("Show Residual Value", value=True)
     show_monthly = st.checkbox("Show Monthly Payment", value=True)
-
     show_msrp = st.checkbox("Show MSRP", value=True)
     show_mileage = st.checkbox("Show Mileage", value=True)
-
-    
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -81,7 +78,7 @@ if vin_input:
 
         mileage_options = [10000, 12000, 15000]
         term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
-        rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())}
+        rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())]
 
         st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
         header_cols = st.columns([1] + [1] * len(mileage_options))
@@ -99,7 +96,7 @@ if vin_input:
                 base_residual = float(row['Residual'])
                 adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
                 mf_col = f"Tier {tier_num}"
-                lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                lease_cash = float(row_group.iloc[0]["LeaseCash"]) if "LeaseCash" in row_group.columns else 0.0
 
                 with row_cols[i + 1]:
                     monthly_placeholder = st.empty()
@@ -111,14 +108,17 @@ if vin_input:
                             st.markdown(f'<div class="{markup_class}">', unsafe_allow_html=True)
                             apply_markup = st.toggle(markup_label, value=markup_state, key=f"mf_markup_{term}_{mileage}")
                             st.markdown('</div>', unsafe_allow_html=True)
+
                         apply_cash = st.toggle("Lease Cash Applied", value=False, key=f"apply_cash_{term}_{mileage}")
                         lease_cash_label = "Lease Cash Applied" if apply_cash else "Lease Cash Removed"
                         lease_cash_class = "toggle-green" if apply_cash else "toggle-red"
                         st.markdown(f'<div class="{lease_cash_class}"><p>{lease_cash_label}</p></div>', unsafe_allow_html=True)
+
                         money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
 
                         mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
                         total_ccr = money_down_local + (lease_cash if apply_cash else 0.0)
+
                         selling_price = st.number_input(
                             "Selling Price ($)",
                             min_value=0.0,
@@ -126,6 +126,7 @@ if vin_input:
                             step=100.0,
                             key=f"selling_price_{term}_{mileage}"
                         )
+
                         residual_value = round(msrp * adjusted_residual, 2)
                         payment_calc = calculate_base_and_monthly_payment(
                             S=selling_price,
@@ -139,11 +140,11 @@ if vin_input:
                             U=0,
                             tau=tax_rate
                         )
+
                         monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
                         cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
                         initial_monthly_payment = float(cleaned)
                         title = f"${initial_monthly_payment:,.2f}"
-
                         monthly_placeholder.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
 
                         st.markdown(f"""
