@@ -138,19 +138,21 @@ st.markdown("""
     .stToggle input[type="checkbox"]:checked::before {
         transform: translateX(20px);
     }
-    /* New styling for lease option boxes */
-    .lease-option-box {
-        background-color: #ffffff;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    /* Styling for expander header */
+    .st-expander {
         border: 1px solid #e2e8f0;
+        border-radius: 8px;
         margin-bottom: 1rem;
     }
-    .lease-option-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
+    .st-expander div[role="button"] {
+        background-color: #ffffff;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        color: #1e3a8a;
+    }
+    .st-expander div[role="region"] {
+        padding: 1rem;
+        background-color: #f9fafb;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -294,32 +296,29 @@ if submit_button and vin_input:
                                 U=0,
                                 tau=tax_rate
                             )
-                            st.markdown(f"""
-                            <div class="lease-option-box">
-                                <div class="lease-option-grid">
-                                    <div>
-                                        <p class="metric-label">Mileage</p>
-                                        <p class="metric-value">{mileage:,} mi/year</p>
-                                    </div>
-                                    <div>
-                                        <p class="metric-label">Money Factor</p>
-                                        <p class="metric-value">{mf:.5f}</p>
-                                    </div>
-                                    <div>
-                                        <p class="metric-label">Residual Value</p>
-                                        <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-                                    </div>
-                                    <div>
-                                        <p class="metric-label">Monthly Payment (w/ tax)</p>
-                                        <p class="metric-value">{payment_calc['Monthly Payment']}</p>
-                                    </div>
-                                    <div>
-                                        <p class="metric-label">Down Payment</p>
-                                        <p class="metric-value">${money_down:,.2f}</p>
+                            with st.expander(f"Monthly Payment (w/ tax): {payment_calc['Monthly Payment']}", expanded=False):
+                                st.markdown(f"""
+                                <div class="lease-details">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                                        <div>
+                                            <p class="metric-label">Mileage</p>
+                                            <p class="metric-value">{mileage:,} mi/year</p>
+                                        </div>
+                                        <div>
+                                            <p class="metric-label">Money Factor</p>
+                                            <p class="metric-value">{mf:.5f}</p>
+                                        </div>
+                                        <div>
+                                            <p class="metric-label">Residual Value</p>
+                                            <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
+                                        </div>
+                                        <div>
+                                            <p class="metric-label">Down Payment</p>
+                                            <p class="metric-value">${money_down:,.2f}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
                             if st.session_state.debug_mode:
                                 st.markdown("**Debug Info**")
                                 st.write({
