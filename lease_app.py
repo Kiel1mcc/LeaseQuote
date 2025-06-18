@@ -105,12 +105,12 @@ if vin_input:
                     monthly_placeholder = st.empty()
                     with st.expander("View Details"):
                         markup_state = st.session_state.get(f"mf_markup_{term}_{mileage}", True)
-markup_label = "Markup Applied" if markup_state else "Markup Removed"
-markup_class = "toggle-green" if markup_state else "toggle-red"
-with st.container():
-    st.markdown(f'<div class="{markup_class}">', unsafe_allow_html=True)
-    apply_markup = st.toggle(markup_label, value=True, key=f"mf_markup_{term}_{mileage}")
-    st.markdown('</div>', unsafe_allow_html=True)
+                        markup_label = "Markup Applied" if markup_state else "Markup Removed"
+                        markup_class = "toggle-green" if markup_state else "toggle-red"
+                        with st.container():
+                            st.markdown(f'<div class="{markup_class}">', unsafe_allow_html=True)
+                            apply_markup = st.toggle(markup_label, value=markup_state, key=f"mf_markup_{term}_{mileage}")
+                            st.markdown('</div>', unsafe_allow_html=True)
                         apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"apply_cash_{term}_{mileage}")
                         money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
 
