@@ -78,7 +78,7 @@ if vin_input:
 
         mileage_options = [10000, 12000, 15000]
         term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
-        rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())]
+        rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())}
 
         st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
         header_cols = st.columns([1] + [1] * len(mileage_options))
