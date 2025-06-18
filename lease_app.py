@@ -138,6 +138,20 @@ st.markdown("""
     .stToggle input[type="checkbox"]:checked::before {
         transform: translateX(20px);
     }
+    /* New styling for lease option boxes */
+    .lease-option-box {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+    .lease-option-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -162,6 +176,10 @@ with st.sidebar:
     county_column = county_rates.columns[0]
     selected_county = st.selectbox("Select County:", county_rates[county_column])
     money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
+    st.markdown("### Submit")
+    submit_button = st.button("Submit")
+    if submit_button:
+        st.session_state.sidebar_open = False
     st.markdown("### Display Settings")
     default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="toggle_default_apply_cash")
     if 'default_apply_cash_set' not in st.session_state:
@@ -176,7 +194,11 @@ with st.sidebar:
         st.session_state.debug_mode = debug_mode
         st.session_state.debug_mode_set = True
     st.markdown("*Click Submit to calculate lease options.*")
-    submit_button = st.button("Submit")
+
+# Control sidebar visibility
+if 'sidebar_open' not in st.session_state:
+    st.session_state.sidebar_open = True
+st.sidebar.expanded = st.session_state.sidebar_open
 
 if submit_button and vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -273,8 +295,8 @@ if submit_button and vin_input:
                                 tau=tax_rate
                             )
                             st.markdown(f"""
-                            <div class="lease-details">
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                            <div class="lease-option-box">
+                                <div class="lease-option-grid">
                                     <div>
                                         <p class="metric-label">Mileage</p>
                                         <p class="metric-value">{mileage:,} mi/year</p>
