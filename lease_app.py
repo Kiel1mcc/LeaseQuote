@@ -17,19 +17,98 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
 st.markdown("""
 <style>
-    .main {background-color: #f9f9f9;}
-    .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {margin-bottom: 1rem;}
-    .stButton>button {background-color: #0066cc; color: white; border-radius: 5px;}
-    .stButton>button:hover {background-color: #0055b3;}
-    .vehicle-info {background-color: #e6f0fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;}
-    .vehicle-row {display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 1.5rem; font-size: 0.95rem;}
-    .vehicle-row div {white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-    .lease-details {background-color: #ffffff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem;}
-    .error {color: #d32f2f; font-weight: bold;}
-    h1 {color: #003087; font-size: 2rem;}
-    h3 {color: #003087; margin-top: 1.5rem;}
-    .metric-label {font-size: 0.9rem; color: #555;}
-    .metric-value {font-size: 1.1rem; font-weight: bold; color: #003087;}
+    .main {
+        background-color: #f8fafc;
+        padding: 2rem;
+    }
+    .sidebar .sidebar-content {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
+        margin-bottom: 1.5rem;
+        border-radius: 6px;
+    }
+    .stButton>button {
+        background-color: #1e3a8a;
+        color: white;
+        border-radius: 6px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    .stButton>button:hover {
+        background-color: #1e40af;
+    }
+    .vehicle-info {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+    .vehicle-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(100px, 1fr));
+        gap: 2rem;
+        font-size: 0.95rem;
+        color: #1f2937;
+    }
+    .vehicle-row div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .lease-details {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+    .error {
+        color: #b91c1c;
+        font-weight: 600;
+        background-color: #fef2f2;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    h1 {
+        color: #1e3a8a;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    h3 {
+        color: #1e3a8a;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .metric-label {
+        font-size: 0.85rem;
+        color: #4b5563;
+        margin-bottom: 0.25rem;
+    }
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e3a8a;
+    }
+    .stNumberInput input, .stSelectbox select, .stTextInput input {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.5rem;
+    }
+    .stToggle label {
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -143,7 +222,7 @@ if vin_input:
                             )
                             st.markdown(f"""
                             <div class="lease-details">
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
                                     <div>
                                         <p class="metric-label">Mileage</p>
                                         <p class="metric-value">{mileage:,} mi/year</p>
