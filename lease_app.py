@@ -30,23 +30,19 @@ st.markdown("""
     h3 {color: #003087; margin-top: 1.5rem;}
     .metric-label {font-size: 0.85rem; color: #777; margin-bottom: 0.25rem;}
     .metric-value {font-size: 1.2rem; font-weight: 600; color: #222; margin-bottom: 1rem;}
-    .option-panel {background-color: #f0f4f8; padding: 1.25rem; border-radius: 6px; margin-top: 1rem;}
+    .option-panel {background-color: #f0f4f8; padding: 1.25rem; border-radius: 6px; margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;}
+    .option-panel .stToggle, .option-panel .stNumberInput {margin: 0.5rem 0;}
 </style>
 """, unsafe_allow_html=True)
 
-# rest of the app unchanged from your version until just this part
-
-# Initialize variables used in the expander key and markup to avoid NameErrors
-# In the full application these values would normally come from user input or
-# previously loaded data.  Here we assign reasonable defaults so the example
-# Streamlit snippet can run without errors.
+# Initialize variables
 term = 36
 mileage = 12000
 initial_monthly_payment = 0.0
 mf = 0.0
 residual_value = 0.0
 adjusted_residual = 0.0
-payment_calc = {"Monthly Payment": 0.0}
+payment_calc = {"Monthly Payment": "$0.00"}
 apply_markup = False
 apply_cash = False
 custom_cash = 0.0
@@ -56,7 +52,7 @@ try:
 except:
     title = "Monthly Payment"
 
-with st.expander(title):
+with st.expander(title, key=f"expander_{term}_{mileage}"):
     st.markdown(f"""
     <div class="lease-details">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
@@ -77,12 +73,14 @@ with st.expander(title):
                 <p class="metric-value">{payment_calc['Monthly Payment']}</p>
             </div>
         </div>
-        <div class="option-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>{st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")}</div>
-                <div>{st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")}</div>
-                <div>{st.number_input("Down Payment ($)", value=custom_cash, step=100.0, key=f"cash_input_{term}_{mileage}")}</div>
-            </div>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    with st.container():
+        col1, col2, col3 = st.columns([1, 1, 2])
+        with col1:
+            st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")
+        with col2:
+            st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")
+        with col3:
+            st.number_input("Down Payment ($)", value=custom_cash, step=100.0, key=f"cash_input_{term}_{mileage}")
