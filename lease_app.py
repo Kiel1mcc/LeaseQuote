@@ -35,7 +35,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize variables
+# User input panel
+with st.sidebar:
+    st.header("Lease Parameters")
+    vin_input = st.text_input("Enter VIN:", value="")
+    selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
+    selected_county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula"])  # Placeholder counties
+    custom_cash = st.number_input("Down Payment ($)", value=0.0, step=100.0)
+
+# Initialize default variables
 term = 36
 mileage = 12000
 initial_monthly_payment = 0.0
@@ -45,14 +53,13 @@ adjusted_residual = 0.0
 payment_calc = {"Monthly Payment": "$0.00"}
 apply_markup = False
 apply_cash = False
-custom_cash = 0.0
 
 try:
     title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
 except:
     title = "Monthly Payment"
 
-with st.expander(title, key=f"expander_{term}_{mileage}"):
+with st.expander(title, expanded=True):
     st.markdown(f"""
     <div class="lease-details">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
@@ -76,11 +83,14 @@ with st.expander(title, key=f"expander_{term}_{mileage}"):
     </div>
     """, unsafe_allow_html=True)
 
-    with st.container():
-        col1, col2, col3 = st.columns([1, 1, 2])
-        with col1:
-            st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")
-        with col2:
-            st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")
-        with col3:
-            st.number_input("Down Payment ($)", value=custom_cash, step=100.0, key=f"cash_input_{term}_{mileage}")
+    st.markdown("""
+    <div class="option-panel">
+    """, unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")
+    with col2:
+        st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")
+    st.markdown("""
+    </div>
+    """, unsafe_allow_html=True)
