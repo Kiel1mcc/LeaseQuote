@@ -273,30 +273,30 @@ if submit_button and vin_input:
                             else:
                                 adjusted_residual = base_residual
 
-                            selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
-                            apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
-                            mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
-                            lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                apply_cash = st.toggle("Apply Lease Cash", value=st.session_state.default_apply_cash, key=f"applycash_{term}_{mileage}")
-                            with col2:
-                                custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
-                            total_ccr = money_down + (custom_cash if apply_cash else 0.0)
-                            residual_value = round(float(msrp) * adjusted_residual, 2)
-                            payment_calc = calculate_base_and_monthly_payment(
-                                S=selling_price,
-                                RES=residual_value,
-                                W=term,
-                                F=mf,
-                                M=962.50,
-                                Q=0,
-                                B=total_ccr,
-                                K=0,
-                                U=0,
-                                tau=tax_rate
-                            )
-                            with st.expander(f"Monthly Payment (w/ tax): {payment_calc['Monthly Payment']}", expanded=False):
+                            with st.expander(f"Monthly Payment (w/ tax): {payment_calc['Monthly Payment']}", expanded=False) as expander:
+                                selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
+                                apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
+                                mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
+                                lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    apply_cash = st.toggle("Apply Lease Cash", value=st.session_state.default_apply_cash, key=f"applycash_{term}_{mileage}")
+                                with col2:
+                                    custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
+                                total_ccr = money_down + (custom_cash if apply_cash else 0.0)
+                                residual_value = round(float(msrp) * adjusted_residual, 2)
+                                payment_calc = calculate_base_and_monthly_payment(
+                                    S=selling_price,
+                                    RES=residual_value,
+                                    W=term,
+                                    F=mf,
+                                    M=962.50,
+                                    Q=0,
+                                    B=total_ccr,
+                                    K=0,
+                                    U=0,
+                                    tau=tax_rate
+                                )
                                 st.markdown(f"""
                                 <div class="lease-details">
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
