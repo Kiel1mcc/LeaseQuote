@@ -132,6 +132,10 @@ if vin_input:
                         st.markdown(f"""
                         <div class="lease-details">
                             <div class="detail-item">
+                                <p class="metric-label">MSRP</p>
+                                <p class="metric-value">${msrp:,.2f}</p>
+                            </div>
+                            <div class="detail-item">
                                 <p class="metric-label">Mileage</p>
                                 <p class="metric-value">{mileage:,} mi/year</p>
                             </div>
