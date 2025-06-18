@@ -27,9 +27,10 @@ st.markdown("""
     h1 {color: #003087; font-size: 2rem;}
     h3 {color: #003087; margin-top: 1.5rem;}
     .metric-label {font-size: 0.85rem; color: #777; margin-bottom: 0.25rem;}
-    .metric-value {font-size: 1.2rem; font-weight: 600; color: #222; margin-bottom: 1rem;}
+    .metric-value {font-size: 1.6rem; font-weight: 700; color: #222; margin-bottom: 1rem;}
     .option-panel {background-color: #f0f4f8; padding: 1.25rem; border-radius: 6px; margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;}
     .option-panel .stToggle, .option-panel .stNumberInput {margin: 0.5rem 0;}
+    .mileage-header {text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,61 +92,62 @@ if vin_input:
             tax_rate = tax_row[rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
+            mileage_options = [10000, 12000, 15000]
             term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
             if not term_col:
                 st.error("Missing LeaseTerm column in the data.")
             else:
-                mileage_options = [10000, 12000, 15000]
-                available_terms = sorted(matching_programs[term_col].dropna().unique())
+                rows_for_term = {term: matching_programs[matching_programs[term_col] == term] for term in sorted(matching_programs[term_col].dropna().unique())}
 
-                for term in available_terms:
-                    st.markdown(f"## {term}-Month Lease Options")
-                    cols = st.columns(len(mileage_options))
+                header_cols = st.columns(len(mileage_options) + 1)
+                header_cols[0].markdown("#### Term")
+                for i, mileage in enumerate(mileage_options):
+                    header_cols[i+1].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
+
+                for term in rows_for_term:
+                    row_group = rows_for_term[term]
+                    cols = st.columns(len(mileage_options) + 1)
+                    cols[0].markdown(f"**{term} Mo**")
 
                     for i, mileage in enumerate(mileage_options):
-                        with cols[i]:
-                            rows_for_term = matching_programs[matching_programs[term_col] == term]
-                            if rows_for_term.empty:
-                                continue
-                            row = rows_for_term.iloc[0]
-                            mf_col = f"Tier {tier_num}"
-                            if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
-                                continue
+                        row = row_group.iloc[0]
+                        mf_col = f"Tier {tier_num}"
+                        if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                            continue
 
-                            base_residual = float(row['Residual'])
-                            adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
+                        base_residual = float(row['Residual'])
+                        adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
 
-                            selling_price = float(msrp)
-                            apply_markup = True
-                            mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
-                            lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                            apply_cash = False
-                            total_ccr = money_down + (lease_cash if apply_cash else 0.0)
-                            residual_value = round(msrp * adjusted_residual, 2)
+                        selling_price = float(msrp)
+                        apply_markup = True
+                        mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
+                        lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                        apply_cash = False
+                        total_ccr = money_down + (lease_cash if apply_cash else 0.0)
+                        residual_value = round(msrp * adjusted_residual, 2)
 
-                            payment_calc = calculate_base_and_monthly_payment(
-                                S=selling_price,
-                                RES=residual_value,
-                                W=term,
-                                F=mf,
-                                M=962.50,
-                                Q=0,
-                                B=total_ccr,
-                                K=0,
-                                U=0,
-                                tau=tax_rate
-                            )
+                        payment_calc = calculate_base_and_monthly_payment(
+                            S=selling_price,
+                            RES=residual_value,
+                            W=term,
+                            F=mf,
+                            M=962.50,
+                            Q=0,
+                            B=total_ccr,
+                            K=0,
+                            U=0,
+                            tau=tax_rate
+                        )
 
-                            monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
-                            cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
-                            initial_monthly_payment = float(cleaned)
+                        monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
+                        cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
+                        initial_monthly_payment = float(cleaned)
 
-                            try:
-                                title = f"${initial_monthly_payment:,.2f}"
-                            except:
-                                title = "$0.00"
+                        title = f"${initial_monthly_payment:,.2f}"
 
-                            with st.expander(f"{mileage:,} mi/year – Monthly: {title}"):
+                        with cols[i+1]:
+                            st.markdown(f"<div class='metric-value'>{title}</div>", unsafe_allow_html=True)
+                            with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
