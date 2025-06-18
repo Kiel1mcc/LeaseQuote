@@ -89,12 +89,14 @@ st.markdown("""
         margin-top: 2.5rem;
         align-items: center;
     }
-    .lease-term, .mileage-header {
+    .lease-term, .mileage-header, .payment-value, .stExpander summary {
         font-size: 1.3rem;
         font-weight: 600;
         padding: 1rem;
         text-align: center;
-        border-radius: 8px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s;
     }
     .lease-term {
         color: #64748b;
@@ -105,15 +107,8 @@ st.markdown("""
         background: #e0e7ff;
     }
     .payment-value {
-        font-size: 1.6rem;
-        font-weight: 700;
         color: #1a1a1a;
-        text-align: center;
-        padding: 1rem;
         background: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s;
     }
     .payment-value:hover {
         transform: translateY(-2px);
@@ -183,17 +178,13 @@ st.markdown("""
         border-radius: 8px;
         background: #ffffff;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-        transition: all 0.2s;
     }
     .stExpander summary {
-        font-weight: 600;
-        color: #2563eb;
-        padding: 0.75rem;
-        cursor: pointer;
-        border-radius: 8px;
+        color: #ffffff;
+        background: #e0e7ff;
     }
     .stExpander summary:hover {
-        background: #f1f5f9;
+        background: #c7d2fe;
     }
     .sidebar .stHeader {
         color: #1e40af;
@@ -299,7 +290,7 @@ if vin_input:
 
                 st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
                 cols = st.columns([1] + [1] * len(mileage_options))
-                cols[0].markdown("<div class='lease-term'>Term</div>", unsafe_allow_html=True)
+                cols[0].markdown(f"<div class='lease-term'>{''}</div>", unsafe_allow_html=True)
                 for i, mileage in enumerate(mileage_options):
                     cols[i + 1].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
 
