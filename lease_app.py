@@ -36,6 +36,21 @@ st.markdown("""
 
 # rest of the app unchanged from your version until just this part
 
+# Initialize variables used in the expander key and markup to avoid NameErrors
+# In the full application these values would normally come from user input or
+# previously loaded data.  Here we assign reasonable defaults so the example
+# Streamlit snippet can run without errors.
+term = 36
+mileage = 12000
+initial_monthly_payment = 0.0
+mf = 0.0
+residual_value = 0.0
+adjusted_residual = 0.0
+payment_calc = {"Monthly Payment": 0.0}
+apply_markup = False
+apply_cash = False
+custom_cash = 0.0
+
 try:
     title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
 except:
