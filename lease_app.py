@@ -35,6 +35,12 @@ with st.sidebar:
     show_money_factor = st.checkbox("Show Money Factor", value=True)
     show_residual = st.checkbox("Show Residual Value", value=True)
     show_monthly = st.checkbox("Show Monthly Payment", value=True)
+    show_msrp = st.checkbox("Show MSRP", value=True)
+    show_mileage = st.checkbox("Show Mileage", value=True)
+
+    if vin_input and not vin_data.empty:
+        st.markdown(f"**MSRP:** ${msrp:,.2f}")
+        st.markdown(f"**Mileage Options:** 10K, 12K, 15K mi/year")
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -129,14 +135,8 @@ if vin_input:
 
                         st.markdown(f"""
                         <div class="lease-details">
-                            <div class="detail-item">
-                                <p class="metric-label">MSRP</p>
-                                <p class="metric-value">${msrp:,.2f}</p>
-                            </div>
-                            <div class="detail-item">
-                                <p class="metric-label">Mileage</p>
-                                <p class="metric-value">{mileage:,} mi/year</p>
-                            </div>
+                            {f'''<div class="detail-item"><p class="metric-label">MSRP</p><p class="metric-value">${msrp:,.2f}</p></div>''' if show_msrp else ''}
+                            {f'''<div class="detail-item"><p class="metric-label">Mileage</p><p class="metric-value">{mileage:,} mi/year</p></div>''' if show_mileage else ''}
                             {f'''<div class="detail-item"><p class="metric-label">Money Factor</p><p class="metric-value">{mf:.5f}</p></div>''' if show_money_factor else ''}
                             {f'''<div class="detail-item"><p class="metric-label">Residual Value</p><p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p></div>''' if show_residual else ''}
                             {f'''<div class="detail-item"><p class="metric-label">Monthly Payment</p><p class="metric-value">{payment_calc['Monthly Payment']}</p></div>''' if show_monthly else ''}
