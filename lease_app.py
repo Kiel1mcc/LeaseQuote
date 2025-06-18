@@ -15,36 +15,52 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
 st.markdown("""
 <style>
-    .main {background-color: #f8fafc; padding: 1rem;}
+    .main {
+        background-color: #1a202c;
+        color: #e2e8f0;
+        padding: 2rem;
+        min-height: 100vh;
+    }
     .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
-        margin-bottom: 1.25rem;
-        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 0.5rem;
+        color: #e2e8f0;
+    }
+    .sidebar .stTextInput input, .sidebar .stSelectbox select, .sidebar .stNumberInput input {
+        color: #e2e8f0;
+        background-color: transparent;
+        border: none;
     }
     .stButton>button {
-        background-color: #1e40af;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
         color: white;
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        transition: background-color 0.2s;
+        border: none;
+        border-radius: 10px;
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .stButton>button:hover {
-        background-color: #1e3a8a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
     }
     .vehicle-info {
-        background-color: #ffffff;
-        padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 1.5rem;
-        border: 1px solid #e2e8f0;
+        background-color: #2d3748;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        margin-bottom: 2rem;
+        border: 1px solid #4b5563;
     }
     .vehicle-row {
         display: grid;
-        grid-template-columns: repeat(7, minmax(120px, 1fr));
-        gap: 2rem;
-        font-size: 0.95rem;
-        color: #1f2937;
+        grid-template-columns: repeat(7, minmax(130px, 1fr));
+        gap: 2.5rem;
+        font-size: 1rem;
+        color: #e2e8f0;
     }
     .vehicle-row div {
         white-space: nowrap;
@@ -52,81 +68,109 @@ st.markdown("""
         text-overflow: ellipsis;
     }
     .lease-details {
-        background-color: #ffffff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-top: 1.5rem;
-        border: 1px solid #e2e8f0;
+        background-color: #2d3748;
+        padding: 2.5rem;
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        margin-top: 2rem;
+        border: 1px solid #4b5563;
     }
     .error {
-        color: #b91c1c;
+        color: #fef2f2;
         font-weight: 600;
-        background-color: #fef2f2;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+        background-color: #7f1d1d;
+        padding: 1.25rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     h1 {
-        color: #1e40af;
-        font-size: 2.25rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
+        color: #60a5fa;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
     }
     h3 {
-        color: #1e40af;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
-    .metric-label {
-        font-size: 0.9rem;
-        color: #6b7280;
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-    .metric-value {
+        color: #60a5fa;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #111827;
-        margin-bottom: 1.25rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .metric-label {
+        font-size: 0.95rem;
+        color: #9ca3af;
+        font-weight: 500;
+        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #e2e8f0;
+        margin-bottom: 1.5rem;
     }
     .option-panel {
-        background-color: #f1f5f9;
-        padding: 1.5rem;
-        border-radius: 10px;
-        margin-top: 1.5rem;
+        background-color: #374151;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-top: 2rem;
         display: flex;
-        gap: 1.5rem;
+        gap: 2rem;
         flex-wrap: wrap;
         justify-content: flex-start;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #4b5563;
     }
     .option-panel .stToggle, .option-panel .stNumberInput {
-        margin: 0.75rem 0;
+        margin: 0.8rem 0;
+        color: #e2e8f0;
+    }
+    .option-panel .stNumberInput input {
+        background-color: #2d3748;
+        color: #e2e8f0;
+        border-radius: 8px;
     }
     .mileage-header {
         text-align: center;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1e40af;
-        margin-bottom: 1.25rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #60a5fa;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
     }
     .stExpander {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background-color: #ffffff;
+        border: 1px solid #4b5563;
+        border-radius: 10px;
+        background-color: #2d3748;
+        transition: all 0.3s;
     }
     .stExpander summary {
-        font-weight: 500;
-        color: #1e40af;
+        font-weight: 600;
+        color: #3b82f6;
+        padding: 1rem;
+        cursor: pointer;
+    }
+    .stExpander summary:hover {
+        background-color: #374151;
     }
     .sidebar .stHeader {
-        color: #1e40af;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
+        color: #60a5fa;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+    }
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #2d3748;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #60a5fa;
+        border-radius: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -247,7 +291,7 @@ if vin_input:
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem;">
                                         <div>
                                             <p class="metric-label">📈 Mileage</p>
                                             <p class="metric-value">{mileage:,} mi/year</p>
