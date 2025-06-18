@@ -99,7 +99,7 @@ st.markdown("""
     }
     .mileage-header {
         color: #2563eb;
-        background-color: #f7f9fc;
+        background-color: #f0f4ff;
         border-radius: 8px;
     }
     .payment-value {
@@ -118,43 +118,41 @@ st.markdown("""
     }
     .lease-details {
         background-color: #ffffff;
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 12px;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
         margin-top: 1rem;
         border: 1px solid #e5e7eb;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
     }
-    .error {
-        color: #7f1d1d;
-        font-weight: 600;
-        background-color: #fef2f2;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border: 1px solid #fee2e2;
-    }
-    h1 {
-        color: #1e40af;
-        font-size: 2.75rem;
-        font-weight: 800;
-        margin-bottom: 2.5rem;
-        letter-spacing: -0.025rem;
+    .detail-item {
+        padding: 1rem;
+        border-radius: 8px;
         text-align: center;
     }
-    h3 {
-        color: #1e40af;
-        font-size: 1.875rem;
-        font-weight: 700;
-        margin-top: 3rem;
-        margin-bottom: 2rem;
-        letter-spacing: -0.015rem;
+    .detail-item.mileage {
+        background-color: #e6ffe6;
+    }
+    .detail-item.money-factor {
+        background-color: #d4edda;
+    }
+    .detail-item.residual-value {
+        background-color: #fff3cd;
+    }
+    .detail-item.monthly-payment {
+        background-color: #ffd6cc;
+    }
+    .detail-item.monthly-payment.lowest {
+        background-color: #ff4d4d;
+        color: white;
     }
     .metric-label {
         font-size: 1rem;
         color: #6b7280;
         font-weight: 600;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.05rem;
         white-space: nowrap;
@@ -162,28 +160,28 @@ st.markdown("""
         text-overflow: ellipsis;
     }
     .metric-value {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .option-panel {
         background-color: #f7f9fc;
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 12px;
         margin-top: 1.5rem;
         display: flex;
-        gap: 2rem;
+        gap: 1.5rem;
         flex-wrap: wrap;
         justify-content: flex-start;
         border: 1px solid #e5e7eb;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
     .option-panel .stToggle, .option-panel .stNumberInput {
-        margin: 1rem 0;
+        margin: 0.75rem 0;
         color: #1a1a1a;
     }
     .option-panel .stNumberInput input {
@@ -202,7 +200,7 @@ st.markdown("""
     .stExpander summary {
         font-weight: 600;
         color: #2563eb;
-        padding: 1rem;
+        padding: 0.75rem;
         cursor: pointer;
         border-radius: 8px;
     }
@@ -239,8 +237,8 @@ st.markdown("""
         .lease-options-table {
             grid-template-columns: 1fr repeat(3, minmax(120px, 1fr));
         }
-        .lease-details div {
-            grid-template-columns: 1fr !important;
+        .lease-details {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -322,6 +320,7 @@ if vin_input:
                     cols = st.columns([1] + [1] * len(mileage_options))
                     cols[0].markdown(f"<div class='lease-term'>{term} Mo</div>", unsafe_allow_html=True)
 
+                    min_payment = float('inf')
                     for i, mileage in enumerate(mileage_options):
                         row = row_group.iloc[0]
                         mf_col = f"Tier {tier_num}"
@@ -355,31 +354,32 @@ if vin_input:
                         monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
                         cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
                         initial_monthly_payment = float(cleaned)
+                        if initial_monthly_payment < min_payment:
+                            min_payment = initial_monthly_payment
 
                         title = f"${initial_monthly_payment:,.2f}"
 
                         with cols[i + 1]:
-                            st.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
+                            payment_class = 'payment-value' + (' lowest' if initial_monthly_payment == min_payment else '')
+                            st.markdown(f"<div class='{payment_class}'>{title}</div>", unsafe_allow_html=True)
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3.5rem;">
-                                        <div>
-                                            <p class="metric-label">Mileage</p>
-                                            <p class="metric-value">{mileage:,} mi/year</p>
-                                        </div>
-                                        <div>
-                                            <p class="metric-label">Money Factor</p>
-                                            <p class="metric-value">{mf:.5f}</p>
-                                        </div>
-                                        <div>
-                                            <p class="metric-label">Residual Value</p>
-                                            <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-                                        </div>
-                                        <div>
-                                            <p class="metric-label">Monthly Payment</p>
-                                            <p class="metric-value">{payment_calc['Monthly Payment']}</p>
-                                        </div>
+                                    <div class="detail-item mileage">
+                                        <p class="metric-label">Mileage</p>
+                                        <p class="metric-value">{mileage:,} mi/year</p>
+                                    </div>
+                                    <div class="detail-item money-factor">
+                                        <p class="metric-label">Money Factor</p>
+                                        <p class="metric-value">{mf:.5f}</p>
+                                    </div>
+                                    <div class="detail-item residual-value">
+                                        <p class="metric-label">Residual Value</p>
+                                        <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
+                                    </div>
+                                    <div class="detail-item monthly-payment">
+                                        <p class="metric-label">Monthly Payment</p>
+                                        <p class="metric-value">{payment_calc['Monthly Payment']}</p>
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
