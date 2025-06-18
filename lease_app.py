@@ -15,22 +15,119 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
 st.markdown("""
 <style>
-    .main {background-color: #f9f9f9;}
-    .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {margin-bottom: 1rem;}
-    .stButton>button {background-color: #0066cc; color: white; border-radius: 5px;}
-    .stButton>button:hover {background-color: #0055b3;}
-    .vehicle-info {background-color: #e6f0fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;}
-    .vehicle-row {display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 1.5rem; font-size: 0.95rem;}
-    .vehicle-row div {white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-    .lease-details {background-color: #ffffff; padding: 1.5rem; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.06); margin-top: 1rem;}
-    .error {color: #d32f2f; font-weight: bold;}
-    h1 {color: #003087; font-size: 2rem;}
-    h3 {color: #003087; margin-top: 1.5rem;}
-    .metric-label {font-size: 0.85rem; color: #777; margin-bottom: 0.25rem;}
-    .metric-value {font-size: 1.6rem; font-weight: 700; color: #222; margin-bottom: 1rem;}
-    .option-panel {background-color: #f0f4f8; padding: 1.25rem; border-radius: 6px; margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;}
-    .option-panel .stToggle, .option-panel .stNumberInput {margin: 0.5rem 0;}
-    .mileage-header {text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;}
+    .main {background-color: #f8fafc; padding: 1rem;}
+    .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
+        margin-bottom: 1.25rem;
+        font-size: 0.95rem;
+    }
+    .stButton>button {
+        background-color: #1e40af;
+        color: white;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    .stButton>button:hover {
+        background-color: #1e3a8a;
+    }
+    .vehicle-info {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    .vehicle-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(120px, 1fr));
+        gap: 2rem;
+        font-size: 0.95rem;
+        color: #1f2937;
+    }
+    .vehicle-row div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .lease-details {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-top: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    .error {
+        color: #b91c1c;
+        font-weight: 600;
+        background-color: #fef2f2;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    h1 {
+        color: #1e40af;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    h3 {
+        color: #1e40af;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .metric-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.25rem;
+    }
+    .option-panel {
+        background-color: #f1f5f9;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        border: 1px solid #e2e8f0;
+    }
+    .option-panel .stToggle, .option-panel .stNumberInput {
+        margin: 0.75rem 0;
+    }
+    .mileage-header {
+        text-align: center;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 1.25rem;
+    }
+    .stExpander {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background-color: #ffffff;
+    }
+    .stExpander summary {
+        font-weight: 500;
+        color: #1e40af;
+    }
+    .sidebar .stHeader {
+        color: #1e40af;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -150,7 +247,7 @@ if vin_input:
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem;">
                                         <div>
                                             <p class="metric-label">📈 Mileage</p>
                                             <p class="metric-value">{mileage:,} mi/year</p>
