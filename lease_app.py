@@ -56,7 +56,7 @@ try:
 except:
     title = "Monthly Payment"
 
-with st.expander(title, key=f"expander_{term}_{mileage}"):
+with st.expander(title):
     st.markdown(f"""
     <div class="lease-details">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
