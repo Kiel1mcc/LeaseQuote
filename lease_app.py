@@ -242,6 +242,11 @@ with st.sidebar:
     selected_county = st.selectbox("Select County:", county_rates[county_column], help="Select county for tax rate")
     money_down = st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0, help="Enter down payment amount")
 
+    st.subheader("Display Settings")
+    show_money_factor = st.checkbox("Show Money Factor", value=True)
+    show_residual = st.checkbox("Show Residual Value", value=True)
+    show_monthly = st.checkbox("Show Monthly Payment", value=True)st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0, help="Enter down payment amount")
+
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
@@ -360,18 +365,9 @@ if vin_input:
                                         <p class=\"metric-label\">Mileage</p>
                                         <p class=\"metric-value\">{mileage:,} mi/year</p>
                                     </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Money Factor</p>
-                                        <p class=\"metric-value\">{mf:.5f}</p>
-                                    </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Residual Value</p>
-                                        <p class=\"metric-value\">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-                                    </div>
-                                    <div class=\"detail-item\">
-                                        <p class=\"metric-label\">Monthly Payment</p>
-                                        <p class=\"metric-value\">{payment_calc['Monthly Payment']}</p>
-                                    </div>
+                                    {f'''<div class=\"detail-item\"><p class=\"metric-label\">Money Factor</p><p class=\"metric-value\">{mf:.5f}</p></div>''' if show_money_factor else ''}
+                                    {f'''<div class=\"detail-item\"><p class=\"metric-label\">Residual Value</p><p class=\"metric-value\">${residual_value:,.2f} ({adjusted_residual:.0%})</p></div>''' if show_residual else ''}
+                                    {f'''<div class=\"detail-item\"><p class=\"metric-label\">Monthly Payment</p><p class=\"metric-value\">{payment_calc['Monthly Payment']}</p></div>''' if show_monthly else ''}
                                 </div>
                                 """, unsafe_allow_html=True)
 
