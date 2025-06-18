@@ -89,13 +89,16 @@ if vin_input:
                 base_residual = float(row['Residual'])
                 adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
                 mf_col = f"Tier {tier_num}"
-                mf = float(row[mf_col]) + 0.0004
+                mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
                 lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                total_ccr = money_down
+                total_ccr = money_down_local + (lease_cash if apply_cash else 0.0)
 
                 with row_cols[i + 1]:
                     monthly_placeholder = st.empty()
                     with st.expander("View Details"):
+                        apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"mf_markup_{term}_{mileage}")
+                        apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"apply_cash_{term}_{mileage}")
+                        money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
                         selling_price = st.number_input(
                             "Selling Price ($)",
                             min_value=0.0,
