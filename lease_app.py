@@ -154,7 +154,7 @@ if vin_input:
                                     </div>
                                     <div>
                                         <p class="metric-label">Residual Value</p>
-                                        <p class="metric-value">${residual_value:,.2f}</p>
+                                        <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
                                     </div>
                                     <div>
                                         <p class="metric-label">Monthly Payment (w/ tax)</p>
