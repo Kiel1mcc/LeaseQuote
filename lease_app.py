@@ -159,6 +159,10 @@ st.markdown("""
 
 st.title("Lease Quote Calculator")
 
+# Track whether the user has submitted a VIN so results persist
+if "submitted" not in st.session_state:
+    st.session_state.submitted = False
+
 lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
@@ -173,7 +177,7 @@ if 'debug_mode' not in st.session_state:
 
 with st.sidebar:
     st.header("Lease Parameters")
-    vin_input = st.text_input("Enter VIN:", value="")
+    vin_input = st.text_input("Enter VIN:", value="", key="vin_input")
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
     county_column = county_rates.columns[0]
     selected_county = st.selectbox("Select County:", county_rates[county_column])
@@ -181,7 +185,9 @@ with st.sidebar:
     st.markdown("### Submit")
     submit_button = st.button("Submit")
     if submit_button:
-        st.session_state.sidebar_open = False
+        if st.session_state.vin_input:
+            st.session_state.sidebar_open = False
+            st.session_state.submitted = True
     st.markdown("### Display Settings")
     default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="toggle_default_apply_cash")
     if 'default_apply_cash_set' not in st.session_state:
@@ -202,7 +208,8 @@ if 'sidebar_open' not in st.session_state:
     st.session_state.sidebar_open = True
 st.sidebar.expanded = st.session_state.sidebar_open
 
-if submit_button and vin_input:
+if st.session_state.submitted and st.session_state.vin_input:
+    vin_input = st.session_state.vin_input
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
@@ -352,5 +359,5 @@ if submit_button and vin_input:
                                     "Tax Rate": f"{tax_rate:.2%}",
                                     "Base Payment": f"${payment_calc['Base Payment']:,.2f}"
                                 })
-elif submit_button and not vin_input:
+elif submit_button and not st.session_state.vin_input:
     st.error("Please enter a VIN before submitting.")
