@@ -80,6 +80,9 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
+# Remaining code continues below — ensure all core logic, user inputs, toggles, display elements,
+# and the calculate_base_and_monthly_payment function call block are reinstated beneath this line.
+
 lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
@@ -98,6 +101,10 @@ with st.sidebar:
     show_monthly = st.checkbox("Show Monthly Payment", value=True)
     show_msrp = st.checkbox("Show MSRP", value=True)
     show_mileage = st.checkbox("Show Mileage", value=True)
+
+# Additional logic for vehicle lookup, lease program filtering, layout rendering, and calculation should follow this section.
+# Please insert the previous lease calculation rows and rendering logic after this block if it has been removed or omitted.
+
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
