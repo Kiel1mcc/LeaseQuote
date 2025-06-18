@@ -38,6 +38,7 @@ st.markdown("""
         padding: 0.5rem 1.5rem;
         font-weight: 500;
         transition: background-color 0.2s;
+        width: 100%;
     }
     .stButton>button:hover {
         background-color: #1e40af;
@@ -109,6 +110,34 @@ st.markdown("""
         font-size: 0.9rem;
         color: #1f2937;
     }
+    /* Custom toggle styling */
+    .stToggle input[type="checkbox"] {
+        appearance: none;
+        width: 40px;
+        height: 20px;
+        background-color: #e2e8f0;
+        border-radius: 10px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .stToggle input[type="checkbox"]:checked {
+        background-color: #1e3a8a;
+    }
+    .stToggle input[type="checkbox"]::before {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+    }
+    .stToggle input[type="checkbox"]:checked::before {
+        transform: translateX(20px);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -118,6 +147,14 @@ lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
 
+# Initialize session state for defaults
+if 'default_apply_cash' not in st.session_state:
+    st.session_state.default_apply_cash = False
+if 'default_apply_markup' not in st.session_state:
+    st.session_state.default_apply_markup = True
+if 'debug_mode' not in st.session_state:
+    st.session_state.debug_mode = False
+
 with st.sidebar:
     st.header("Lease Parameters")
     vin_input = st.text_input("Enter VIN:", value="")
@@ -125,8 +162,14 @@ with st.sidebar:
     county_column = county_rates.columns[0]
     selected_county = st.selectbox("Select County:", county_rates[county_column])
     money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
+    st.markdown("### Display Settings")
+    st.session_state.default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="default_apply_cash")
+    st.session_state.default_apply_markup = st.toggle("Auto-apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key="default_apply_markup")
+    st.session_state.debug_mode = st.toggle("Enable Debug Mode", value=st.session_state.debug_mode, key="debug_mode")
+    st.markdown("*Click Submit to calculate lease options.*")
+    submit_button = st.button("Submit")
 
-if vin_input:
+if submit_button and vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
     if vin_data.empty:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
@@ -198,12 +241,12 @@ if vin_input:
                                 adjusted_residual = base_residual
 
                             selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
-                            apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"markup_{term}_{mileage}")
+                            apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
                             mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
                             lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
                             col1, col2 = st.columns(2)
                             with col1:
-                                apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"applycash_{term}_{mileage}")
+                                apply_cash = st.toggle("Apply Lease Cash", value=st.session_state.default_apply_cash, key=f"applycash_{term}_{mileage}")
                             with col2:
                                 custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
                             total_ccr = money_down + (custom_cash if apply_cash else 0.0)
@@ -246,3 +289,16 @@ if vin_input:
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
+                            if st.session_state.debug_mode:
+                                st.markdown("**Debug Info**")
+                                st.write({
+                                    "Selling Price": f"${selling_price:,.2f}",
+                                    "Residual Value": f"${residual_value:,.2f}",
+                                    "Lease Term": f"{term} months",
+                                    "Money Factor": f"{mf:.5f}",
+                                    "Total CCR": f"${total_ccr:,.2f}",
+                                    "Tax Rate": f"{tax_rate:.2%}",
+                                    "Base Payment": f"${payment_calc['Base Payment']:,.2f}"
+                                })
+elif submit_button and not vin_input:
+    st.error("Please enter a VIN before submitting.")
