@@ -87,6 +87,7 @@ st.markdown("""
         grid-template-columns: 1fr repeat(3, minmax(180px, 1fr));
         gap: 1rem;
         margin-top: 2.5rem;
+        align-items: center;
     }
     .lease-term, .mileage-header {
         font-size: 1.3rem;
@@ -117,11 +118,6 @@ st.markdown("""
     .payment-value:hover {
         transform: translateY(-2px);
     }
-    .payment-value.lowest {
-        background: #dc2626;
-        color: #ffffff;
-        font-weight: 800;
-    }
     .lease-details {
         background: #ffffff;
         padding: 1.5rem;
@@ -132,6 +128,7 @@ st.markdown("""
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
+        align-items: center;
     }
     .detail-item {
         padding: 1rem;
@@ -311,7 +308,6 @@ if vin_input:
                     cols = st.columns([1] + [1] * len(mileage_options))
                     cols[0].markdown(f"<div class='lease-term'>{term} Mo</div>", unsafe_allow_html=True)
 
-                    min_payment = float('inf')
                     for i, mileage in enumerate(mileage_options):
                         row = row_group.iloc[0]
                         mf_col = f"Tier {tier_num}"
@@ -345,14 +341,11 @@ if vin_input:
                         monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
                         cleaned = monthly_raw.replace("$", "").replace(",", "") if isinstance(monthly_raw, str) else monthly_raw
                         initial_monthly_payment = float(cleaned)
-                        if initial_monthly_payment < min_payment:
-                            min_payment = initial_monthly_payment
 
                         title = f"${initial_monthly_payment:,.2f}"
 
                         with cols[i + 1]:
-                            payment_class = 'payment-value' + (' lowest' if initial_monthly_payment == min_payment else '')
-                            st.markdown(f"<div class='{payment_class}'>{title}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div class='payment-value'>{title}</div>", unsafe_allow_html=True)
                             with st.expander("View Details"):
                                 st.markdown(f"""
                                 <div class="lease-details">
