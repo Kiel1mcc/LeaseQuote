@@ -94,34 +94,26 @@ if vin_input:
 
             st.markdown("### Lease Options")
             term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
-            mileage_col = next((col for col in matching_programs.columns if col.lower() in ["mileage", "annualmileage"]), None)
-
-            if not term_col or not mileage_col:
-                st.error("Missing LeaseTerm or Mileage column in the data.")
+            if not term_col:
+                st.error("Missing LeaseTerm column in the data.")
             else:
                 terms = sorted(matching_programs[term_col].dropna().unique())
+                mileage_options = [10000, 12000, 15000]
                 for term in terms:
-                    term_programs = matching_programs[matching_programs[term_col] == term]
-                    mileages = sorted(term_programs[mileage_col].dropna().unique())
                     st.subheader(f"{term}-Month Lease")
-                    cols = st.columns(len(mileages))
-                    for mileage, col in zip(mileages, cols):
+                    cols = st.columns(len(mileage_options))
+                    for mileage, col in zip(mileage_options, cols):
                         with col:
-                            row = term_programs[term_programs[mileage_col] == mileage]
-                            if row.empty:
-                                st.info("This mileage and term combination is not available on the selected model.")
-                                continue
-                            row = row.iloc[0]
+                            row = matching_programs[matching_programs[term_col] == term].iloc[0]
                             mf_col = f"Tier {tier_num}"
                             if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
                                 st.info("This mileage and term combination is not available on the selected model.")
                                 continue
 
-                            # Adjust residual based on mileage
                             base_residual = float(row['Residual'])
-                            if int(mileage) == 10000:
+                            if mileage == 10000 and term >= 33:
                                 adjusted_residual = base_residual + 0.01
-                            elif int(mileage) == 15000:
+                            elif mileage == 15000:
                                 adjusted_residual = base_residual - 0.02
                             else:
                                 adjusted_residual = base_residual
