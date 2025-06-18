@@ -9,8 +9,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
-import sys
 from lease_calculations import calculate_base_and_monthly_payment
 
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
@@ -35,62 +33,152 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# User input panel
+lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
+vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
+county_rates = pd.read_csv("County_Tax_Rates.csv")
+
 with st.sidebar:
     st.header("Lease Parameters")
     vin_input = st.text_input("Enter VIN:", value="")
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
-    selected_county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula"])  # Placeholder counties
-    custom_cash = st.number_input("Down Payment ($)", value=0.0, step=100.0)
+    county_column = county_rates.columns[0]
+    selected_county = st.selectbox("Select County:", county_rates[county_column])
+    money_down = st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
 
-# Initialize default variables
-term = 36
-mileage = 12000
-initial_monthly_payment = 0.0
-mf = 0.0
-residual_value = 0.0
-adjusted_residual = 0.0
-payment_calc = {"Monthly Payment": "$0.00"}
-apply_markup = False
-apply_cash = False
+if vin_input:
+    vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
+    if vin_data.empty:
+        st.error("VIN not found in inventory. Please check the VIN and try again.")
+    else:
+        vin = vin_data["VIN"].values[0]
+        year = vin_data.get("ModelYear", ["N/A"])[0]
+        make = vin_data.get("Make", ["N/A"])[0]
+        model = vin_data["Model"].values[0]
+        trim = vin_data["Trim"].values[0]
+        model_number = vin_data["ModelNumber"].values[0]
+        msrp = vin_data["MSRP"].values[0]
 
-try:
-    title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
-except:
-    title = "Monthly Payment"
-
-with st.expander(title, expanded=True):
-    st.markdown(f"""
-    <div class="lease-details">
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
-            <div>
-                <p class="metric-label">📈 Mileage</p>
-                <p class="metric-value">{mileage:,} mi/year</p>
-            </div>
-            <div>
-                <p class="metric-label">💰 Money Factor</p>
-                <p class="metric-value">{mf:.5f}</p>
-            </div>
-            <div>
-                <p class="metric-label">📉 Residual Value</p>
-                <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
-            </div>
-            <div>
-                <p class="metric-label">📆 Monthly Payment</p>
-                <p class="metric-value">{payment_calc['Monthly Payment']}</p>
+        st.markdown("### Vehicle Information")
+        st.markdown(f"""
+        <div class="vehicle-info">
+            <div class="vehicle-row">
+                <div><b>VIN:</b> {vin}</div>
+                <div><b>Year:</b> {year}</div>
+                <div><b>Make:</b> {make}</div>
+                <div><b>Model:</b> {model}</div>
+                <div><b>Trim:</b> {trim}</div>
+                <div><b>Model Number:</b> {model_number}</div>
+                <div><b>MSRP:</b> ${msrp:,.2f}</div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="option-panel">
-    """, unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}")
-    with col2:
-        st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}")
-    st.markdown("""
-    </div>
-    """, unsafe_allow_html=True)
+        lease_col = next((col for col in lease_programs.columns if col.strip().lower() == "modelnumber"), None)
+        if not lease_col:
+            st.error("ModelNumber column not found in lease program file.")
+            st.stop()
+
+        matching_programs = lease_programs[lease_programs[lease_col] == model_number]
+        if matching_programs.empty:
+            st.error("No lease programs found for this vehicle.")
+        else:
+            tier_num = int(selected_tier.split(" ")[1])
+            rate_column = "Rate" if "Rate" in county_rates.columns else county_rates.columns[-1]
+            tax_row = county_rates[county_rates[county_column] == selected_county]
+            if tax_row.empty:
+                st.error(f"Tax rate not found for selected county: {selected_county}")
+                st.stop()
+            tax_rate = tax_row[rate_column].values[0] / 100
+
+            st.markdown("### Lease Options")
+            term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
+            if not term_col:
+                st.error("Missing LeaseTerm column in the data.")
+            else:
+                terms = sorted(matching_programs[term_col].dropna().unique())
+                mileage_options = [10000, 12000, 15000]
+                for term in terms:
+                    rows_for_term = matching_programs[matching_programs[term_col] == term]
+                    for mileage in mileage_options:
+                        row = rows_for_term.iloc[0]
+                        mf_col = f"Tier {tier_num}"
+                        if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                            continue
+
+                        base_residual = float(row['Residual'])
+                        if mileage == 10000 and term >= 33:
+                            adjusted_residual = base_residual + 0.01
+                        elif mileage == 15000:
+                            adjusted_residual = base_residual - 0.02
+                        else:
+                            adjusted_residual = base_residual
+
+                        selling_price = float(msrp)
+                        apply_markup = True
+                        mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
+                        lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+                        apply_cash = False
+                        total_ccr = money_down + (lease_cash if apply_cash else 0.0)
+                        residual_value = round(msrp * adjusted_residual, 2)
+
+                        payment_calc = calculate_base_and_monthly_payment(
+                            S=selling_price,
+                            RES=residual_value,
+                            W=term,
+                            F=mf,
+                            M=962.50,
+                            Q=0,
+                            B=total_ccr,
+                            K=0,
+                            U=0,
+                            tau=tax_rate
+                        )
+
+                        monthly_raw = payment_calc.get('Monthly Payment', '$0.00')
+                        if isinstance(monthly_raw, str):
+                            cleaned = monthly_raw.replace("$", "").replace(",", "")
+                        else:
+                            cleaned = monthly_raw
+                        initial_monthly_payment = float(cleaned)
+
+                        try:
+                            title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
+                        except:
+                            title = "Monthly Payment"
+
+                        with st.expander(title):
+                            st.markdown(f"""
+                            <div class="lease-details">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                                    <div>
+                                        <p class="metric-label">📈 Mileage</p>
+                                        <p class="metric-value">{mileage:,} mi/year</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">💰 Money Factor</p>
+                                        <p class="metric-value">{mf:.5f}</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">📉 Residual Value</p>
+                                        <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
+                                    </div>
+                                    <div>
+                                        <p class="metric-label">📆 Monthly Payment</p>
+                                        <p class="metric-value">{payment_calc['Monthly Payment']}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                            st.markdown("""
+                            <div class="option-panel">
+                            """, unsafe_allow_html=True)
+                            col1, col2 = st.columns([1, 1])
+                            with col1:
+                                st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}", disabled=True)
+                            with col2:
+                                st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
+                            st.number_input("Down Payment ($)", value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}", disabled=True)
+                            st.markdown("""
+                            </div>
+                            """, unsafe_allow_html=True)
