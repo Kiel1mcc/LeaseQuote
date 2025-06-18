@@ -84,7 +84,7 @@ st.markdown("""
     }
     .lease-options-table {
         display: grid;
-        grid-template-columns: repeat(4, minmax(180px, 1fr));
+        grid-template-columns: 1fr repeat(3, minmax(180px, 1fr));
         gap: 1rem;
         margin-top: 2.5rem;
         align-items: center;
@@ -100,7 +100,7 @@ st.markdown("""
     }
     .lease-term {
         color: #64748b;
-        background: #e0e7ff;
+        background: #f1f5f9;
     }
     .mileage-header {
         color: #2563eb;
@@ -221,7 +221,7 @@ st.markdown("""
             gap: 2rem;
         }
         .lease-options-table {
-            grid-template-columns: repeat(4, minmax(140px, 1fr));
+            grid-template-columns: 1fr repeat(3, minmax(140px, 1fr));
         }
         .lease-details {
             grid-template-columns: 1fr;
@@ -297,11 +297,11 @@ if vin_input:
 
                 st.markdown("<div class='lease-options-table'>", unsafe_allow_html=True)
                 cols = st.columns([1] + [1] * len(mileage_options))
-                cols[0].markdown(f"<div class='lease-term'>{rows_for_term.keys()[0]} Mo</div>", unsafe_allow_html=True)  # Start with first term
-                for i, mileage in enumerate(mileage_options, 1):
-                    cols[i].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
+                cols[0].markdown(f"<div class='lease-term'>{''}</div>", unsafe_allow_html=True)
+                for i, mileage in enumerate(mileage_options):
+                    cols[i + 1].markdown(f"<div class='mileage-header'>{mileage//1000}K Miles</div>", unsafe_allow_html=True)
 
-                for term in list(rows_for_term.keys())[1:]:  # Skip the first term already placed
+                for term in rows_for_term:
                     row_group = rows_for_term[term]
                     cols = st.columns([1] + [1] * len(mileage_options))
                     cols[0].markdown(f"<div class='lease-term'>{term} Mo</div>", unsafe_allow_html=True)
