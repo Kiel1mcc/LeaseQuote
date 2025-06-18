@@ -101,7 +101,7 @@ if vin_input:
                         money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
 
                         mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
-                        total_ccr = money_down_local + (lease_cash if apply_cash else 0.0), min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
+                        total_ccr = money_down_local + (lease_cash if apply_cash else 0.0)
                         selling_price = st.number_input(
                             "Selling Price ($)",
                             min_value=0.0,
