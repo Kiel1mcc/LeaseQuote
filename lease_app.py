@@ -53,8 +53,8 @@ if vin_input:
         st.error("VIN not found in inventory. Please check the VIN and try again.")
     else:
         vin = vin_data["VIN"].values[0]
-        year = vin_data["ModelYear"].values[0] if "ModelYear" in vin_data.columns else "N/A"
-        make = vin_data["Make"].values[0] if "Make" in vin_data.columns else "N/A"
+        year = vin_data.get("ModelYear", ["N/A"])[0]
+        make = vin_data.get("Make", ["N/A"])[0]
         model = vin_data["Model"].values[0]
         trim = vin_data["Trim"].values[0]
         model_number = vin_data["ModelNumber"].values[0]
@@ -93,44 +93,40 @@ if vin_input:
             tax_rate = tax_row[rate_column].values[0] / 100
 
             st.markdown("### Lease Options")
-            term_col = next((col for col in ["LeaseTerm", "Lease_Term", "Term"] if col in matching_programs.columns), None)
-            mileage_col = next((col for col in ["Mileage", "AnnualMileage"] if col in matching_programs.columns), None)
+            term_col = next((col for col in matching_programs.columns if col.lower() in ["leaseterm", "lease_term", "term"]), None)
+            mileage_col = next((col for col in matching_programs.columns if col.lower() in ["mileage", "annualmileage"]), None)
 
             if not term_col or not mileage_col:
                 st.error("Missing LeaseTerm or Mileage column in the data.")
             else:
-                grouped = matching_programs.groupby([term_col, mileage_col])
-                sorted_terms = sorted(set(matching_programs[term_col].unique()))
-
-                for term in sorted_terms:
+                terms = sorted(matching_programs[term_col].dropna().unique())
+                for term in terms:
                     term_programs = matching_programs[matching_programs[term_col] == term]
-                    mileage_groups = term_programs.groupby(mileage_col)
+                    mileages = sorted(term_programs[mileage_col].dropna().unique())
                     st.subheader(f"{term}-Month Lease")
-
-                    cols = st.columns(len(mileage_groups))
-
-                    for (mileage, group), col in zip(mileage_groups, cols):
+                    cols = st.columns(len(mileages))
+                    for mileage, col in zip(mileages, cols):
                         with col:
-                            row = group.iloc[0]
-                            mf_col = f"Tier {tier_num}"
-                            if 'Residual' not in row or mf_col not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                            row = term_programs[term_programs[mileage_col] == mileage]
+                            if row.empty:
                                 st.info("This mileage and term combination is not available on the selected model.")
                                 continue
-
+                            row = row.iloc[0]
+                            mf_col = f"Tier {tier_num}"
+                            if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
+                                st.info("This mileage and term combination is not available on the selected model.")
+                                continue
                             selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
                             apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"markup_{term}_{mileage}")
                             mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
-
                             lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                            col1, col2 = st.columns([1,1])
+                            col1, col2 = st.columns(2)
                             with col1:
                                 apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"applycash_{term}_{mileage}")
                             with col2:
                                 custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
-
                             total_ccr = money_down + (custom_cash if apply_cash else 0.0)
                             residual_value = round(float(msrp) * float(row["Residual"]), 2)
-
                             payment_calc = calculate_base_and_monthly_payment(
                                 S=selling_price,
                                 RES=residual_value,
@@ -143,7 +139,6 @@ if vin_input:
                                 U=0,
                                 tau=tax_rate
                             )
-
                             st.markdown(f"""
                             <div class="lease-details">
                                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
