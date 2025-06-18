@@ -15,6 +15,62 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
 st.markdown("""
 <style>
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+.vehicle-info, .lease-options-table, .lease-details {
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+}
+.vehicle-row div {
+    display: inline-block;
+    margin-right: 20px;
+    font-size: 16px;
+}
+.lease-term, .mileage-header {
+    background-color: #007bff;
+    color: #ffffff;
+    text-align: center;
+    padding: 6px;
+    font-weight: bold;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+.payment-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007bff;
+    text-align: center;
+    margin-bottom: 5px;
+}
+.lease-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 6px;
+}
+.detail-item {
+    background-color: #e9ecef;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+}
+.metric-label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+.metric-value {
+    font-size: 16px;
+    color: #333;
+}
 .toggle-green .stToggleSwitch [data-baseweb="switch"] {
   background-color: #28a745 !important;
 }
