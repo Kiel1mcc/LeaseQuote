@@ -147,7 +147,7 @@ lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
 vehicle_data = pd.read_excel("Locator_Detail_20250605.xlsx")
 county_rates = pd.read_csv("County_Tax_Rates.csv")
 
-# Initialize session state for defaults
+# Initialize session state with defaults
 if 'default_apply_cash' not in st.session_state:
     st.session_state.default_apply_cash = False
 if 'default_apply_markup' not in st.session_state:
@@ -163,9 +163,18 @@ with st.sidebar:
     selected_county = st.selectbox("Select County:", county_rates[county_column])
     money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
     st.markdown("### Display Settings")
-    st.session_state.default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="default_apply_cash")
-    st.session_state.default_apply_markup = st.toggle("Auto-apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key="default_apply_markup")
-    st.session_state.debug_mode = st.toggle("Enable Debug Mode", value=st.session_state.debug_mode, key="debug_mode")
+    default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="toggle_default_apply_cash")
+    if 'default_apply_cash_set' not in st.session_state:
+        st.session_state.default_apply_cash = default_apply_cash
+        st.session_state.default_apply_cash_set = True
+    default_apply_markup = st.toggle("Auto-apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key="toggle_default_apply_markup")
+    if 'default_apply_markup_set' not in st.session_state:
+        st.session_state.default_apply_markup = default_apply_markup
+        st.session_state.default_apply_markup_set = True
+    debug_mode = st.toggle("Enable Debug Mode", value=st.session_state.debug_mode, key="toggle_debug_mode")
+    if 'debug_mode_set' not in st.session_state:
+        st.session_state.debug_mode = debug_mode
+        st.session_state.debug_mode_set = True
     st.markdown("*Click Submit to calculate lease options.*")
     submit_button = st.button("Submit")
 
