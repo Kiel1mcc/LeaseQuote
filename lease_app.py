@@ -273,13 +273,24 @@ if submit_button and vin_input:
                             else:
                                 adjusted_residual = base_residual
 
-                            # Pre-compute initial payment for expander label
-                            initial_selling_price = float(msrp)
-                            initial_apply_markup = st.session_state.default_apply_markup
+                            # Initialize session state for this specific term and mileage
+                            state_key = f"{term}_{mileage}"
+                            if f"selling_price_{state_key}" not in st.session_state:
+                                st.session_state[f"selling_price_{state_key}"] = float(msrp)
+                            if f"apply_markup_{state_key}" not in st.session_state:
+                                st.session_state[f"apply_markup_{state_key}"] = st.session_state.default_apply_markup
+                            if f"apply_cash_{state_key}" not in st.session_state:
+                                st.session_state[f"apply_cash_{state_key}"] = st.session_state.default_apply_cash
+                            if f"custom_cash_{state_key}" not in st.session_state:
+                                st.session_state[f"custom_cash_{state_key}"] = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
+
+                            # Compute initial payment for expander label
+                            initial_selling_price = st.session_state[f"selling_price_{state_key}"]
+                            initial_apply_markup = st.session_state[f"apply_markup_{state_key}"]
                             initial_mf = float(row[mf_col]) + (0.0004 if initial_apply_markup else 0.0)
-                            initial_apply_cash = st.session_state.default_apply_cash
-                            initial_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                            initial_total_ccr = money_down + (initial_cash if initial_apply_cash else 0.0)
+                            initial_apply_cash = st.session_state[f"apply_cash_{state_key}"]
+                            initial_custom_cash = st.session_state[f"custom_cash_{state_key}"]
+                            initial_total_ccr = money_down + (initial_custom_cash if initial_apply_cash else 0.0)
                             initial_residual_value = round(float(msrp) * adjusted_residual, 2)
                             initial_payment_calc = calculate_base_and_monthly_payment(
                                 S=initial_selling_price,
@@ -296,15 +307,15 @@ if submit_button and vin_input:
                             initial_monthly_payment = initial_payment_calc['Monthly Payment']
 
                             with st.expander(f"Monthly Payment (w/ tax): {initial_monthly_payment}", expanded=False) as expander:
-                                selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
-                                apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
+                                selling_price = st.number_input("Selling Price ($)", value=st.session_state[f"selling_price_{state_key}"], step=100.0, key=f"sp_input_{state_key}", on_change=lambda: st.session_state.update({f"selling_price_{state_key}": selling_price}))
+                                apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state[f"apply_markup_{state_key}"], key=f"markup_toggle_{state_key}", on_change=lambda: st.session_state.update({f"apply_markup_{state_key}": apply_markup}))
                                 mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
                                 lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
                                 col1, col2 = st.columns(2)
                                 with col1:
-                                    apply_cash = st.toggle("Apply Lease Cash", value=st.session_state.default_apply_cash, key=f"applycash_{term}_{mileage}")
+                                    apply_cash = st.toggle("Apply Lease Cash", value=st.session_state[f"apply_cash_{state_key}"], key=f"cash_toggle_{state_key}", on_change=lambda: st.session_state.update({f"apply_cash_{state_key}": apply_cash}))
                                 with col2:
-                                    custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
+                                    custom_cash = st.number_input("Cash ($)", value=st.session_state[f"custom_cash_{state_key}"], step=100.0, key=f"cash_input_{state_key}", disabled=not apply_cash, on_change=lambda: st.session_state.update({f"custom_cash_{state_key}": custom_cash}))
                                 total_ccr = money_down + (custom_cash if apply_cash else 0.0)
                                 residual_value = round(float(msrp) * adjusted_residual, 2)
                                 payment_calc = calculate_base_and_monthly_payment(
@@ -341,6 +352,8 @@ if submit_button and vin_input:
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
+                                # Update the expander label dynamically (workaround for Streamlit limitation)
+                                expander.header = f"Monthly Payment (w/ tax): {payment_calc['Monthly Payment']}"
                             if st.session_state.debug_mode:
                                 st.markdown("**Debug Info**")
                                 st.write({
