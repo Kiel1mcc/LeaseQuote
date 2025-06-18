@@ -154,8 +154,6 @@ if vin_input:
                         with st.expander(title, key=f"expander_{term}_{mileage}"):
                             st.number_input("Selling Price ($)", value=selling_price, step=100.0, key=f"selling_price_{term}_{mileage}", disabled=True)
                             st.number_input("Down Payment ($)", value=custom_cash, step=100.0, disabled=True, key=f"cash_input_{term}_{mileage}")
-                            st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}", disabled=True)
-                            st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
 
                             st.markdown(f"""
                             <div class="lease-details">
@@ -179,3 +177,6 @@ if vin_input:
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
+
+                            st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}", disabled=True)
+                            st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
