@@ -16,65 +16,67 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 st.markdown("""
 <style>
     .main {
-        background-color: #ffffff;
-        color: #1a1a1a;
-        padding: 2.5rem;
+        background: linear-gradient(135deg, #0a192f, #1e3a8a);
+        color: #e2e8f0;
+        padding: 3rem 4rem;
         min-height: 100vh;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput {
-        margin-bottom: 1.75rem;
-        background-color: #f7f9fc;
-        border-radius: 10px;
-        padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        transition: border-color 0.2s;
+        margin-bottom: 2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
+        transition: border-color 0.3s, background 0.3s;
     }
     .sidebar .stTextInput input, .sidebar .stSelectbox select, .sidebar .stNumberInput input {
-        color: #1a1a1a;
-        background-color: transparent;
+        color: #e2e8f0;
+        background: transparent;
         border: none;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     .sidebar .stTextInput input:focus, .sidebar .stSelectbox select:focus, .sidebar .stNumberInput input:focus {
         outline: none;
-        border-color: #2563eb;
+        border-color: #60a5fa;
     }
     .stButton>button {
-        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        background: linear-gradient(90deg, #3b82f6, #9333ea);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 0.9rem 2.5rem;
+        border-radius: 15px;
+        padding: 1rem 2.5rem;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         text-transform: uppercase;
-        letter-spacing: 0.05rem;
-        transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+        letter-spacing: 0.1rem;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        transition: transform 0.3s, box-shadow 0.3s;
     }
     .stButton>button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-        background: linear-gradient(90deg, #1d4ed8, #2563eb);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6);
     }
     .vehicle-info {
-        background-color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
         padding: 2.5rem;
-        border-radius: 16px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        margin-bottom: 2.5rem;
-        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        margin-bottom: 3rem;
         transition: transform 0.3s;
     }
     .vehicle-info:hover {
-        transform: translateY(-4px);
+        transform: translateY(-5px);
     }
     .vehicle-row {
         display: grid;
-        grid-template-columns: repeat(7, minmax(140px, 1fr));
-        gap: 3rem;
-        font-size: 1.05rem;
-        color: #1a1a1a;
+        grid-template-columns: repeat(7, minmax(150px, 1fr));
+        gap: 3.5rem;
+        font-size: 1.1rem;
+        color: #e2e8f0;
         font-weight: 500;
     }
     .vehicle-row div {
@@ -84,75 +86,83 @@ st.markdown("""
     }
     .lease-options-table {
         display: grid;
-        grid-template-columns: 1fr repeat(3, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-top: 2rem;
+        grid-template-columns: 1fr repeat(3, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2.5rem;
     }
     .lease-term, .mileage-header {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         font-weight: 600;
-        padding: 1rem;
+        padding: 1.2rem;
         text-align: center;
+        border-radius: 10px;
     }
     .lease-term {
-        color: #1a1a1a;
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, 0.1);
     }
     .mileage-header {
-        color: #2563eb;
-        background-color: #f0f4ff;
-        border-radius: 8px;
+        color: #60a5fa;
+        background: rgba(96, 165, 250, 0.2);
     }
     .payment-value {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        color: #1a1a1a;
+        color: #e2e8f0;
         text-align: center;
-        padding: 1rem;
-        background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s;
+        padding: 1.2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, background 0.3s;
     }
     .payment-value:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .payment-value.lowest {
+        background: #dc2626;
+        color: #ffffff;
+        font-weight: 800;
     }
     .lease-details {
-        background-color: #ffffff;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-        margin-top: 1rem;
-        border: 1px solid #e5e7eb;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        margin-top: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
+        gap: 2rem;
     }
     .detail-item {
-        padding: 1rem;
-        border-radius: 8px;
+        padding: 1.5rem;
+        border-radius: 10px;
         text-align: center;
+        transition: transform 0.3s;
     }
     .detail-item.mileage {
-        background-color: #e6ffe6;
+        background: rgba(34, 197, 94, 0.1);
     }
     .detail-item.money-factor {
-        background-color: #d4edda;
+        background: rgba(59, 130, 246, 0.1);
     }
     .detail-item.residual-value {
-        background-color: #fff3cd;
+        background: rgba(234, 179, 8, 0.1);
     }
     .detail-item.monthly-payment {
-        background-color: #ffd6cc;
+        background: rgba(239, 68, 68, 0.1);
     }
-    .detail-item.monthly-payment.lowest {
-        background-color: #ff4d4d;
-        color: white;
+    .detail-item:hover {
+        transform: translateY(-2px);
     }
     .metric-label {
-        font-size: 1rem;
-        color: #6b7280;
+        font-size: 1.1rem;
+        color: #a3bffa;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05rem;
         white-space: nowrap;
@@ -160,82 +170,82 @@ st.markdown("""
         text-overflow: ellipsis;
     }
     .metric-value {
-        font-size: 1.5rem;
+        font-size: 1.7rem;
         font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 0.5rem;
+        color: #e2e8f0;
+        margin-bottom: 0.75rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .option-panel {
-        background-color: #f7f9fc;
-        padding: 1.5rem;
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2rem;
+        border-radius: 15px;
         margin-top: 1.5rem;
         display: flex;
-        gap: 1.5rem;
+        gap: 2rem;
         flex-wrap: wrap;
         justify-content: flex-start;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
     .option-panel .stToggle, .option-panel .stNumberInput {
-        margin: 0.75rem 0;
-        color: #1a1a1a;
+        margin: 1rem 0;
+        color: #e2e8f0;
     }
     .option-panel .stNumberInput input {
-        background-color: #ffffff;
-        color: #1a1a1a;
+        background: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
         border-radius: 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     .stExpander {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background-color: #ffffff;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-        transition: all 0.2s;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
     }
     .stExpander summary {
         font-weight: 600;
-        color: #2563eb;
-        padding: 0.75rem;
+        color: #60a5fa;
+        padding: 1rem;
         cursor: pointer;
-        border-radius: 8px;
+        border-radius: 12px;
     }
     .stExpander summary:hover {
-        background-color: #f7f9fc;
+        background: rgba(255, 255, 255, 0.1);
     }
     .sidebar .stHeader {
-        color: #1e40af;
-        font-size: 1.875rem;
+        color: #60a5fa;
+        font-size: 2rem;
         font-weight: 700;
         margin-bottom: 2.5rem;
         text-transform: uppercase;
-        letter-spacing: 0.05rem;
+        letter-spacing: 0.1rem;
     }
     ::-webkit-scrollbar {
-        width: 10px;
+        width: 12px;
     }
     ::-webkit-scrollbar-track {
-        background: #f7f9fc;
-        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
     }
     ::-webkit-scrollbar-thumb {
-        background: #2563eb;
-        border-radius: 5px;
+        background: #60a5fa;
+        border-radius: 6px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #1d4ed8;
+        background: #3b82f6;
     }
     @media (max-width: 768px) {
         .vehicle-row {
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
+            gap: 2rem;
         }
         .lease-options-table {
-            grid-template-columns: 1fr repeat(3, minmax(120px, 1fr));
+            grid-template-columns: 1fr repeat(3, minmax(140px, 1fr));
         }
         .lease-details {
             grid-template-columns: 1fr;
