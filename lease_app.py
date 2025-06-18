@@ -15,7 +15,12 @@ st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
 
 st.markdown("""
 <style>
-/* [styling omitted for brevity] */
+.toggle-green .stToggleSwitch [data-baseweb="switch"] {
+  background-color: #28a745 !important;
+}
+.toggle-red .stToggleSwitch [data-baseweb="switch"] {
+  background-color: #dc3545 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,11 +104,17 @@ if vin_input:
                 with row_cols[i + 1]:
                     monthly_placeholder = st.empty()
                     with st.expander("View Details"):
-                        apply_markup = st.toggle("Remove MF Markup (-0.00040)", value=False, key=f"mf_markup_{term}_{mileage}")
+                        markup_state = st.session_state.get(f"mf_markup_{term}_{mileage}", True)
+markup_label = "Markup Applied" if markup_state else "Markup Removed"
+markup_class = "toggle-green" if markup_state else "toggle-red"
+with st.container():
+    st.markdown(f'<div class="{markup_class}">', unsafe_allow_html=True)
+    apply_markup = st.toggle(markup_label, value=True, key=f"mf_markup_{term}_{mileage}")
+    st.markdown('</div>', unsafe_allow_html=True)
                         apply_cash = st.toggle("Apply Lease Cash", value=False, key=f"apply_cash_{term}_{mileage}")
                         money_down_local = st.number_input("Down Payment ($)", min_value=0.0, value=money_down, step=100.0, key=f"cash_input_{term}_{mileage}")
 
-                        mf = float(row[mf_col]) + (0.0 if apply_markup else -0.0004)
+                        mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
                         total_ccr = money_down_local + (lease_cash if apply_cash else 0.0)
                         selling_price = st.number_input(
                             "Selling Price ($)",
