@@ -304,7 +304,7 @@ if st.session_state.submitted and st.session_state.vin_input:
 
                             with st.expander(
                                 f"Monthly Payment (w/ tax): {initial_monthly_payment}",
-                                expanded=True,
+                                key=f"expander_{term}_{mileage}"
                             ) as expander:
                                 selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
                                 apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key=f"markup_{term}_{mileage}")
