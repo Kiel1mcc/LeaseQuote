@@ -189,18 +189,34 @@ with st.sidebar:
             st.session_state.sidebar_open = False
             st.session_state.submitted = True
     st.markdown("### Display Settings")
-    default_apply_cash = st.toggle("Auto-apply Lease Cash", value=st.session_state.default_apply_cash, key="toggle_default_apply_cash")
-    if 'default_apply_cash_set' not in st.session_state:
+    default_apply_cash = st.toggle(
+        "Auto-apply Lease Cash",
+        value=st.session_state.default_apply_cash,
+        key="toggle_default_apply_cash",
+    )
+    if default_apply_cash != st.session_state.default_apply_cash:
         st.session_state.default_apply_cash = default_apply_cash
-        st.session_state.default_apply_cash_set = True
-    default_apply_markup = st.toggle("Auto-apply MF Markup (+0.00040)", value=st.session_state.default_apply_markup, key="toggle_default_apply_markup")
-    if 'default_apply_markup_set' not in st.session_state:
+        for key in list(st.session_state.keys()):
+            if key.startswith("applycash_"):
+                st.session_state[key] = default_apply_cash
+
+    default_apply_markup = st.toggle(
+        "Auto-apply MF Markup (+0.00040)",
+        value=st.session_state.default_apply_markup,
+        key="toggle_default_apply_markup",
+    )
+    if default_apply_markup != st.session_state.default_apply_markup:
         st.session_state.default_apply_markup = default_apply_markup
-        st.session_state.default_apply_markup_set = True
-    debug_mode = st.toggle("Enable Debug Mode", value=st.session_state.debug_mode, key="toggle_debug_mode")
-    if 'debug_mode_set' not in st.session_state:
-        st.session_state.debug_mode = debug_mode
-        st.session_state.debug_mode_set = True
+        for key in list(st.session_state.keys()):
+            if key.startswith("markup_"):
+                st.session_state[key] = default_apply_markup
+
+    debug_mode = st.toggle(
+        "Enable Debug Mode",
+        value=st.session_state.debug_mode,
+        key="toggle_debug_mode",
+    )
+    st.session_state.debug_mode = debug_mode
     st.markdown("*Click Submit to calculate lease options.*")
 
 # Control sidebar visibility
