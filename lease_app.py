@@ -116,6 +116,16 @@ if vin_input:
                             if mf_col not in row or 'Residual' not in row or pd.isna(row[mf_col]) or pd.isna(row['Residual']):
                                 st.info("This mileage and term combination is not available on the selected model.")
                                 continue
+
+                            # Adjust residual based on mileage
+                            base_residual = float(row['Residual'])
+                            if int(mileage) == 10000:
+                                adjusted_residual = base_residual + 0.01
+                            elif int(mileage) == 15000:
+                                adjusted_residual = base_residual - 0.02
+                            else:
+                                adjusted_residual = base_residual
+
                             selling_price = st.number_input("Selling Price ($)", value=float(msrp), step=100.0, key=f"sp_{term}_{mileage}")
                             apply_markup = st.toggle("Apply MF Markup (+0.00040)", value=True, key=f"markup_{term}_{mileage}")
                             mf = float(row[mf_col]) + (0.0004 if apply_markup else 0.0)
@@ -126,7 +136,7 @@ if vin_input:
                             with col2:
                                 custom_cash = st.number_input("Cash ($)", value=lease_cash, step=100.0, key=f"cash_{term}_{mileage}", disabled=not apply_cash)
                             total_ccr = money_down + (custom_cash if apply_cash else 0.0)
-                            residual_value = round(float(msrp) * float(row["Residual"]), 2)
+                            residual_value = round(float(msrp) * adjusted_residual, 2)
                             payment_calc = calculate_base_and_monthly_payment(
                                 S=selling_price,
                                 RES=residual_value,
