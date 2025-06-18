@@ -45,7 +45,7 @@ with st.sidebar:
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
     county_column = county_rates.columns[0]
     selected_county = st.selectbox("Select County:", county_rates[county_column])
-    money_down = st.number_input("Money Down ($)", min_value=0.0, value=0.0, step=100.0)
+    money_down = st.number_input("Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
 
 if vin_input:
     vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -141,18 +141,21 @@ if vin_input:
                             cleaned = monthly_raw.replace("$", "").replace(",", "")
                         else:
                             cleaned = monthly_raw
-                        initial_monthly_payment = float(cleaned)
+                        try:
+                            initial_monthly_payment = float(cleaned)
+                        except (ValueError, TypeError):
+                            initial_monthly_payment = 0.0
 
                         try:
-                            title = f"Monthly Payment (w/ tax): ${initial_monthly_payment:,.2f}"
+                            title = f"Monthly Payment: ${initial_monthly_payment:,.2f}"
                         except:
-                            title = "Monthly Payment (w/ tax): —"
+                            title = "Monthly Payment: —"
 
-                        with st.expander(title):
+                        with st.expander(title, key=f"expander_{term}_{mileage}"):
                             st.number_input("Selling Price ($)", value=selling_price, step=100.0, key=f"selling_price_{term}_{mileage}", disabled=True)
+                            st.number_input("Down Payment ($)", value=custom_cash, step=100.0, disabled=True, key=f"cash_input_{term}_{mileage}")
                             st.toggle("Apply MF Markup (+0.00040)", value=apply_markup, key=f"mf_markup_{term}_{mileage}", disabled=True)
                             st.toggle("Apply Lease Cash", value=apply_cash, key=f"apply_cash_{term}_{mileage}", disabled=True)
-                            st.number_input("Cash ($)", value=custom_cash, step=100.0, disabled=True, key=f"cash_input_{term}_{mileage}")
 
                             st.markdown(f"""
                             <div class="lease-details">
@@ -170,12 +173,8 @@ if vin_input:
                                         <p class="metric-value">${residual_value:,.2f} ({adjusted_residual:.0%})</p>
                                     </div>
                                     <div>
-                                        <p class="metric-label">Monthly Payment (w/ tax)</p>
+                                        <p class="metric-label">Monthly Payment</p>
                                         <p class="metric-value">{payment_calc['Monthly Payment']}</p>
-                                    </div>
-                                    <div>
-                                        <p class="metric-label">Down Payment</p>
-                                        <p class="metric-value">${money_down:,.2f}</p>
                                     </div>
                                 </div>
                             </div>
