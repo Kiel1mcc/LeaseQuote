@@ -89,9 +89,7 @@ if vin_input:
                 base_residual = float(row['Residual'])
                 adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
                 mf_col = f"Tier {tier_num}"
-                
                 lease_cash = float(row["LeaseCash"]) if "LeaseCash" in row else 0.0
-                
 
                 with row_cols[i + 1]:
                     monthly_placeholder = st.empty()
@@ -109,7 +107,7 @@ if vin_input:
                             step=100.0,
                             key=f"selling_price_{term}_{mileage}"
                         )
-                        residual_value = round(selling_price * adjusted_residual, 2)
+                        residual_value = round(msrp * adjusted_residual, 2)
                         payment_calc = calculate_base_and_monthly_payment(
                             S=selling_price,
                             RES=residual_value,
