@@ -122,14 +122,11 @@ if vin_input:
                     bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
                     topVal = B - K - (
                         F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
-                        
+                        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+                    )
 
+                    # Handle negative numerator for CCR
                     if topVal < 0:
-                        B += abs(topVal)
-                        topVal = B - K - (
-                            F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
-                            (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
-                        )
                         st.markdown(f"⬆️ Adjusted B due to negative CCR numerator: ${B:,.2f}")
                         st.markdown(f"🔁 New Top Value after correction: {topVal:.6f}")
 
