@@ -58,7 +58,7 @@ if vin_input and model_number:
         tax_rate = county_rates[county_rates.iloc[:, 0] == selected_county].iloc[0, 1] / 100
 
         mileage_options = [10000, 12000, 15000]
-        lease_terms = sorted(lease_matches["LeaseTerm"].dropna().unique())
+        lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
         for term in lease_terms:
             term_group = lease_matches[lease_matches["LeaseTerm"] == term]
