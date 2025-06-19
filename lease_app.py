@@ -104,61 +104,7 @@ if vin_input:
                     RES = residual_value
                     S = selling_price
 
-                    ccr, overflow = calculate_ccr_full(
-                        SP=SP,
-                        B=B,
-                        rebates=0.0,
-                        TV=TV,
-                        K=K,
-                        M=M,
-                        Q=Q,
-                        RES=RES,
-                        F=F,
-                        W=W,
-                        τ=τ
-                    )
-
-                    # Show intermediate values
-                    bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
-                    topVal = B - K - (
-                        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
-                        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
-                    )
-
-                    # Handle negative numerator for CCR
-                    if topVal < 0:
-                        st.markdown(f"⬆️ Adjusted B due to negative CCR numerator: ${B:,.2f}")
-                        st.markdown(f"🔁 New Top Value after correction: {topVal:.6f}")
-
-                        ccr, overflow = calculate_ccr_full(
-                            SP=SP,
-                            B=B,
-                            rebates=0.0,
-                            TV=TV,
-                            K=K,
-                            M=M,
-                            Q=Q,
-                            RES=RES,
-                            F=F,
-                            W=W,
-                            τ=τ
-                        )
-
-                        ccr, overflow = calculate_ccr_full(
-                            SP=SP,
-                            B=B,
-                            rebates=0.0,
-                            TV=TV,
-                            K=K,
-                            M=M,
-                            Q=Q,
-                            RES=RES,
-                            F=F,
-                            W=W,
-                            τ=τ
-                        )
-                            (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
-                        )
+                    
                         st.markdown(f"⬆️ Adjusted B due to negative CCR numerator: ${B:,.2f}")
                         st.markdown(f"🔁 New Top Value after correction: {topVal:.6f}")
                     st.markdown(f"**Top Value (Numerator for CCR):** {topVal:.6f}")
