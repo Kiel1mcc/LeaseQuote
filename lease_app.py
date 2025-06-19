@@ -134,7 +134,6 @@ if vin_input:
                         st.markdown(f"⬆️ Adjusted B due to negative CCR numerator: ${B:,.2f}")
                         st.markdown(f"🔁 New Top Value after correction: {topVal:.6f}")
 
-                        # Recalculate CCR using adjusted B
                         ccr, overflow = calculate_ccr_full(
                             SP=SP,
                             B=B,
