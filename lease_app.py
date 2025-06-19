@@ -65,8 +65,6 @@ if vin_input:
                     available_lease_cash = float(row.get("LeaseCash", 0.0))
 
                     st.markdown(f"**Mileage: {mileage:,} / yr**")
-                    st.markdown(f"Money Factor: {money_factor:.6f}")
-                    st.markdown(f"MSRP: ${msrp:,.2f}")
 
                     selling_price = st.number_input(
                         f"Selling Price ($) — {term} mo / {mileage:,} mi",
@@ -118,6 +116,11 @@ if vin_input:
                         τ=tax_rate
                     )
 
+                    st.markdown(f"**Money Factor:** {money_factor:.6f}  ")
+                    st.markdown(f"**MSRP:** ${msrp:,.2f}  ")
+                    st.markdown(f"**Residual Value:** ${residual_value:,.2f}  ")
+                    st.markdown(f"**Numerator:** {payment['Numerator (N)']:.6f}  ")
+                    st.markdown(f"**Denominator:** {payment['Denominator (D)']}  ")
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*")
 
