@@ -21,20 +21,17 @@ def calculate_ccr_full(
     - overflow_down: float — if CCR < 0, this is added as extra cash down
     """
 
-    adjusted_price = selling_price - trade_value
-    M = doc_fee + acq_fee
-    Q = license_fee + title_fee
+    """
+    Cap cost reduction is the total of any customer cash, lease cash,
+    rebates or trade equity that directly lowers the vehicle's capitalized
+    cost. Fees due at signing (doc, acquisition, license and title) are not
+    deducted from this amount so that lease cash always reduces the payment
+    regardless of how it compares to the fees.
+    """
 
-    credits = money_down + lease_cash_used + rebates
+    credits = money_down + lease_cash_used + rebates + trade_value
 
-    # New logic — no longer using tax or base payment here
-    ccr = credits - M - Q
-
-    if ccr >= 0:
-        return round(ccr, 2), 0.0
-    else:
-        overflow = round(abs(ccr), 2)
-        return 0.0, overflow
+    return round(credits, 2), 0.0
 
 def calculate_payment_from_ccr(
     selling_price,

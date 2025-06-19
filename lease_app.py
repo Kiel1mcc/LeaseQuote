@@ -36,7 +36,9 @@ if vin_input:
         else:
             lease_info = lease_matches.iloc[0]
             model_year = lease_info.get("Year", "N/A")
-            make = lease_info.get("Make", "N/A")
+            # The lease programs file does not include a Make column. All data
+            # currently corresponds to Hyundai, so use that as a fallback.
+            make = lease_info.get("Make", "Hyundai")
             model = lease_info.get("Model", "N/A")
             trim = lease_info.get("Trim", "N/A")
 
