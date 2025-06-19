@@ -37,8 +37,6 @@ if vin_input:
         else:
             lease_info = lease_matches.iloc[0]
             model_year = lease_info.get("Year", "N/A")
-            # The lease programs file does not include a Make column. All data
-            # currently corresponds to Hyundai, so use that as a fallback.
             make = lease_info.get("Make", "Hyundai")
             model = lease_info.get("Model", "N/A")
             trim = lease_info.get("Trim", "N/A")
@@ -46,7 +44,7 @@ if vin_input:
             st.markdown(f"### Vehicle: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
 
             tier_num = int(selected_tier.split(" ")[1])
-            tax_rate = 0.0725  # use selected county to map later
+            tax_rate = 0.0725
             mileage_options = [10000, 12000, 15000]
             lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
@@ -67,6 +65,8 @@ if vin_input:
                     available_lease_cash = float(row.get("LeaseCash", 0.0))
 
                     st.markdown(f"**Mileage: {mileage:,} / yr**")
+                    st.markdown(f"Money Factor: {money_factor:.6f}")
+                    st.markdown(f"MSRP: ${msrp:,.2f}")
 
                     selling_price = st.number_input(
                         f"Selling Price ($) — {term} mo / {mileage:,} mi",
@@ -93,7 +93,6 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
-                    # Combine down payment and lease cash for CCR calculation
                     total_down = money_down_slider + lease_cash_used
 
                     ccr, overflow = calculate_ccr_full(
@@ -119,20 +118,12 @@ if vin_input:
                         τ=tax_rate
                     )
 
-                    st.markdown(
-                        f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**"
-                    )
-                    st.markdown(
-                        f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*"
-                    )
+                    st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*")
 
                     with st.expander("Details"):
-                        st.markdown(f"Money Factor: {money_factor:.6f}")
-                        st.markdown(f"MSRP: ${msrp:,.2f}")
-                        st.markdown(f"Residual Value: ${residual_value:,.2f}")
-                        st.markdown(
-                            f"Numerator: {payment['Numerator (N)']:.6f}"
-                        )
-                        st.markdown(
-                            f"Denominator: {payment['Denominator (D)']}"
-                        )
+                        st.markdown(f"Money Factor Used: {money_factor:.6f}")
+                        st.markdown(f"MSRP Used: ${msrp:,.2f}")
+                        st.markdown(f"Residual Value Used: ${residual_value:,.2f}")
+                        st.markdown(f"Numerator: {payment['Numerator (N)']:.6f}")
+                        st.markdown(f"Denominator: {payment['Denominator (D)']}")
