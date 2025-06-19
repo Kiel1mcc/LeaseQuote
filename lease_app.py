@@ -47,7 +47,7 @@ if vin_input and model_number:
         st.error("No lease program found for this model number.")
     else:
         lease_info = lease_matches.iloc[0]
-        model_year = lease_info.get("ModelYear", model_year if manual_entry else "N/A")
+        model_year = lease_info.get("Year", model_year if manual_entry else "N/A")
         make = lease_info.get("Make", make if manual_entry else "N/A")
         model = lease_info.get("Model", model if manual_entry else "N/A")
         trim = lease_info.get("Trim", trim if manual_entry else "N/A")
@@ -61,7 +61,7 @@ if vin_input and model_number:
         lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
         for term in lease_terms:
-            term_group = lease_matches[lease_matches["LeaseTerm"] == term]
+            term_group = lease_matches[lease_matches["Term"] == term]
             st.subheader(f"{term}-Month Lease")
 
             for mileage in mileage_options:
