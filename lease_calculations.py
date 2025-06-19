@@ -24,15 +24,11 @@ def calculate_ccr_full(
     adjusted_price = selling_price - trade_value
     M = doc_fee + acq_fee
     Q = license_fee + title_fee
-    tau = tax_rate
 
     credits = money_down + lease_cash_used + rebates
 
-    depreciation = adjusted_price - residual_value
-    rent_charge = (adjusted_price + residual_value) * money_factor
-    base_payment = (depreciation + rent_charge) / term
-
-    ccr = credits - M - Q - (tau * base_payment)
+    # New logic — no longer using tax or base payment here
+    ccr = credits - M - Q
 
     if ccr >= 0:
         return round(ccr, 2), 0.0
@@ -73,3 +69,20 @@ def calculate_payment_from_ccr(
         "Monthly Payment": round(monthly_payment, 2),
         "Total Sales Tax": round(total_sales_tax, 2),
     }
+
+# Example usage:
+# ccr, overflow = calculate_ccr_full(
+#     selling_price=25040,
+#     money_down=0,
+#     lease_cash_used=1500,
+#     rebates=0,
+#     trade_value=0,
+#     doc_fee=250,
+#     acq_fee=650,
+#     license_fee=47.50,
+#     title_fee=15.0,
+#     residual_value=15000,
+#     money_factor=0.00100,
+#     term=36,
+#     tax_rate=0.0725
+# )
