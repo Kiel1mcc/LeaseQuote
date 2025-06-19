@@ -29,7 +29,7 @@ if vin_input:
         msrp = vehicle["MSRP"]
         model_number = vehicle["ModelNumber"]
 
-        st.markdown(f"### Vehicle: {vehicle['Year']} {vehicle['Make']} {vehicle['Model']} {vehicle['Trim']}")
+        st.markdown(f"### Vehicle: {vehicle.get('Year', 'N/A')} {vehicle.get('Make', 'N/A')} {vehicle.get('Model', 'N/A')} {vehicle.get('Trim', 'N/A')}")
 
         matching_programs = lease_programs[lease_programs["ModelNumber"] == model_number]
         tier_num = int(selected_tier.split(" ")[1])
