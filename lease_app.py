@@ -118,6 +118,15 @@ if vin_input:
                         τ=τ
                     )
 
+                    # Show intermediate values
+                    bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
+                    topVal = B - K - (
+                        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
+                        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+                    )
+                    st.markdown(f"**Top Value (Numerator for CCR):** {topVal:.6f}")
+                    st.markdown(f"**Bottom Value (Denominator for CCR):** {bottomVal:.6f}")
+
                     payment = calculate_payment_from_ccr(
                         SP=SP,
                         CCR=ccr,
