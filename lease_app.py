@@ -19,6 +19,7 @@ with st.sidebar:
     selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"])
     trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
     default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
+    apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
 
 # VIN match
 if vin_input:
@@ -61,6 +62,8 @@ if vin_input:
 
                     mf_col = f"Tier {tier_num}"
                     money_factor = float(row[mf_col])
+                    if apply_markup:
+                        money_factor += 0.0004
                     available_lease_cash = float(row.get("LeaseCash", 0.0))
 
                     st.markdown(f"**Mileage: {mileage:,} / yr**")
@@ -71,14 +74,15 @@ if vin_input:
                         key=f"price_{term}_{mileage}"
                     )
 
-                    lease_cash_used = st.number_input(
-                        f"Lease Cash Used ($) — Max: ${available_lease_cash:,.2f}",
-                        min_value=0.0,
-                        max_value=available_lease_cash,
-                        value=available_lease_cash,
-                        step=1.0,
-                        key=f"lease_cash_{term}_{mileage}"
-                    )
+                    with st.expander("Incentives"):
+                        lease_cash_used = st.number_input(
+                            f"Lease Cash Used ($) — Max: ${available_lease_cash:,.2f}",
+                            min_value=0.0,
+                            max_value=available_lease_cash,
+                            value=0.0,
+                            step=1.0,
+                            key=f"lease_cash_{term}_{mileage}"
+                        )
 
                     money_down_slider = st.slider(
                         f"Adjust Down Payment ($) — {term} mo / {mileage:,} mi",
@@ -121,3 +125,14 @@ if vin_input:
                     st.markdown(
                         f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*"
                     )
+
+                    with st.expander("Details"):
+                        st.markdown(f"Money Factor: {money_factor:.6f}")
+                        st.markdown(f"MSRP: ${msrp:,.2f}")
+                        st.markdown(f"Residual Value: ${residual_value:,.2f}")
+                        st.markdown(
+                            f"Numerator: {payment['Numerator (N)']:.6f}"
+                        )
+                        st.markdown(
+                            f"Denominator: {payment['Denominator (D)']}"
+                        )
