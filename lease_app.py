@@ -89,30 +89,35 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
+                    # Combine down payment and lease cash for CCR calculation
+                    total_down = money_down_slider + lease_cash_used
+
                     ccr, overflow = calculate_ccr_full(
-                        selling_price=selling_price,
-                        money_down=money_down_slider,
-                        lease_cash_used=lease_cash_used,
+                        SP=selling_price,
+                        B=total_down,
                         rebates=0.0,
-                        trade_value=trade_value,
-                        doc_fee=250.0,
-                        acq_fee=650.0,
-                        license_fee=47.50,
-                        title_fee=15.0,
-                        residual_value=residual_value,
-                        money_factor=money_factor,
-                        term=term,
-                        tax_rate=tax_rate
+                        TV=trade_value,
+                        K=0.0,
+                        M=250.0 + 650.0,
+                        Q=47.50 + 15.0,
+                        RES=residual_value,
+                        F=money_factor,
+                        W=term,
+                        τ=tax_rate
                     )
 
                     payment = calculate_payment_from_ccr(
-                        selling_price=selling_price,
-                        cap_cost_reduction=ccr,
-                        residual_value=residual_value,
-                        term=term,
-                        money_factor=money_factor,
-                        tax_rate=tax_rate
+                        SP=selling_price,
+                        CCR=ccr,
+                        RES=residual_value,
+                        W=term,
+                        F=money_factor,
+                        τ=tax_rate
                     )
 
-                    st.markdown(f"**Monthly Payment: ${payment['Monthly Payment']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment']:.2f}, Tax: ${payment['Total Sales Tax']:.2f}, CCR: ${ccr:.2f}*")
+                    st.markdown(
+                        f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**"
+                    )
+                    st.markdown(
+                        f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*"
+                    )
