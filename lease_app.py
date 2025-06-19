@@ -94,8 +94,8 @@ if vin_input:
                     B = money_down_slider + lease_cash_used
                     K = 0.0
                     U = 0.0
-                    M = 250.0 + 650.0
-                    Q = 47.50 + 15.0
+                    M = 250.0 + 650.0 + 62.50
+                    Q = 0.0
                     τ = tax_rate
                     F = money_factor
                     W = term
