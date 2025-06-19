@@ -1,4 +1,4 @@
-# LOCKED FORMULA - CCR CALCULATIONAdd commentMore actions
+# LOCKED FORMULA - CCR CALCULATIONAdd comment More actions
 
 def calculate_ccr_full(
     SP,  # Selling Price
