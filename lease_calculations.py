@@ -1,85 +1,98 @@
+# LOCKED FORMULA - CCR CALCULATION
+
 def calculate_ccr_full(
-    selling_price,
-    money_down,
-    lease_cash_used,
+    SP,  # Selling Price
+    B,   # Cash Down + Lease Cash + Rebates
     rebates,
-    trade_value,
-    doc_fee,
-    acq_fee,
-    license_fee,
-    title_fee,
-    residual_value,
-    money_factor,
-    term,
-    tax_rate
+    TV,  # Trade Value
+    K,   # Lease Inception Fees (not used directly)
+    M,   # Taxable Fees (Doc + Acq)
+    Q,   # Non-taxable Fees (License + Title)
+    RES, # Residual Value ($)
+    F,   # Money Factor
+    W,   # Lease Term (Months)
+    τ    # Sales Tax Rate
 ):
     """
-    Calculate Cap Cost Reduction (CCR) with overflow logic for negative values.
+    Calculate Cap Cost Reduction (CCR) using full Excel-style formula logic.
+    Returns final CCR and any overflow amount to apply as cash down.
 
-    Returns:
-    - final_ccr: float — the usable cap cost reduction (≥ 0)
-    - overflow_down: float — if CCR < 0, this is added as extra cash down
+    FORMULA BELOW LOCKED — DO NOT EDIT BELOW UNLESS YOU ARE KIEL MCCLEARY
     """
+    S = SP - TV  # Adjusted price after trade
+    U = 0.00     # Non-cash CCR (if ever used)
 
-    """
-    Cap cost reduction is the total of any customer cash, lease cash,
-    rebates or trade equity that directly lowers the vehicle's capitalized
-    cost. Fees due at signing (doc, acquisition, license and title) are not
-    deducted from this amount so that lease cash always reduces the payment
-    regardless of how it compares to the fees.
-    """
+    # LOCKED IN: Denominator (bottomVal)
+    bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
 
-    credits = money_down + lease_cash_used + rebates + trade_value
+    # LOCKED IN: Numerator (topVal)
+    topVal = B - K - (
+        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
+        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+    )
 
-    return round(credits, 2), 0.0
+    if topVal < 0:
+        B += abs(topVal)
+        # Recalculate numerator with updated B
+        topVal = B - K - (
+            F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
+            (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+        )
+
+    CCR = topVal / bottomVal
+
+    if CCR < 0:
+        return 0.0, round(abs(CCR), 6)
+    else:
+        return round(CCR, 6), 0.0
 
 def calculate_payment_from_ccr(
-    selling_price,
-    cap_cost_reduction,
-    residual_value,
-    term,
-    money_factor,
-    tax_rate,
-    doc_fee=250.0,
-    acq_fee=650.0,
-    license_fee=47.50,
-    title_fee=15.0
+    SP,
+    CCR,
+    RES,
+    W,
+    F,
+    τ,
+    M=900.0,  # DOC + ACQ default
+    Q=62.50   # License + Title default
 ):
+    """FORMULA ABOVE LOCKED — DO NOT EDIT BELOW UNLESS YOU ARE KIEL MCCLEARY
+      Compute base payment, tax, and monthly lease payment.
+    Includes safeguard: if numerator is negative, it is inverted.
     """
-    Compute base payment, monthly payment, and sales tax
-    from the final CCR produced by `calculate_ccr_full`.
-    Returns a dict with human-readable values.
-    """
-    taxable_fees = doc_fee + acq_fee
-    net_cap_cost = (selling_price - cap_cost_reduction) + taxable_fees
-    depreciation = (net_cap_cost - residual_value) / term
-    rent_charge = money_factor * (net_cap_cost + residual_value)
-    base_payment = depreciation + rent_charge
+    cap_cost = (SP - CCR) + M
+    numerator = (cap_cost - RES) + (cap_cost + RES) * F
 
-    monthly_tax = base_payment * tax_rate
-    monthly_payment = base_payment + monthly_tax
+    if numerator < 0:
+        numerator = abs(numerator)
 
-    total_sales_tax = monthly_tax * term
+    depreciation = (cap_cost - RES) / W
+    rent_charge = F * (cap_cost + RES)
+    BP = depreciation + rent_charge
+
+    monthly_tax = BP * τ
+    MP = BP + monthly_tax
+    ST = monthly_tax * W
 
     return {
-        "Base Payment": round(base_payment, 2),
-        "Monthly Payment": round(monthly_payment, 2),
-        "Total Sales Tax": round(total_sales_tax, 2),
+        "Base Payment (BP)": round(BP, 2),
+        "Monthly Payment (MP)": round(MP, 2),
+        "Sales Tax (ST)": round(ST, 2),
+        "Depreciation (AMD)": round(depreciation, 2),
+        "Lease Charge (ALC)": round(rent_charge, 2),
+        "Net Cap Cost (TA)": round(cap_cost, 2),
+        "Numerator (N)": round(numerator, 6),
+        "Denominator (D)": W
     }
 
-# Example usage:
-# ccr, overflow = calculate_ccr_full(
-#     selling_price=25040,
-#     money_down=0,
-#     lease_cash_used=1500,
-#     rebates=0,
-#     trade_value=0,
-#     doc_fee=250,
-#     acq_fee=650,
-#     license_fee=47.50,
-#     title_fee=15.0,
-#     residual_value=15000,
-#     money_factor=0.00100,
-#     term=36,
-#     tax_rate=0.0725
-# )
+# Glossary reference:
+# SP = Sales Price
+# TV = Trade Value
+# B = Cash Down + Lease Cash + Rebates
+# M = Taxable Fees (DOC + ACQ)
+# Q = Non-taxable Fees (License + Title)
+# RES = Residual Value ($)
+# F = Money Factor
+# W = Lease Term
+# τ = Sales Tax Rate
+# U = Non-cash CCR (unused but placeholder for formula compatibility)
