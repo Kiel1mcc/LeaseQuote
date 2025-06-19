@@ -147,7 +147,7 @@ if vin_input:
                             F=F,
                             W=W,
                             τ=τ
-                        ) + (S + M - U - RES)) - U + RES) +
+                        )
                             (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
                         )
                         st.markdown(f"⬆️ Adjusted B due to negative CCR numerator: ${B:,.2f}")
