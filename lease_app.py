@@ -6,9 +6,16 @@ from lease_calculations import calculate_ccr_full, calculate_payment_from_ccr
 st.set_page_config(page_title="Lease Quote Tool", layout="wide")
 
 # Load data files
-lease_programs = pd.read_csv("All_Lease_Programs_Database.csv")
+# Read CSVs with utf-8-sig to handle potential byte order marks and
+# strip whitespace from all column headers for consistency.
+lease_programs = pd.read_csv("All_Lease_Programs_Database.csv", encoding="utf-8-sig")
+lease_programs.columns = lease_programs.columns.str.strip()
+
 vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
-county_rates = pd.read_csv("County_Tax_Rates.csv")
+vehicle_data.columns = vehicle_data.columns.str.strip()
+
+county_rates = pd.read_csv("County_Tax_Rates.csv", encoding="utf-8-sig")
+county_rates.columns = county_rates.columns.str.strip()
 
 # Sidebar inputs
 with st.sidebar:
@@ -45,6 +52,7 @@ if vin_input and model_number:
 
     if lease_matches.empty:
         st.error("No lease program found for this model number.")
+        st.stop()
     else:
         lease_info = lease_matches.iloc[0]
         model_year = lease_info.get("Year", model_year if manual_entry else "N/A")
