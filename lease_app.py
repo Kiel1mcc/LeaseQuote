@@ -91,42 +91,61 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
-                    total_down = money_down_slider + lease_cash_used
+                    B = money_down_slider + lease_cash_used
+                    K = 0.0
+                    U = 0.0
+                    M = 250.0 + 650.0
+                    Q = 47.50 + 15.0
+                    τ = tax_rate
+                    F = money_factor
+                    W = term
+                    TV = trade_value
+                    SP = selling_price
+                    RES = residual_value
+                    S = selling_price
 
                     ccr, overflow = calculate_ccr_full(
-                        SP=selling_price,
-                        B=total_down,
+                        SP=SP,
+                        B=B,
                         rebates=0.0,
-                        TV=trade_value,
-                        K=0.0,
-                        M=250.0 + 650.0,
-                        Q=47.50 + 15.0,
-                        RES=residual_value,
-                        F=money_factor,
-                        W=term,
-                        τ=tax_rate
+                        TV=TV,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=RES,
+                        F=F,
+                        W=W,
+                        τ=τ
                     )
 
                     payment = calculate_payment_from_ccr(
-                        SP=selling_price,
+                        SP=SP,
                         CCR=ccr,
-                        RES=residual_value,
-                        W=term,
-                        F=money_factor,
-                        τ=tax_rate
+                        RES=RES,
+                        W=W,
+                        F=F,
+                        τ=τ
                     )
 
-                    st.markdown(f"**Money Factor:** {money_factor:.6f}  ")
+                    st.markdown(f"**Money Factor:** {F:.6f}  ")
                     st.markdown(f"**MSRP:** ${msrp:,.2f}  ")
-                    st.markdown(f"**Residual Value:** ${residual_value:,.2f}  ")
+                    st.markdown(f"**Residual Value:** ${RES:,.2f}  ")
                     st.markdown(f"**Numerator:** {payment['Numerator (N)']:.6f}  ")
                     st.markdown(f"**Denominator:** {payment['Denominator (D)']}  ")
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*")
 
-                    with st.expander("Details"):
-                        st.markdown(f"Money Factor Used: {money_factor:.6f}")
-                        st.markdown(f"MSRP Used: ${msrp:,.2f}")
-                        st.markdown(f"Residual Value Used: ${residual_value:,.2f}")
-                        st.markdown(f"Numerator: {payment['Numerator (N)']:.6f}")
-                        st.markdown(f"Denominator: {payment['Denominator (D)']}")
+                    st.markdown("---")
+                    st.markdown(f"**Variables Used:**  ")
+                    st.markdown(f"B (Money Down + Lease Cash): ${B:,.2f}  ")
+                    st.markdown(f"K (Inception Fees): ${K:,.2f}  ")
+                    st.markdown(f"U (Unused Cap Reduction): ${U:,.2f}  ")
+                    st.markdown(f"M (DOC + ACQ Fees): ${M:,.2f}  ")
+                    st.markdown(f"Q (License + Title): ${Q:,.2f}  ")
+                    st.markdown(f"τ (Tax Rate): {tax_rate:.4f}  ")
+                    st.markdown(f"F (Money Factor): {F:.6f}  ")
+                    st.markdown(f"W (Term): {W}  ")
+                    st.markdown(f"TV (Trade Value): ${TV:,.2f}  ")
+                    st.markdown(f"SP (Selling Price): ${SP:,.2f}  ")
+                    st.markdown(f"S (Selling Price, duplicate): ${S:,.2f}  ")
+                    st.markdown(f"RES (Residual): ${RES:,.2f}  ")
