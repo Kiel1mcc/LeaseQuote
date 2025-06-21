@@ -128,11 +128,12 @@ if vin_input:
 
                     B = remaining["lease_cash"] + remaining["cash_down"]
                     TV = remaining["trade"]
+                    S = SP - max(0, TV - remaining_charges)
 
                     st.markdown(f"**Adjusted B (CCR Cash Applied):** ${B:,.2f}")
 
                     ccr, overflow, debug_final = calculate_ccr_full(
-                        SP=SP,
+                        SP=S,
                         B=B,
                         rebates=0.0,
                         TV=TV,
@@ -145,7 +146,6 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, TV - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
