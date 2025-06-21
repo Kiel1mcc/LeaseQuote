@@ -48,7 +48,7 @@ def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
 
     depreciation = (adjusted_cap_cost - RES) / W
     rent_charge = F * (adjusted_cap_cost + RES)
-    BP = depreciation + rent_charge
+    BP =   rent_charge
     ST = (BP * τ)* W
     MP = BP + ST
 
