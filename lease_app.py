@@ -11,12 +11,20 @@ lease_programs.columns = lease_programs.columns.str.strip()
 vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
 vehicle_data.columns = vehicle_data.columns.str.strip()
 
+# County tax rates
+county_rates_df = pd.read_csv("County_Tax_Rates.csv")
+county_rates_df.columns = county_rates_df.columns.str.strip()
+counties = county_rates_df["County"].tolist()
+tax_rate_lookup = dict(zip(county_rates_df["County"], county_rates_df["Tax Rate"]))
+
 # Sidebar inputs
 with st.sidebar:
     st.header("Lease Parameters")
     vin_input = st.text_input("Enter VIN:", "")
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
-    selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"])
+    selected_county = st.selectbox(
+        "Select County:", counties, index=counties.index("Marion")
+    )
     trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
     default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
@@ -44,7 +52,7 @@ if vin_input:
             st.markdown(f"### Vehicle: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
 
             tier_num = int(selected_tier.split(" ")[1])
-            tax_rate = 0.0725
+            tax_rate = tax_rate_lookup.get(selected_county, 7.25) / 100
             mileage_options = [10000, 12000, 15000]
             lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
