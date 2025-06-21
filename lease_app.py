@@ -131,7 +131,7 @@ if vin_input:
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=trade_value_input,
+                        TV=trade_value_remaining,
                         K=K,
                         M=M,
                         Q=Q,
