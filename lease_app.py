@@ -71,8 +71,8 @@ remaining_charges = deal_charges - TV_applied
 B_applied = min(remaining_charges, B_hold)
 
 # What’s left after covering deal charges
-TV_final = TV_hold - TV_applied
-B_final = B_hold - B_applied
+TV_final = 0.0  # Not used to reduce SP after deal coverage
+B_final = B_hold - B_applied  # Only excess B goes toward CCR
 
 adjusted_B = B_applied + TV_applied
 
@@ -81,7 +81,7 @@ final_ccr, monthly_payment, debug_post = calculate_base_and_monthly_payment(
     SP=SP,
     B=B_final,
     rebates=0.0,
-    TV=TV_final,
+    TV=0.0,
     K=K,
     M=M,
     Q=Q,
