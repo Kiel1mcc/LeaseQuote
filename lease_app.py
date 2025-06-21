@@ -119,7 +119,7 @@ if vin_input:
 
                     S = SP - max(0, TV - overflow)
                     payment = calculate_payment_from_ccr(
-                        S=SP,
+                        S=S,
                         CCR=ccr,
                         RES=RES,
                         W=W,
