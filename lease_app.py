@@ -103,7 +103,7 @@ if vin_input:
                     SP = selling_price
                     RES = residual_value
 
-                    ccr, overflow, _ = calculate_ccr_full(
+                    ccr, overflow, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
@@ -130,3 +130,7 @@ if vin_input:
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
+
+                    with st.expander("Debug Info"):
+                        st.json(debug_ccr)
+                        st.json(payment)
