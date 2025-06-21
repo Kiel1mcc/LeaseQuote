@@ -101,32 +101,32 @@ if vin_input:
                     RES = residual_value
                     U = 0.0
 
-                    # Step 1: Run calculation to detect deal charges (shortfall)
+                    # Step 1: Calculate deal charges
                     initial_ccr, _, debug_pre = calculate_ccr_full(
                         SP=SP, B=0.0, rebates=0.0, TV=0.0,
                         K=K, M=M, Q=Q, RES=RES, F=F, W=W, τ=τ
                     )
-                    topVal = debug_pre.get("Initial TopVal", 0.0)
-                    deal_charges = max(0.0, topVal)
+                    initial_topval = debug_pre.get("Initial TopVal", 0.0)
+                    deal_charges = max(0.0, -initial_topval)
 
-                    # Step 2: Pool all sources and apply to deal charges first
-                    total_pool = lease_cash_used + money_down_slider + trade_value_input
-                    to_deal_charges = min(deal_charges, total_pool)
+                    pool = {
+                        "lease_cash": lease_cash_used,
+                        "cash_down": money_down_slider,
+                        "trade": trade_value_input
+                    }
 
-                    from_lease_cash = min(to_deal_charges, lease_cash_used)
-                    remainder = to_deal_charges - from_lease_cash
-                    from_cash = min(remainder, money_down_slider)
-                    remainder -= from_cash
-                    from_trade = min(remainder, trade_value_input)
+                    used_for_deal = {}
+                    remaining_charges = deal_charges
 
-                    # Remaining values after covering deal charges
-                    remaining_lease_cash = lease_cash_used - from_lease_cash
-                    remaining_cash = money_down_slider - from_cash
-                    remaining_trade = trade_value_input - from_trade
+                    for k in pool:
+                        used = min(pool[k], remaining_charges)
+                        used_for_deal[k] = used
+                        remaining_charges -= used
 
-                    # Step 3: Apply only remaining trade to SP, and others to B
-                    B = remaining_lease_cash + remaining_cash
-                    TV = remaining_trade
+                    remaining = {k: pool[k] - used_for_deal[k] for k in pool}
+
+                    B = remaining["lease_cash"] + remaining["cash_down"]
+                    TV = remaining["trade"]
 
                     st.markdown(f"**Adjusted B (CCR Cash Applied):** ${B:,.2f}")
 
@@ -160,13 +160,13 @@ if vin_input:
 
                     if deal_charges > 0:
                         st.markdown(f"### 🔧 Deal Charges (TopVal Shortfall): ${deal_charges:,.2f}")
-                        st.markdown(f"- From Lease Cash: ${from_lease_cash:,.2f}")
-                        st.markdown(f"- From Cash Down: ${from_cash:,.2f}")
-                        st.markdown(f"- From Trade: ${from_trade:,.2f}")
+                        st.markdown(f"- From Lease Cash: ${used_for_deal['lease_cash']:,.2f}")
+                        st.markdown(f"- From Cash Down: ${used_for_deal['cash_down']:,.2f}")
+                        st.markdown(f"- From Trade: ${used_for_deal['trade']:,.2f}")
 
-                    st.markdown(f"**Remaining Trade Applied to Price:** ${remaining_trade:.2f}")
-                    st.markdown(f"**Remaining Cash Down Applied to CCR:** ${remaining_cash:.2f}")
-                    st.markdown(f"**Remaining Lease Cash Applied to CCR:** ${remaining_lease_cash:.2f}")
+                    st.markdown(f"**Remaining Trade Applied to Price:** ${remaining['trade']:.2f}")
+                    st.markdown(f"**Remaining Cash Down Applied to CCR:** ${remaining['cash_down']:.2f}")
+                    st.markdown(f"**Remaining Lease Cash Applied to CCR:** ${remaining['lease_cash']:.2f}")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Full CCR Debug Info")
