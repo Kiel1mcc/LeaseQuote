@@ -100,12 +100,13 @@ if vin_input:
                     SP = selling_price
                     RES = residual_value
                     U = 0.0
-                    B = money_down_slider + lease_cash_used
+                    cash_down = money_down_slider
+                    lease_cash = lease_cash_used
 
-                    # First run — check topVal only
+                    # Check for TopVal coverage
                     initial_ccr, _, debug_ccr = calculate_ccr_full(
                         SP=SP,
-                        B=B,
+                        B=0.0,
                         rebates=0.0,
                         TV=0.0,
                         K=K,
@@ -120,15 +121,18 @@ if vin_input:
                     topVal = debug_ccr.get("Initial TopVal", 0.0)
                     topVal_shortfall = max(0.0, topVal)
 
-                    trade_to_use = min(topVal_shortfall, trade_value_input)
-                    remaining_trade = trade_value_input - trade_to_use
-                    B += trade_to_use
+                    trade_to_top = min(trade_value_input, topVal_shortfall)
+                    cash_to_top = max(0.0, topVal_shortfall - trade_to_top)
+
+                    trade_remaining = trade_value_input - trade_to_top
+                    cash_remaining = cash_down - cash_to_top
+                    B = lease_cash + cash_remaining
 
                     ccr, overflow, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=remaining_trade,
+                        TV=trade_remaining,
                         K=K,
                         M=M,
                         Q=Q,
@@ -138,7 +142,7 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, remaining_trade - overflow)
+                    S = SP - max(0, trade_remaining - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -150,18 +154,19 @@ if vin_input:
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Remaining Trade: ${remaining_trade:.2f}, Shortfall Covered: ${trade_to_use:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Remaining Trade: ${trade_remaining:.2f}, Trade to TopVal: ${trade_to_top:.2f}, Cash to TopVal: ${cash_to_top:.2f}*")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
-                        st.markdown(f"Initial CCR: {initial_ccr:.6f}")
-                        st.markdown(f"TopVal Shortfall (Applied to DP): {topVal_shortfall:.2f}")
+                        st.markdown(f"TopVal Shortfall: {topVal_shortfall:.2f}")
                         st.markdown(f"Trade Value Input: {trade_value_input:.2f}")
-                        st.markdown(f"Trade Applied: {trade_to_use:.2f}")
-                        st.markdown(f"Remaining Trade Value: {remaining_trade:.2f}")
-                        st.markdown(f"Final CCR: {ccr:.6f}")
-                        st.markdown(f"Adjusted Selling Price (S): {S:.2f}")
+                        st.markdown(f"Trade to TopVal: {trade_to_top:.2f}")
+                        st.markdown(f"Remaining Trade: {trade_remaining:.2f}")
+                        st.markdown(f"Cash to TopVal: {cash_to_top:.2f}")
+                        st.markdown(f"Cash Remaining: {cash_remaining:.2f}")
                         st.markdown(f"Final Down Cap Reduction (B): {B:.2f}")
+                        st.markdown(f"Adjusted Selling Price (S): {S:.2f}")
+                        st.markdown(f"Final CCR: {ccr:.6f}")
                         st.markdown(f"Overflow: {overflow:.6f}")
                         st.markdown("### Full CCR Debug Info")
                         st.json(debug_ccr)
