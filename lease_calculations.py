@@ -50,7 +50,10 @@ def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
     rent_charge = F * (adjusted_cap_cost + RES)
     BP =  depreciation + rent_charge
     ST = (BP * τ)* W
-    MP = BP + ST
+    TA = S+Q+ST+M-CCR
+    AMD = (TA-RES)/W
+    ALC = F * (TA+RES)
+    MP = AMD + ALC
 
     return {
         "Base Payment (BP)": round(BP, 2),
