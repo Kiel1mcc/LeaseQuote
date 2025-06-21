@@ -125,12 +125,17 @@ if vin_input:
                         W=W,
                         F=F,
                         τ=τ,
-                        M=M
+                        M=M,
+                        Q=Q,
+                        ST=debug_ccr.get("Sales Tax", 0.0)  # Pass ST to match TA logic if required
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
 
                     with st.expander("🔍 Debug Details"):
+                        st.markdown("### Debug Info")
                         st.json(debug_ccr)
-                        st.json(payment)
+                        st.markdown("### Payment Breakdown")
+                        for k, v in payment.items():
+                            st.markdown(f"**{k}:** ${v:,.2f}")
