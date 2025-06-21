@@ -131,6 +131,6 @@ if vin_input:
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
 
-                    with st.expander("Debug Info"):
+                    with st.expander("🔍 Debug Details"):
                         st.json(debug_ccr)
                         st.json(payment)
