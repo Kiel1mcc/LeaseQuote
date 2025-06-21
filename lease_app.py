@@ -102,28 +102,6 @@ if vin_input:
                     TV = trade_value
                     SP = selling_price
                     RES = residual_value
-                    S = selling_price
-
-                    bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
-                    topVal = B - K - (
-                        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
-                        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
-                    )
-
-                    st.markdown(f"🔎 Initial TopVal: {topVal:.6f}")
-                    st.markdown(f"🔎 Initial B (Money Down + Lease Cash): ${B:,.2f}")
-
-                    base_payment_pre = calculate_payment_from_ccr(SP, CCR=topVal / bottomVal, RES=RES, W=W, F=F, τ=τ)
-                    st.markdown(f"🧮 Pre-Adjustment Base Payment: ${base_payment_pre['Base Payment (BP)']:.2f}, Tax: ${base_payment_pre['Sales Tax (ST)']:.2f}")
-
-                    if topVal < 0:
-                        B += abs(topVal)
-                        topVal = B - K - (
-                            F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
-                            (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
-                        )
-                        st.markdown(f"⬆️ Adjusted B after applying negative TopVal: ${B:,.2f}")
-                        st.markdown(f"🔁 Recalculated TopVal after B adjustment: {topVal:.6f}")
 
                     ccr, overflow = calculate_ccr_full(
                         SP=SP,
@@ -139,12 +117,9 @@ if vin_input:
                         τ=τ
                     )
 
-                    st.markdown(f"**Top Value (Numerator for CCR):** {topVal:.6f}")
-                    st.markdown(f"**Bottom Value (Denominator for CCR):** {bottomVal:.6f}")
-                    st.markdown(f"**CCR After Final Calc:** {ccr:.2f}")
-
+                    S = SP - max(0, TV - overflow)
                     payment = calculate_payment_from_ccr(
-                        SP=SP,
+                        S=S,
                         CCR=ccr,
                         RES=RES,
                         W=W,
@@ -152,25 +127,5 @@ if vin_input:
                         τ=τ
                     )
 
-                    st.markdown(f"**Money Factor:** {F:.6f}  ")
-                    st.markdown(f"**MSRP:** ${msrp:,.2f}  ")
-                    st.markdown(f"**Residual Value:** ${RES:,.2f}  ")
-                    st.markdown(f"**Numerator:** {payment['Numerator (N)']:.6f}  ")
-                    st.markdown(f"**Denominator:** {payment['Denominator (D)']}  ")
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*")
-
-                    st.markdown("---")
-                    st.markdown(f"**Variables Used:**  ")
-                    st.markdown(f"B (Money Down + Lease Cash): ${B:,.2f}  ")
-                    st.markdown(f"K (Inception Fees): ${K:,.2f}  ")
-                    st.markdown(f"U (Unused Cap Reduction): ${U:,.2f}  ")
-                    st.markdown(f"M (DOC + ACQ Fees): ${M:,.2f}  ")
-                    st.markdown(f"Q (License + Title): ${Q:,.2f}  ")
-                    st.markdown(f"τ (Tax Rate): {tax_rate:.4f}  ")
-                    st.markdown(f"F (Money Factor): {F:.6f}  ")
-                    st.markdown(f"W (Term): {W}  ")
-                    st.markdown(f"TV (Trade Value): ${TV:,.2f}  ")
-                    st.markdown(f"SP (Selling Price): ${SP:,.2f}  ")
-                    st.markdown(f"S (Selling Price, duplicate): ${S:,.2f}  ")
-                    st.markdown(f"RES (Residual): ${RES:,.2f}  ")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
