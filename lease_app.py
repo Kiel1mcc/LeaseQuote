@@ -164,4 +164,8 @@ if vin_input:
                         st.json(debug_ccr)
                         st.markdown("### Payment Breakdown")
                         for k, v in payment.items():
-                            st.markdown(f"**{k}:** ${v:,.2f}")
+                            if isinstance(v, (int, float)):
+                                st.markdown(f"**{k}:** ${v:,.2f}")
+                                    else:
+                                        st.markdown(f"**{k}:** {v}")
+
