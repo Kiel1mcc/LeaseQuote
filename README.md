@@ -21,6 +21,7 @@ that restores the original configuration. Global controls include:
 
 - **Default Down Payment**: starting down payment value for each quote.
 - **Apply Money Factor Markup**: toggles a 0.0004 increase to all money factors.
+- **Sale Price**: adjust the selling price when reviewing lease programs.
 
 Each lease term/mileage combination offers an **Incentives** expander where you
 can enter the amount of lease cash to apply (defaults to zero). A **Details**
