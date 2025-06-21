@@ -102,8 +102,8 @@ if vin_input:
                     U = 0.0
                     B = money_down_slider + lease_cash_used
 
-                    # First calculation without trade to determine topVal
-                    test_ccr, _, debug_ccr = calculate_ccr_full(
+                    # New logic: apply trade value to topVal reduction and leftover to reduce SP
+                    initial_ccr, topVal, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
@@ -117,21 +117,15 @@ if vin_input:
                         τ=τ
                     )
 
-                    topVal = debug_ccr.get("TopVal", 0.0)
-                    trade_value_remaining = trade_value_input
+                    trade_to_use = min(abs(topVal), trade_value_input)
+                    B += trade_to_use
+                    trade_remaining = trade_value_input - trade_to_use
 
-                    if topVal < 0:
-                        B += abs(topVal)
-                        trade_value_remaining -= abs(topVal)
-                        if trade_value_remaining < 0:
-                            trade_value_remaining = 0.0
-
-                    # Final CCR using adjusted trade value
                     ccr, overflow, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=trade_value_remaining,
+                        TV=trade_remaining,
                         K=K,
                         M=M,
                         Q=Q,
@@ -141,7 +135,7 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, trade_value_remaining - overflow)
+                    S = SP - max(0, trade_remaining - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -153,7 +147,7 @@ if vin_input:
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_value_remaining:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_remaining:.2f}*")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
