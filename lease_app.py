@@ -108,6 +108,7 @@ if vin_input:
                     )
                     initial_topval = debug_pre.get("Initial TopVal", 0.0)
                     deal_charges = max(0.0, -initial_topval)
+                    st.markdown(f"**🔧 Deal Charges (Uncovered TopVal): ${deal_charges:,.2f}**")
 
                     pool = {
                         "lease_cash": lease_cash_used,
@@ -159,7 +160,7 @@ if vin_input:
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}*")
 
                     if deal_charges > 0:
-                        st.markdown(f"### 🔧 Deal Charges (TopVal Shortfall): ${deal_charges:,.2f}")
+                        st.markdown(f"### 🔍 How Deal Charges Were Covered:")
                         st.markdown(f"- From Lease Cash: ${used_for_deal['lease_cash']:,.2f}")
                         st.markdown(f"- From Cash Down: ${used_for_deal['cash_down']:,.2f}")
                         st.markdown(f"- From Trade: ${used_for_deal['trade']:,.2f}")
