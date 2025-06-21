@@ -67,8 +67,6 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ, adjust_negati
 
     topVal = topVal_initial
 
-    if topVal < 0 and adjust_negative:
-
     if adjust_negative and topVal < 0:
 
         B += abs(topVal)
