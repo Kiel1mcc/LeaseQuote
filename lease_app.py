@@ -126,8 +126,7 @@ if vin_input:
                         F=F,
                         τ=τ,
                         M=M,
-                        Q=Q,
-                        ST=debug_ccr.get("Sales Tax", 0.0)  # Pass ST to match TA logic if required
+                        Q=Q
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
