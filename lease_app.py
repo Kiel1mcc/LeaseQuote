@@ -166,6 +166,6 @@ if vin_input:
                         for k, v in payment.items():
                             if isinstance(v, (int, float)):
                                 st.markdown(f"**{k}:** ${v:,.2f}")
-                                    else:
-                                        st.markdown(f"**{k}:** {v}")
+                            else:
+                                st.markdown(f"**{k}:** {v}")
 
