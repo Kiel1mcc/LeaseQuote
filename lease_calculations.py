@@ -1,6 +1,45 @@
 # lease_calculations.py
 
-def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
+def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ, adjust_negative=True):
+    """Calculate the capitalized cost reduction (CCR) needed for a lease.
+
+    Parameters
+    ----------
+    SP : float
+        Selling price of the vehicle.
+    B : float
+        Initial cash applied toward CCR.
+    rebates : float
+        Placeholder for manufacturer rebates (currently unused).
+    TV : float
+        Trade-in value to reduce the selling price.
+    K : float
+        Upfront fees paid in cash.
+    M : float
+        Additional charges to be capitalized.
+    Q : float
+        Upfront taxes or fees added to the lease balance.
+    RES : float
+        Residual value of the vehicle.
+    F : float
+        Money factor.
+    W : int
+        Lease term in months.
+    τ : float
+        Sales tax rate expressed as a decimal.
+    adjust_negative : bool, optional
+        When ``True`` (default), any negative ``topVal`` is absorbed by
+        increasing ``B`` before calculating CCR. When ``False`` the raw
+        negative ``topVal`` is used, allowing callers to inspect it.
+
+    Returns
+    -------
+    tuple
+        ``(CCR, overflow, debug_info)`` where ``CCR`` is the calculated
+        cap cost reduction, ``overflow`` is the absolute value of a
+        negative CCR (``0.0`` otherwise), and ``debug_info`` contains
+        intermediate calculation values.
+    """
     S = SP - TV
     U = 0.00
     bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
@@ -25,7 +64,7 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
     }
 
     topVal = topVal_initial
-    if topVal < 0:
+    if adjust_negative and topVal < 0:
         B += abs(topVal)
         topVal = B - K - (
             F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +

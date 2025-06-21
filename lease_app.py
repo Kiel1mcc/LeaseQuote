@@ -103,8 +103,18 @@ if vin_input:
 
                     # Step 1: Calculate deal charges
                     initial_ccr, _, debug_pre = calculate_ccr_full(
-                        SP=SP, B=0.0, rebates=0.0, TV=0.0,
-                        K=K, M=M, Q=Q, RES=RES, F=F, W=W, τ=τ
+                        SP=SP,
+                        B=0.0,
+                        rebates=0.0,
+                        TV=0.0,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=RES,
+                        F=F,
+                        W=W,
+                        τ=τ,
+                        adjust_negative=False
                     )
                     initial_topval = debug_pre.get("Initial TopVal", 0.0)
                     deal_charges = max(0.0, -initial_topval)
