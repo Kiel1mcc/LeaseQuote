@@ -170,7 +170,7 @@ if vin_input:
                         F=F,
                         W=W,
                         τ=τ,
-                        adjust_negative=True,
+                        adjust_negative=False,
                     )
 
                     payment = calculate_payment_from_ccr(
