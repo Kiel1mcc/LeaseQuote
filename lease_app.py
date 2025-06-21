@@ -101,6 +101,7 @@ if vin_input:
                     RES = residual_value
                     U = 0.0
 
+
                     rebate_input = 0.0  # placeholder for future rebate support
 
                     # Step 1: Calculate deal charges using all funds
@@ -111,14 +112,8 @@ if vin_input:
                         B=B_total,
                         rebates=0.0,
                         TV=TV_total,
-                        K=K,
-                        M=M,
-                        Q=Q,
-                        RES=RES,
-                        F=F,
-                        W=W,
-                        τ=τ,
-                        adjust_negative=False,
+
+                   
                     )
                     initial_topval = debug_pre.get("Initial TopVal", 0.0)
                     deal_charges = max(0.0, -initial_topval)
