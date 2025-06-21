@@ -104,7 +104,6 @@ if vin_input:
                     RES = residual_value
                     S = selling_price
 
-                    # First CCR values
                     bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
                     topVal = B - K - (
                         F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
@@ -113,6 +112,9 @@ if vin_input:
 
                     st.markdown(f"🔎 Initial TopVal: {topVal:.6f}")
                     st.markdown(f"🔎 Initial B (Money Down + Lease Cash): ${B:,.2f}")
+
+                    base_payment_pre = calculate_payment_from_ccr(SP, CCR=topVal / bottomVal, RES=RES, W=W, F=F, τ=τ)
+                    st.markdown(f"🧮 Pre-Adjustment Base Payment: ${base_payment_pre['Base Payment (BP)']:.2f}, Tax: ${base_payment_pre['Sales Tax (ST)']:.2f}")
 
                     if topVal < 0:
                         B += abs(topVal)
