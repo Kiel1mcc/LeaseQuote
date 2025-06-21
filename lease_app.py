@@ -124,7 +124,8 @@ if vin_input:
                         RES=RES,
                         W=W,
                         F=F,
-                        τ=τ
+                        τ=τ,
+                        M=M
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
