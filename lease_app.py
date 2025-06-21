@@ -166,7 +166,10 @@ if vin_input:
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Remaining Trade: ${final_trade:.2f}, Cash Remaining: ${final_cash:.2f}*")
 
                     if deal_charges > 0:
-                        st.markdown(f"**⚠️ Deal Charges: ${deal_charges:.2f}** (amount required before applying to down or trade)")
+                        st.markdown(f"### 🔧 Deal Charges (TopVal Shortfall): ${deal_charges:,.2f}")
+                        st.markdown(f"- From Lease Cash: ${from_lease_cash:,.2f}")
+                        st.markdown(f"- From Cash Down: ${from_cash:,.2f}")
+                        st.markdown(f"- From Trade: ${from_trade:,.2f}")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
