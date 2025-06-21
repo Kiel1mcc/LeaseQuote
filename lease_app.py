@@ -103,7 +103,7 @@ if vin_input:
                     cash_down = money_down_slider
                     lease_cash = lease_cash_used
 
-                    # Check for TopVal coverage
+                    # First calculate with nothing applied to get deal charges
                     initial_ccr, _, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=0.0,
@@ -119,20 +119,29 @@ if vin_input:
                     )
 
                     topVal = debug_ccr.get("Initial TopVal", 0.0)
-                    topVal_shortfall = max(0.0, topVal)
+                    deal_charges = max(0.0, topVal)
 
-                    trade_to_top = min(trade_value_input, topVal_shortfall)
-                    cash_to_top = max(0.0, topVal_shortfall - trade_to_top)
+                    total_pool = lease_cash + cash_down + trade_value_input
+                    to_deal_charges = min(deal_charges, total_pool)
 
-                    trade_remaining = trade_value_input - trade_to_top
-                    cash_remaining = cash_down - cash_to_top
-                    B = lease_cash + cash_remaining
+                    # Break down what portion of the pool goes to deal charges
+                    from_lease_cash = min(to_deal_charges, lease_cash)
+                    remainder = to_deal_charges - from_lease_cash
+                    from_cash = min(remainder, cash_down)
+                    from_trade = max(0.0, remainder - from_cash)
+
+                    # Remaining values
+                    final_cash = cash_down - from_cash
+                    final_trade = trade_value_input - from_trade
+                    final_lease_cash = lease_cash - from_lease_cash
+
+                    B = final_cash + final_lease_cash
 
                     ccr, overflow, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=trade_remaining,
+                        TV=final_trade,
                         K=K,
                         M=M,
                         Q=Q,
@@ -142,7 +151,7 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, trade_remaining - overflow)
+                    S = SP - max(0, final_trade - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -154,16 +163,17 @@ if vin_input:
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Remaining Trade: ${trade_remaining:.2f}, Trade to TopVal: ${trade_to_top:.2f}, Cash to TopVal: ${cash_to_top:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Remaining Trade: ${final_trade:.2f}, Cash Remaining: ${final_cash:.2f}*")
+
+                    if deal_charges > 0:
+                        st.markdown(f"**⚠️ Deal Charges: ${deal_charges:.2f}** (amount required before applying to down or trade)")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
-                        st.markdown(f"TopVal Shortfall: {topVal_shortfall:.2f}")
-                        st.markdown(f"Trade Value Input: {trade_value_input:.2f}")
-                        st.markdown(f"Trade to TopVal: {trade_to_top:.2f}")
-                        st.markdown(f"Remaining Trade: {trade_remaining:.2f}")
-                        st.markdown(f"Cash to TopVal: {cash_to_top:.2f}")
-                        st.markdown(f"Cash Remaining: {cash_remaining:.2f}")
+                        st.markdown(f"TopVal Shortfall: {deal_charges:.2f}")
+                        st.markdown(f"Lease Cash Applied to Deal Charges: {from_lease_cash:.2f}")
+                        st.markdown(f"Cash Applied to Deal Charges: {from_cash:.2f}")
+                        st.markdown(f"Trade Applied to Deal Charges: {from_trade:.2f}")
                         st.markdown(f"Final Down Cap Reduction (B): {B:.2f}")
                         st.markdown(f"Adjusted Selling Price (S): {S:.2f}")
                         st.markdown(f"Final CCR: {ccr:.6f}")
