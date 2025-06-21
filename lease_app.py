@@ -103,7 +103,7 @@ if vin_input:
                     SP = selling_price
                     RES = residual_value
 
-                    ccr, overflow = calculate_ccr_full(
+                    ccr, overflow, _ = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
