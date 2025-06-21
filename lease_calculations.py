@@ -42,7 +42,7 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
         return 0.0, round(abs(CCR), 6), debug_info
     return round(CCR, 6), 0.0, debug_info
 
-def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
+def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M, Q=0.0):
     cap_cost = S + M
     adjusted_cap_cost = cap_cost - CCR
 
@@ -50,9 +50,9 @@ def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
     rent_charge = F * (adjusted_cap_cost + RES)
     BP =  depreciation + rent_charge
     ST = (BP * τ)* W
-    TA = S+Q+ST+M-CCR
-    AMD = (TA-RES)/W
-    ALC = F * (TA+RES)
+    TA = S + Q + ST + M - CCR
+    AMD = (TA - RES) / W
+    ALC = F * (TA + RES)
     MP = AMD + ALC
 
     return {
