@@ -102,7 +102,7 @@ if vin_input:
                     U = 0.0
                     B = money_down_slider + lease_cash_used
 
-                    # New logic: apply trade value to topVal reduction and leftover to reduce SP
+                    # First run — check topVal only
                     initial_ccr, topVal, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
@@ -151,6 +151,16 @@ if vin_input:
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
+                        st.markdown(f"Initial CCR: {initial_ccr:.6f}")
+                        st.markdown(f"TopVal (Before Trade): {topVal:.6f}")
+                        st.markdown(f"Trade Value Input: {trade_value_input:.2f}")
+                        st.markdown(f"Trade Applied to TopVal: {trade_to_use:.2f}")
+                        st.markdown(f"Remaining Trade Value: {trade_remaining:.2f}")
+                        st.markdown(f"Final CCR: {ccr:.6f}")
+                        st.markdown(f"Adjusted Selling Price (S): {S:.2f}")
+                        st.markdown(f"Final Down Cap Reduction (B): {B:.2f}")
+                        st.markdown(f"Overflow: {overflow:.6f}")
+                        st.markdown("### Full CCR Debug Info")
                         st.json(debug_ccr)
                         st.markdown("### Payment Breakdown")
                         for k, v in payment.items():
