@@ -109,20 +109,22 @@ if vin_input:
                     topVal = debug_pre.get("Initial TopVal", 0.0)
                     deal_charges = max(0.0, topVal)
 
-                    # Step 2: Pool cash down + lease cash + trade to apply to deal charges first
+                    # Step 2: Pool all sources and apply to deal charges first
                     total_pool = lease_cash_used + money_down_slider + trade_value_input
                     to_deal_charges = min(deal_charges, total_pool)
 
                     from_lease_cash = min(to_deal_charges, lease_cash_used)
                     remainder = to_deal_charges - from_lease_cash
                     from_cash = min(remainder, money_down_slider)
-                    from_trade = max(0.0, remainder - from_cash)
+                    remainder -= from_cash
+                    from_trade = min(remainder, trade_value_input)
 
+                    # Remaining values after covering deal charges
                     remaining_lease_cash = lease_cash_used - from_lease_cash
                     remaining_cash = money_down_slider - from_cash
                     remaining_trade = trade_value_input - from_trade
 
-                    # Step 3: Calculate payment with updated values
+                    # Step 3: Apply only remaining trade to SP, and others to B
                     B = remaining_lease_cash + remaining_cash
                     TV = remaining_trade
 
@@ -170,3 +172,8 @@ if vin_input:
                         st.markdown("### Full CCR Debug Info")
                         st.json(debug_final)
                         st.markdown("### Payment Breakdown")
+                        for k, v in payment.items():
+                            if isinstance(v, (int, float)):
+                                st.markdown(f"**{k}:** ${v:,.2f}")
+                            else:
+                                st.markdown(f"**{k}:** {v}")
