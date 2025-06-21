@@ -101,53 +101,85 @@ if vin_input:
                     RES = residual_value
                     U = 0.0
 
-                    # Step 1: Calculate deal charges
-                    initial_ccr, _, debug_pre = calculate_ccr_full(
-                        SP=SP, B=0.0, rebates=0.0, TV=0.0,
-                        K=K, M=M, Q=Q, RES=RES, F=F, W=W, τ=τ
-                    )
-                    initial_topval = debug_pre.get("Initial TopVal", 0.0)
-                    deal_charges = max(0.0, -initial_topval)
-                    st.markdown(f"**🔧 Deal Charges (Uncovered TopVal): ${deal_charges:,.2f}**")
+                    rebate_input = 0.0  # placeholder for future rebate support
 
-                    pool = {
-                        "lease_cash": lease_cash_used,
-                        "cash_down": money_down_slider,
-                        "trade": trade_value_input
-                    }
-
-                    used_for_deal = {}
-                    remaining_charges = deal_charges
-
-                    for k in pool:
-                        used = min(pool[k], remaining_charges)
-                        used_for_deal[k] = used
-                        remaining_charges -= used
-
-                    remaining = {k: pool[k] - used_for_deal[k] for k in pool}
-
-                    B = remaining["lease_cash"] + remaining["cash_down"]
-                    TV = remaining["trade"]
-                    S = SP - max(0, TV - remaining_charges)
-
-                    st.markdown(f"**Adjusted B (CCR Cash Applied):** ${B:,.2f}")
-
-                    ccr, overflow, debug_final = calculate_ccr_full(
-                        SP=S,
-                        B=B,
+                    # Step 1: Calculate deal charges using all funds
+                    B_total = lease_cash_used + money_down_slider + rebate_input
+                    TV_total = trade_value_input
+                    _, _, debug_pre = calculate_ccr_full(
+                        SP=SP,
+                        B=B_total,
                         rebates=0.0,
-                        TV=TV,
+                        TV=TV_total,
                         K=K,
                         M=M,
                         Q=Q,
                         RES=RES,
                         F=F,
                         W=W,
-                        τ=τ
+                        τ=τ,
+                        adjust_negative=False,
+                    )
+                    initial_topval = debug_pre.get("Initial TopVal", 0.0)
+                    deal_charges = max(0.0, -initial_topval)
+                    st.markdown(f"**🔧 Deal Charges (Uncovered TopVal): ${deal_charges:,.2f}**")
+
+                    used_for_deal = {
+                        "lease_cash": 0.0,
+                        "cash_down": 0.0,
+                        "rebate": 0.0,
+                        "trade": 0.0,
+                    }
+
+                    remaining_charges = deal_charges
+
+                    # Deduct from lease cash, cash down, and rebates first
+                    for key, amt in [
+                        ("lease_cash", lease_cash_used),
+                        ("cash_down", money_down_slider),
+                        ("rebate", rebate_input),
+                    ]:
+                        used = min(amt, remaining_charges)
+                        used_for_deal[key] = used
+                        remaining_charges -= used
+
+                    # Use trade value if charges remain
+                    used_trade = min(trade_value_input, remaining_charges)
+                    used_for_deal["trade"] = used_trade
+                    remaining_charges -= used_trade
+
+                    remaining = {
+                        "lease_cash": lease_cash_used - used_for_deal["lease_cash"],
+                        "cash_down": money_down_slider - used_for_deal["cash_down"],
+                        "rebate": rebate_input - used_for_deal["rebate"],
+                        "trade": trade_value_input - used_for_deal["trade"],
+                    }
+
+                    unpaid_balance = max(0.0, remaining_charges)
+
+                    B = remaining["lease_cash"] + remaining["cash_down"] + remaining["rebate"]
+                    TV_remaining = remaining["trade"]
+                    S_final = SP - TV_remaining
+
+                    st.markdown(f"**Adjusted B (CCR Cash Applied):** ${B:,.2f}")
+
+                    ccr, overflow, debug_final = calculate_ccr_full(
+                        SP=SP,
+                        B=B,
+                        rebates=0.0,
+                        TV=TV_remaining,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=RES,
+                        F=F,
+                        W=W,
+                        τ=τ,
+                        adjust_negative=True,
                     )
 
                     payment = calculate_payment_from_ccr(
-                        S=S,
+                        S=S_final,
                         CCR=ccr,
                         RES=RES,
                         W=W,
@@ -163,11 +195,15 @@ if vin_input:
                         st.markdown(f"### 🔍 How Deal Charges Were Covered:")
                         st.markdown(f"- From Lease Cash: ${used_for_deal['lease_cash']:,.2f}")
                         st.markdown(f"- From Cash Down: ${used_for_deal['cash_down']:,.2f}")
+                        st.markdown(f"- From Rebates: ${used_for_deal['rebate']:,.2f}")
                         st.markdown(f"- From Trade: ${used_for_deal['trade']:,.2f}")
+                        if unpaid_balance > 0:
+                            st.markdown(f"**Unpaid Balance:** ${unpaid_balance:,.2f}")
 
-                    st.markdown(f"**Remaining Trade Applied to Price:** ${remaining['trade']:.2f}")
+                    st.markdown(f"**Remaining Trade Applied to Price:** ${TV_remaining:.2f}")
                     st.markdown(f"**Remaining Cash Down Applied to CCR:** ${remaining['cash_down']:.2f}")
                     st.markdown(f"**Remaining Lease Cash Applied to CCR:** ${remaining['lease_cash']:.2f}")
+                    st.markdown(f"**Remaining Rebates Applied to CCR:** ${remaining['rebate']:.2f}")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Full CCR Debug Info")

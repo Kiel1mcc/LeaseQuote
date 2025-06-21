@@ -1,6 +1,6 @@
 # lease_calculations.py
 
-def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
+def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ, adjust_negative=True):
     S = SP - TV
     U = 0.00
     bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
@@ -25,7 +25,7 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
     }
 
     topVal = topVal_initial
-    if topVal < 0:
+    if topVal < 0 and adjust_negative:
         B += abs(topVal)
         topVal = B - K - (
             F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
