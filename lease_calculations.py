@@ -67,3 +67,4 @@ def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
         "Net Cap Cost (S + M - CCR)": round(adjusted_cap_cost, 2),
         "Cap Cost (S + M)": round(cap_cost, 2),
         "Tax Calculation": f"{round(BP, 6)} * {round(τ, 6)} = {round(ST, 6)}"
+    }
