@@ -58,5 +58,7 @@ def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
         "Net Cap Cost (S + M - CCR)": round(S + M - CCR, 2),
         "Residual (RES)": RES,
         "Money Factor (F)": round(F, 6),
-        "Cap Cost (S + M)": round(S + M, 2)
+        "Cap Cost (S + M)": round(S + M, 2),
+        "Numerator (N)": round((S + M - CCR - RES) + (S + M - CCR + RES) * F, 6),
+        "Denominator (D)": W
     }
