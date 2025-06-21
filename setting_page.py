@@ -1,16 +1,18 @@
 import streamlit as st
+import pandas as pd
 
 def show_settings() -> None:
     """Display the settings sidebar and handle reset functionality."""
-    # default values
+    county_rates_df = pd.read_csv("County_Tax_Rates.csv")
+    county_rates_df.columns = county_rates_df.columns.str.strip()
+    counties = county_rates_df["County"].tolist()
+    tax_rates = dict(zip(county_rates_df["County"], county_rates_df["Tax Rate"]))
+    DEFAULT_COUNTY = "Marion"
+
     defaults = {
-        "default_county": "Adams",
-        "counties": [
-            "Adams", "Allen", "Ashland", "Ashtabula", "Athens", # …and all your counties
-        ],
-        "tax_rates": {
-            "Adams": 7.25, "Allen": 6.85, "Ashland": 7.00, # …
-        },
+        "default_county": DEFAULT_COUNTY,
+        "counties": counties,
+        "tax_rates": tax_rates,
         "money_factors": {
             # (term, mileage): base money factor
             (36, 10000): 0.00256,
