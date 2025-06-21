@@ -24,8 +24,10 @@ with st.sidebar:
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
 
     selected_county = st.selectbox(
-        "Select County:", counties, index=counties.index("Marion")    
- main
+        "Select County:",
+        counties,
+        index=counties.index("Marion"),
+    )
     trade_value_input = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
     default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
