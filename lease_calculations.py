@@ -43,22 +43,27 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
     return round(CCR, 6), 0.0, debug_info
 
 def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M):
-    BP_initial = ((S + M - CCR - RES) / W) + ((S + M - CCR + RES) * F)
-    ST = round(BP_initial * τ, 2)
-    MP = round(BP_initial + ST, 2)
+    cap_cost = S + M
+    adjusted_cap_cost = cap_cost - CCR
+
+    depreciation = (adjusted_cap_cost - RES) / W
+    rent_charge = F * (adjusted_cap_cost + RES)
+    BP = depreciation + rent_charge
+    ST = BP * τ
+    MP = BP + ST
 
     return {
-        "Base Payment (BP)": round(BP_initial, 2),
-        "Sales Tax (ST)": ST,
-        "Monthly Payment (MP)": MP,
-        "Pre-Adjustment BP": round(BP_initial, 6),
+        "Base Payment (BP)": round(BP, 2),
+        "Sales Tax (ST)": round(ST, 2),
+        "Monthly Payment (MP)": round(MP, 2),
+        "Pre-Adjustment BP": round(BP, 6),
+        "Depreciation": round(depreciation, 6),
+        "Rent Charge": round(rent_charge, 6),
         "Tax Rate (τ)": τ,
         "Term (W)": W,
         "Cap Cost Reduction (CCR)": CCR,
-        "Net Cap Cost (S + M - CCR)": round(S + M - CCR, 2),
         "Residual (RES)": RES,
         "Money Factor (F)": round(F, 6),
-        "Cap Cost (S + M)": round(S + M, 2),
-        "Numerator (N)": round((S + M - CCR - RES) + (S + M - CCR + RES) * F, 6),
-        "Denominator (D)": W
-    }
+        "Net Cap Cost (S + M - CCR)": round(adjusted_cap_cost, 2),
+        "Cap Cost (S + M)": round(cap_cost, 2),
+        "Tax Calculation": f"{round(BP, 6)} * {round(τ, 6)} = {round(ST, 6)}"
