@@ -25,7 +25,7 @@ with st.sidebar:
     selected_county = st.selectbox(
         "Select County:", counties, index=counties.index("Marion")
     )
-    trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
+    trade_value_input = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
     default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
 
@@ -99,23 +99,23 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
-                    B = money_down_slider + lease_cash_used
                     K = 0.0
-                    U = 0.0
                     M = 250.0 + 650.0 + 62.50
                     Q = 0.0
                     τ = tax_rate
                     F = money_factor
                     W = term
-                    TV = trade_value
                     SP = selling_price
                     RES = residual_value
+                    U = 0.0
+                    B = money_down_slider + lease_cash_used
 
-                    ccr, overflow, debug_ccr = calculate_ccr_full(
+                    # First run — check topVal only
+                    initial_ccr, topVal, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=TV,
+                        TV=0.0,
                         K=K,
                         M=M,
                         Q=Q,
@@ -125,7 +125,25 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, TV - overflow)
+                    trade_to_use = min(abs(topVal), trade_value_input)
+                    B += trade_to_use
+                    trade_remaining = trade_value_input - trade_to_use
+
+                    ccr, overflow, debug_ccr = calculate_ccr_full(
+                        SP=SP,
+                        B=B,
+                        rebates=0.0,
+                        TV=trade_remaining,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=RES,
+                        F=F,
+                        W=W,
+                        τ=τ
+                    )
+
+                    S = SP - max(0, trade_remaining - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -133,15 +151,24 @@ if vin_input:
                         W=W,
                         F=F,
                         τ=τ,
-                        M=M,
-                        Q=Q
+                        M=M
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_remaining:.2f}*")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
+                        st.markdown(f"Initial CCR: {initial_ccr:.6f}")
+                        st.markdown(f"TopVal (Before Trade): {topVal:.6f}")
+                        st.markdown(f"Trade Value Input: {trade_value_input:.2f}")
+                        st.markdown(f"Trade Applied to TopVal: {trade_to_use:.2f}")
+                        st.markdown(f"Remaining Trade Value: {trade_remaining:.2f}")
+                        st.markdown(f"Final CCR: {ccr:.6f}")
+                        st.markdown(f"Adjusted Selling Price (S): {S:.2f}")
+                        st.markdown(f"Final Down Cap Reduction (B): {B:.2f}")
+                        st.markdown(f"Overflow: {overflow:.6f}")
+                        st.markdown("### Full CCR Debug Info")
                         st.json(debug_ccr)
                         st.markdown("### Payment Breakdown")
                         for k, v in payment.items():
@@ -149,3 +176,4 @@ if vin_input:
                                 st.markdown(f"**{k}:** ${v:,.2f}")
                             else:
                                 st.markdown(f"**{k}:** {v}")
+
