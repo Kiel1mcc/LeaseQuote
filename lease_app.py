@@ -17,7 +17,7 @@ with st.sidebar:
     vin_input = st.text_input("Enter VIN:", "")
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
     selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"])
-    trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
+    trade_value_input = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
     default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
 
@@ -91,23 +91,23 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
-                    B = money_down_slider + lease_cash_used
                     K = 0.0
-                    U = 0.0
                     M = 250.0 + 650.0 + 62.50
                     Q = 0.0
                     τ = tax_rate
                     F = money_factor
                     W = term
-                    TV = trade_value
                     SP = selling_price
                     RES = residual_value
+                    U = 0.0
+                    B = money_down_slider + lease_cash_used
 
-                    ccr, overflow, debug_ccr = calculate_ccr_full(
+                    # First calculation without trade to determine topVal
+                    test_ccr, _, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=TV,
+                        TV=0.0,
                         K=K,
                         M=M,
                         Q=Q,
@@ -117,7 +117,31 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, TV - overflow)
+                    topVal = debug_ccr.get("TopVal", 0.0)
+                    trade_value_remaining = trade_value_input
+
+                    if topVal < 0:
+                        B += abs(topVal)
+                        trade_value_remaining -= abs(topVal)
+                        if trade_value_remaining < 0:
+                            trade_value_remaining = 0.0
+
+                    # Final CCR using adjusted trade value
+                    ccr, overflow, debug_ccr = calculate_ccr_full(
+                        SP=SP,
+                        B=B,
+                        rebates=0.0,
+                        TV=trade_value_input,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=RES,
+                        F=F,
+                        W=W,
+                        τ=τ
+                    )
+
+                    S = SP - max(0, trade_value_remaining - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -125,19 +149,15 @@ if vin_input:
                         W=W,
                         F=F,
                         τ=τ,
-                        M=M,
-                        Q=Q
+                        M=M
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_value_remaining:.2f}*")
 
                     with st.expander("🔍 Debug Details"):
                         st.markdown("### Debug Info")
                         st.json(debug_ccr)
                         st.markdown("### Payment Breakdown")
                         for k, v in payment.items():
-                            if isinstance(v, (int, float)):
-                                st.markdown(f"**{k}:** ${v:,.2f}")
-                            else:
-                                st.markdown(f"**{k}:** {v}")
+                            st.markdown(f"**{k}:** ${v:,.2f}")
