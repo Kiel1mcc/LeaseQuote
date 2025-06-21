@@ -14,7 +14,8 @@ streamlit run lease_app.py
 ## Adjusting settings
 
 Application settings such as default tax county and tier are managed in
-`setting_page.py`. Click the **Settings** button in the app to open this page.
+`setting_page.py`. Use the sidebar **Navigation** radio to switch to the
+**Settings** page.
 The sidebar provides options to change values and a **Reset to Defaults** button
 that restores the original configuration. Global controls include:
 

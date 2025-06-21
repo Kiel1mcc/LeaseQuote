@@ -2,8 +2,15 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from lease_calculations import calculate_base_and_monthly_payment, calculate_ccr_full
+from setting_page import show_settings
 
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
+
+# Sidebar navigation
+page = st.sidebar.radio("Navigation", ["Quote Calculator", "Settings"])
+if page == "Settings":
+    show_settings()
+    st.stop()
 
 st.markdown("""
 <style>
@@ -19,7 +26,13 @@ st.markdown("""
 # Inputs
 vin_input = st.text_input("Enter VIN:")
 tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
-county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
+
+# County list with default pulled from settings
+county_df = pd.read_csv("County_Tax_Rates.csv")
+counties = county_df["County"].tolist()
+settings = st.session_state.get("settings", {})
+default_county = settings.get("default_county", counties[0])
+county = st.selectbox("Select County:", counties, index=counties.index(default_county))
 trade_value_input = st.number_input("Trade Value ($)", value=0.0)
 money_down_slider = st.number_input("Default Down Payment ($)", value=0.0)
 apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)")
@@ -49,6 +62,9 @@ if vin_input:
     M = 900.0
     Q = 62.5
     F = money_factor
+    if apply_markup:
+        F += 0.0004
+    F += settings.get("money_factor_markup", 0.0)
     W = term
     τ = tax_rate
     SP = selling_price
