@@ -25,6 +25,7 @@ st.markdown("""
 
 # Inputs
 vin_input = st.text_input("Enter VIN:")
+vin_input = vin_input.strip().upper()
 tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
 
 # Load data once and cache for performance
@@ -33,6 +34,8 @@ def load_reference_data():
     lease_df = pd.read_csv("All_Lease_Programs_Database.csv")
     inventory_df = pd.read_excel("Locator_Detail_Updated.xlsx")
     county_df = pd.read_csv("County_Tax_Rates.csv")
+    lease_df["VIN"] = lease_df["VIN"].astype(str).str.strip().str.upper()
+    inventory_df["VIN"] = inventory_df["VIN"].astype(str).str.strip().str.upper()
     county_df["Tax Rate"] = county_df["Tax Rate"].astype(float) / 100
     return lease_df, inventory_df, county_df
 
