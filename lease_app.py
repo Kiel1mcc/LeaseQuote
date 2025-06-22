@@ -2,15 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from lease_calculations import calculate_base_and_monthly_payment, calculate_ccr_full
-from setting_page import show_settings
 
 st.set_page_config(page_title="Lease Quote Calculator", layout="wide")
-
-# Sidebar navigation
-page = st.sidebar.radio("Navigation", ["Quote Calculator", "Settings"])
-if page == "Settings":
-    show_settings()
-    st.stop()
 
 st.markdown("""
 <style>
@@ -26,75 +19,36 @@ st.markdown("""
 # Inputs
 vin_input = st.text_input("Enter VIN:")
 vin_input = vin_input.strip().upper()
-tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
 
-# Load data once and cache for performance
-@st.cache_data
-def load_reference_data():
-    lease_df = pd.read_csv("All_Lease_Programs_Database.csv")
-    inventory_df = pd.read_excel("Locator_Detail_Updated.xlsx")
-    county_df = pd.read_csv("County_Tax_Rates.csv")
-    lease_df["VIN"] = lease_df["VIN"].astype(str).str.strip().str.upper()
-    inventory_df["VIN"] = inventory_df["VIN"].astype(str).str.strip().str.upper()
-    county_df["Tax Rate"] = county_df["Tax Rate"].astype(float) / 100
-    return lease_df, inventory_df, county_df
+if vin_input:
+    tier = st.selectbox("Select Tier:", ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5"])
+    county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
+    trade_value_input = st.number_input("Trade Value ($)", value=0.0)
+    money_down_slider = st.number_input("Default Down Payment ($)", value=0.0)
+    apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)")
 
-lease_df, inventory_df, county_df = load_reference_data()
+    # Placeholder vehicle data
+    selling_price = 25040
+    residual_value = 15255
+    money_factor = 0.00131
+    term = 36
+    tax_rate = 0.0725
 
-# County list with default pulled from settings
-counties = county_df["County"].tolist()
-settings = st.session_state.get("settings", {})
-default_county = settings.get("default_county", counties[0])
-county = st.selectbox("Select County:", counties, index=counties.index(default_county))
-trade_value_input = st.number_input("Trade Value ($)", value=0.0)
-money_down_slider = st.number_input("Default Down Payment ($)", value=0.0)
-apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)")
-
-# Lookup vehicle data from CSV/Excel references
-def get_vehicle_programs(vin: str, county: str):
-    """Return selling price, tax rate and all lease program rows for the VIN."""
-    inv_row = inventory_df[inventory_df["VIN"] == vin]
-    lease_rows = lease_df[lease_df["VIN"] == vin]
-    if inv_row.empty or lease_rows.empty:
-        return None
-
-    inv_row = inv_row.iloc[0]
-    selling_price = float(inv_row["MSRP"])  # default selling price uses MSRP
-    tax_rate = float(county_df[county_df["County"] == county]["Tax Rate"].iloc[0])
-
-    return selling_price, tax_rate, lease_rows
-
-
-def calculate_quote(
-    sp: float,
-    residual_pct: float,
-    money_factor: float,
-    term: int,
-    lease_cash: float,
-    tax_rate: float,
-    trade_value: float,
-    cash_down: float,
-    settings: dict,
-    apply_markup: bool,
-):
-    """Calculate monthly payment using existing helper functions."""
-
+    # Fees and other variables
     K = 0.0
     M = 900.0
     Q = 62.5
-    F = money_factor
-    if apply_markup:
-        F += 0.0004
-    F += settings.get("money_factor_markup", 0.0)
-    RES = sp * residual_pct
-    τ = tax_rate
+    F = money_factor + (0.0004 if apply_markup else 0.0)
     W = term
+    τ = tax_rate
+    SP = selling_price
+    RES = residual_value
 
     # Step 1: Initial TopVal calculation with no funds applied
     _, _, debug_pre = calculate_ccr_full(
-        SP=sp,
+        SP=SP,
         B=0.0,
-        rebates=lease_cash,
+        rebates=0.0,
         TV=0.0,
         K=K,
         M=M,
@@ -103,14 +57,15 @@ def calculate_quote(
         F=F,
         W=W,
         τ=τ,
-        adjust_negative=False,
+        adjust_negative=False
     )
     initial_topval = debug_pre.get("Initial TopVal", 0.0)
     deal_charges = max(0.0, -initial_topval)
+    st.markdown(f"**🛠️ Deal Charges (Uncovered TopVal): ${deal_charges:,.2f}**")
 
     # Step 2: Prioritize trade value to cover deal charges
-    TV_hold = trade_value
-    B_hold = cash_down
+    TV_hold = trade_value_input
+    B_hold = money_down_slider
 
     TV_applied = min(deal_charges, TV_hold)
     remaining_charges = deal_charges - TV_applied
@@ -122,10 +77,11 @@ def calculate_quote(
 
     adjusted_B = B_applied + TV_applied
 
-    _, monthly_payment, debug_post = calculate_base_and_monthly_payment(
-        SP=sp,
+    # Final CCR calculation with true funds
+    final_ccr, monthly_payment, debug_post = calculate_base_and_monthly_payment(
+        SP=SP,
         B=B_final,
-        rebates=lease_cash,
+        rebates=0.0,
         TV=TV_final,
         K=K,
         M=M,
@@ -133,64 +89,16 @@ def calculate_quote(
         RES=RES,
         F=F,
         W=W,
-        τ=τ,
+        τ=τ
     )
 
-    return {
-        "deal_charges": deal_charges,
-        "adjusted_B": adjusted_B,
-        "monthly_payment": monthly_payment,
-        "debug": debug_post,
-    }
+    # Display Output
+    st.markdown(f"**📊 Adjusted B (CCR Cash Applied): ${adjusted_B:,.2f}**")
+    st.markdown(f"**💵 Monthly Payment: ${monthly_payment:,.2f}**")
+    st.markdown(f"_Base: {debug_post.get('Base Payment', 0.0):.2f}, Tax: {debug_post.get('Tax Amount', 0.0):.2f}, CCR: {debug_post.get('CCR', 0.0):.2f}_")
 
-if vin_input:
-    programs = get_vehicle_programs(vin_input, county)
-    if programs is None:
-        st.error("VIN not found in program or inventory data")
-    else:
-        selling_price_default, tax_rate, lease_rows = programs
-
-        # Allow user to adjust sale price and trade value
-        sale_price_input = st.number_input(
-            "Sale Price ($)", value=float(selling_price_default), format="%.2f"
-        )
-
-        # Iterate through each available lease program
-        for _, row in lease_rows.iterrows():
-            term = int(row["Term"])
-            money_factor = float(row[tier])
-            residual_pct = float(row["Residual"])
-            lease_cash = float(row.get("LeaseCash", 0.0))
-
-            result = calculate_quote(
-                sp=sale_price_input,
-                residual_pct=residual_pct,
-                money_factor=money_factor,
-                term=term,
-                lease_cash=lease_cash,
-                tax_rate=tax_rate,
-                trade_value=trade_value_input,
-                cash_down=money_down_slider,
-                settings=settings,
-                apply_markup=apply_markup,
-            )
-
-            with st.expander(f"{term}-Month Program"):
-                st.markdown(
-                    f"**💵 Monthly Payment: ${result['monthly_payment']:,.2f}**"
-                )
-                st.markdown(
-                    f"_Base: {result['debug'].get('Base Payment', 0.0):.2f}, "
-                    f"Tax: {result['debug'].get('Tax Amount', 0.0):.2f}, "
-                    f"CCR: {result['debug'].get('CCR', 0.0):.2f}_"
-                )
-                st.markdown(
-                    f"Deal Charges: ${result['deal_charges']:,.2f}, "
-                    f"Adjusted B: ${result['adjusted_B']:,.2f}"
-                )
-
-
-
-
-
-        
+    st.markdown(f"""
+    ## 🔍 How Deal Charges Were Covered:
+    - From Trade Value: ${TV_applied:,.2f}
+    - From Cash Down: ${B_applied:,.2f}
+    """)
