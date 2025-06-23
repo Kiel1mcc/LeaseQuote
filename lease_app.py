@@ -41,9 +41,6 @@ if vin_input:
     else:
         vehicle_info = vin_row.iloc[0]
 
-        st.write("DEBUG COLUMN NAMES:", list(vehicle_info.index))
-        st.write("DEBUG LEASE DF COLUMNS:", list(lease_df.columns))
-
         SP = vehicle_info['msrp']
         model_number = vehicle_info['modelnumber']
         trim = vehicle_info['trim'].lower()
@@ -127,6 +124,21 @@ if vin_input:
                 st.markdown(f"**📊 Adjusted B (CCR Cash Applied): ${adjusted_B:,.2f}**")
                 st.markdown(f"**💵 Monthly Payment: ${monthly_payment:,.2f}**")
                 st.markdown(f"_Base: {debug_post.get('Base Payment', 0.0):.2f}, Tax: {debug_post.get('Tax Amount', 0.0):.2f}, CCR: {debug_post.get('CCR', 0.0):.2f}_")
+
+                st.markdown("#### 🔍 Calculation Factors")
+                st.code(f"""
+Selling Price (SP): {SP}
+Money Down (B): {B_final}
+Trade-In (TV): {TV_final}
+Lease Cash: 0.0
+Doc + Acq Fee (M): {M}
+Title + License (Q): {Q}
+Residual (RES): {RES}
+Money Factor (F): {F}
+Term (W): {W}
+Tax Rate (τ): {tax_rate}
+                """)
+
                 st.markdown(f"""
                 - From Trade Value: ${TV_applied:,.2f}
                 - From Cash Down: ${B_applied:,.2f}
