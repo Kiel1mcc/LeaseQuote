@@ -44,8 +44,8 @@ if vin_input:
         st.write("DEBUG COLUMN NAMES:", list(vehicle_info.index))  # <-- Debug print
 
         SP = vehicle_info['msrp']
-        model_number = vehicle_info['model number']  # Update this after seeing debug output
-        year = vehicle_info['my']
+        model_number = vehicle_info['modelnumber']  # Corrected based on debug output
+        year = vehicle_info['model']              # This was previously 'my'
 
         tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 6)])
         county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
