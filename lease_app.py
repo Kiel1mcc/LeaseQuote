@@ -12,7 +12,9 @@ def load_inventory():
 
 @st.cache_data
 def load_lease_programs():
-    return pd.read_csv("All_Lease_Programs_Database.csv")
+    df = pd.read_csv("All_Lease_Programs_Database.csv")
+    df.columns = df.columns.str.strip().str.lower()  # Normalize column names
+    return df
 
 inventory_df = load_inventory()
 lease_df = load_lease_programs()
@@ -42,10 +44,11 @@ if vin_input:
         vehicle_info = vin_row.iloc[0]
 
         st.write("DEBUG COLUMN NAMES:", list(vehicle_info.index))  # <-- Debug print
+        st.write("DEBUG LEASE DF COLUMNS:", list(lease_df.columns))  # <-- New debug line
 
         SP = vehicle_info['msrp']
-        model_number = vehicle_info['modelnumber']  # Corrected based on debug output
-        year = vehicle_info['model']              # This was previously 'my'
+        model_number = vehicle_info['modelnumber']
+        year = vehicle_info['model']
 
         tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 6)])
         county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
@@ -58,20 +61,20 @@ if vin_input:
         mileage = 12000
 
         lease_row = lease_df[
-            (lease_df['Model_Year'] == year) &
-            (lease_df['Model_Number'] == model_number) &
-            (lease_df['Lease_Term'] == term) &
-            (lease_df['Trim'].str.lower() == vehicle_info['trim'].lower()) &
-            (lease_df['Tier'] == tier)
+            (lease_df['model_year'] == year) &
+            (lease_df['model_number'] == model_number) &
+            (lease_df['lease_term'] == term) &
+            (lease_df['trim'].str.lower() == vehicle_info['trim'].lower()) &
+            (lease_df['tier'] == tier)
         ]
 
         if lease_row.empty:
             st.error("No lease program found for this VIN, tier, and term.")
         else:
             lease_data = lease_row.iloc[0]
-            residual_value = lease_data['Residual_Value']
-            money_factor = lease_data['Money_Factor']
-            lease_cash = lease_data['Lease_Cash']
+            residual_value = lease_data['residual_value']
+            money_factor = lease_data['money_factor']
+            lease_cash = lease_data['lease_cash']
 
             tax_rate = 0.0725
 
