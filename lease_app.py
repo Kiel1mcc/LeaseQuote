@@ -41,8 +41,10 @@ if vin_input:
     else:
         vehicle_info = vin_row.iloc[0]
 
+        st.write("DEBUG COLUMN NAMES:", list(vehicle_info.index))  # <-- Debug print
+
         SP = vehicle_info['msrp']
-        model_number = vehicle_info['model number']
+        model_number = vehicle_info['model number']  # Update this after seeing debug output
         year = vehicle_info['my']
 
         tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 6)])
