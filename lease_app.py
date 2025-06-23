@@ -49,8 +49,10 @@ if vin_input:
         SP = vehicle_info['msrp']
         model_number = vehicle_info['modelnumber']
         year = vehicle_info['model']
+        trim = vehicle_info['trim'].lower()
 
         tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 6)])
+        tier_column = tier.lower()  # e.g., 'tier 1'
         county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
         trade_value_input = st.number_input("Trade Value ($)", value=0.0)
         money_down_slider = st.number_input("Default Down Payment ($)", value=0.0)
@@ -64,16 +66,15 @@ if vin_input:
             (lease_df['year'] == year) &
             (lease_df['modelnumber'] == model_number) &
             (lease_df['term'] == term) &
-            (lease_df['trim'].str.lower() == vehicle_info['trim'].lower()) &
-            (lease_df['tier 1'] == tier)  # Assuming Tier 1 used for demo; update logic for actual selection
+            (lease_df['trim'].str.lower() == trim)
         ]
 
-        if lease_row.empty:
+        if lease_row.empty or tier_column not in lease_row.columns:
             st.error("No lease program found for this VIN, tier, and term.")
         else:
             lease_data = lease_row.iloc[0]
             residual_value = lease_data['residual']
-            money_factor = lease_data['tier 1']
+            money_factor = lease_data[tier_column]
             lease_cash = lease_data['leasecash']
 
             tax_rate = 0.0725
