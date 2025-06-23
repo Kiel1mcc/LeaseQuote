@@ -61,20 +61,20 @@ if vin_input:
         mileage = 12000
 
         lease_row = lease_df[
-            (lease_df['model_year'] == year) &
-            (lease_df['model_number'] == model_number) &
-            (lease_df['lease_term'] == term) &
+            (lease_df['year'] == year) &
+            (lease_df['modelnumber'] == model_number) &
+            (lease_df['term'] == term) &
             (lease_df['trim'].str.lower() == vehicle_info['trim'].lower()) &
-            (lease_df['tier'] == tier)
+            (lease_df['tier 1'] == tier)  # Assuming Tier 1 used for demo; update logic for actual selection
         ]
 
         if lease_row.empty:
             st.error("No lease program found for this VIN, tier, and term.")
         else:
             lease_data = lease_row.iloc[0]
-            residual_value = lease_data['residual_value']
-            money_factor = lease_data['money_factor']
-            lease_cash = lease_data['lease_cash']
+            residual_value = lease_data['residual']
+            money_factor = lease_data['tier 1']
+            lease_cash = lease_data['leasecash']
 
             tax_rate = 0.0725
 
