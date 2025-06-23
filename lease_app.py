@@ -6,7 +6,9 @@ from lease_calculations import calculate_base_and_monthly_payment, calculate_ccr
 # Load data files
 @st.cache_data
 def load_inventory():
-    return pd.read_excel("Locator_Detail_Updated.xlsx")
+    df = pd.read_excel("Locator_Detail_Updated.xlsx")
+    df.columns = df.columns.str.strip().str.lower()  # Normalize column names
+    return df
 
 @st.cache_data
 def load_lease_programs():
@@ -33,14 +35,15 @@ vin_input = st.text_input("Enter VIN:")
 vin_input = vin_input.strip().upper()
 
 if vin_input:
-    vin_row = inventory_df[inventory_df['VIN'] == vin_input]
+    vin_row = inventory_df[inventory_df['vin'] == vin_input]
     if vin_row.empty:
         st.error("VIN not found in inventory.")
     else:
         vehicle_info = vin_row.iloc[0]
-        SP = vehicle_info['MSRP']
-        model_number = vehicle_info['Model Number']
-        year = vehicle_info['MY']
+
+        SP = vehicle_info['msrp']
+        model_number = vehicle_info['model number']
+        year = vehicle_info['my']
 
         tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 6)])
         county = st.selectbox("Select County:", ["Adams", "Allen", "Ashland", "Ashtabula", "Athens"])
@@ -56,7 +59,7 @@ if vin_input:
             (lease_df['Model_Year'] == year) &
             (lease_df['Model_Number'] == model_number) &
             (lease_df['Lease_Term'] == term) &
-            (lease_df['Trim'].str.lower() == vehicle_info['Trim'].lower()) &
+            (lease_df['Trim'].str.lower() == vehicle_info['trim'].lower()) &
             (lease_df['Tier'] == tier)
         ]
 
