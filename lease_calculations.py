@@ -43,21 +43,22 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
         shortfall = abs(topVal_initial)
         debug_info["Shortfall (Dealership Covered)"] = round(shortfall, 6)
 
-        # Apply incentives to offset shortfall
+        # Apply all incentives to offset shortfall first
         if shortfall > 0 and total_incentives > 0:
             applied_to_shortfall = min(shortfall, total_incentives)
             shortfall -= applied_to_shortfall
 
-            # Distribute applied amount across incentives
-            applied_cash_down = min(remaining_cash_down, applied_to_shortfall)
+            # Distribute applied amount across all incentives
+            total_applied = applied_to_shortfall
+            applied_cash_down = min(remaining_cash_down, total_applied)
             remaining_cash_down -= applied_cash_down
-            applied_to_shortfall -= applied_cash_down
+            total_applied -= applied_cash_down
 
-            applied_lease_cash = min(remaining_lease_cash, applied_to_shortfall)
+            applied_lease_cash = min(remaining_lease_cash, total_applied)
             remaining_lease_cash -= applied_lease_cash
-            applied_to_shortfall -= applied_lease_cash
+            total_applied -= applied_lease_cash
 
-            applied_trade_value = min(remaining_trade_value, applied_to_shortfall)
+            applied_trade_value = min(remaining_trade_value, total_applied)
             remaining_trade_value -= applied_trade_value
 
             debug_info["Applied to Shortfall"] = {
@@ -74,13 +75,13 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
 
         debug_info["Remaining Shortfall"] = round(shortfall, 6)
 
-    # Step 3: Apply remaining incentives
+    # Step 3: Apply remaining incentives only after shortfall is covered
     B = remaining_cash_down + remaining_lease_cash  # Down payment components
-    S = SP - remaining_trade_value  # Apply trade value to sales price
+    S = SP - remaining_trade_value  # Apply remaining trade value to sales price
 
-    # Step 4: Adjust for dealership-covered shortfall
-    # Add remaining shortfall to capitalized cost by increasing S
-    S += shortfall
+    # Step 4: Adjust for any remaining shortfall (dealership covers)
+    if shortfall > 0:
+        S += shortfall  # Add remaining shortfall to capitalized cost
 
     # Step 5: Recalculate TopVal with updated B and S
     topVal = B - K - (
