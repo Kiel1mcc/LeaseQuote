@@ -1,0 +1,23 @@
+name: Daily Inventory Scraper
+
+on:
+  workflow_dispatch:        # Manual trigger
+  schedule:
+    - cron: '0 6 * * *'     # Runs daily at 6:00 AM UTC
+
+jobs:
+  run-daily-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pandas requests beautifulsoup4 openpyxl beautifulsoup4
+
+      - name: Run scraper
+        run: python update_locator_inventory.py --temp
