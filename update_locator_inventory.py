@@ -2,10 +2,13 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import sys
+
+# Check if running in test mode
+OUTPUT_FILE = "Locator_Detail_Test.xlsx" if "--temp" in sys.argv else "Locator_Detail_Updated.xlsx"
 
 # Constants
 URL = "https://www.mathewshyundai.com/new-inventory/index.htm"
-OUTPUT_FILE = "Locator_Detail_Updated.xlsx"
 
 # Start request
 response = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"})
