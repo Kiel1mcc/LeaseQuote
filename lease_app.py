@@ -83,7 +83,7 @@ if vin_input:
                         )
 
                     cash_down = default_money_down
-                    initial_B = lease_cash_used
+                    total_B = initial_B + trade_used + cash_used + remaining_cash
 
                     # Run CCR with lease cash only
                     ccr, overflow, debug_ccr = calculate_ccr_full(
