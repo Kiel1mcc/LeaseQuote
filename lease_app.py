@@ -1,151 +1,138 @@
-import streamlit as st
-import pandas as pd
-from lease_calculations import calculate_ccr_full, calculate_payment_from_ccr
+# lease_calculations.py
 
-st.set_page_config(page_title="Lease Quote Tool", layout="wide")
+def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
+    # Initialize variables
+    U = 0.00
+    cash_down = B  # Cash down payment from user
+    lease_cash = rebates  # Lease cash or rebates
+    total_incentives = cash_down + lease_cash + TV
+    shortfall = 0.0
+    applied_to_shortfall = 0.0
+    remaining_cash_down = cash_down
+    remaining_lease_cash = lease_cash
+    remaining_trade_value = TV
 
-# Load data
-lease_programs = pd.read_csv("All_Lease_Programs_Database.csv", encoding="utf-8-sig")
-lease_programs.columns = lease_programs.columns.str.strip()
+    # Step 1: Calculate initial TopVal with B=0 and S=SP to find shortfall
+    S = SP  # No trade value applied yet
+    B_temp = 0.0  # Temporarily set B to 0
+    bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
 
-vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
-vehicle_data.columns = vehicle_data.columns.str.strip()
+    topVal_initial = B_temp - K - (
+        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
+        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+    )
 
-# Sidebar inputs
-with st.sidebar:
-    st.header("Lease Parameters")
-    vin_input = st.text_input("Enter VIN:", "")
-    selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)])
-    selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"])
-    trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0)
-    default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0)
-    apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
+    debug_info = {
+        "Initial TopVal (B=0, S=SP)": round(topVal_initial, 6),
+        "Initial B": round(B_temp, 2),
+        "Initial S": round(S, 2),
+        "Cash Down": round(cash_down, 2),
+        "Lease Cash": round(lease_cash, 2),
+        "Trade Value": round(TV, 2),
+        "K": round(K, 2),
+        "M": round(M, 2),
+        "Q": round(Q, 2),
+        "RES": round(RES, 2),
+        "F": round(F, 6),
+        "W": W,
+        "τ": round(τ, 6)
+    }
 
-# VIN match
-if vin_input:
-    vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
-    if vin_data.empty:
-        st.warning("Vehicle not found in inventory.")
-    else:
-        vehicle = vin_data.iloc[0]
-        model_number = vehicle["ModelNumber"]
-        msrp = vehicle["MSRP"]
+    # Step 2: Determine shortfall (dealership-covered amount)
+    if topVal_initial < 0:
+        shortfall = abs(topVal_initial)
+        debug_info["Shortfall (Dealership Covered)"] = round(shortfall, 6)
 
-        lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
-        if lease_matches.empty:
-            st.error("No lease program found for this model number.")
-        else:
-            lease_info = lease_matches.iloc[0]
-            model_year = lease_info.get("Year", "N/A")
-            make = lease_info.get("Make", "Hyundai")
-            model = lease_info.get("Model", "N/A")
-            trim = lease_info.get("Trim", "N/A")
+        # Apply all incentives to offset shortfall first
+        if shortfall > 0 and total_incentives > 0:
+            applied_to_shortfall = min(shortfall, total_incentives)
+            shortfall -= applied_to_shortfall
 
-            st.markdown(f"### Vehicle: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
+            # Distribute applied amount across all incentives
+            total_applied = applied_to_shortfall
+            applied_cash_down = min(remaining_cash_down, total_applied)
+            remaining_cash_down -= applied_cash_down
+            total_applied -= applied_cash_down
 
-            tier_num = int(selected_tier.split(" ")[1])
-            tax_rate = 0.0725
-            mileage_options = [10000, 12000, 15000]
-            lease_terms = sorted(lease_matches["Term"].dropna().unique())
+            applied_lease_cash = min(remaining_lease_cash, total_applied)
+            remaining_lease_cash -= applied_lease_cash
+            total_applied -= applied_lease_cash
 
-            for term in lease_terms:
-                term_group = lease_matches[lease_matches["Term"] == term]
-                st.subheader(f"{term}-Month Lease")
+            applied_trade_value = min(remaining_trade_value, total_applied)
+            remaining_trade_value -= applied_trade_value
 
-                for mileage in mileage_options:
-                    row = term_group.iloc[0]
-                    base_residual = float(row["Residual"])
-                    adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
-                    residual_value = round(msrp * adjusted_residual, 2)
+            debug_info["Applied to Shortfall"] = {
+                "Total": round(applied_to_shortfall, 2),
+                "Cash Down": round(applied_cash_down, 2),
+                "Lease Cash": round(applied_lease_cash, 2),
+                "Trade Value": round(applied_trade_value, 2)
+            }
+            debug_info["Remaining Incentives"] = {
+                "Cash Down": round(remaining_cash_down, 2),
+                "Lease Cash": round(remaining_lease_cash, 2),
+                "Trade Value": round(remaining_trade_value, 2)
+            }
 
-                    mf_col = f"Tier {tier_num}"
-                    money_factor = float(row[mf_col])
-                    if apply_markup:
-                        money_factor += 0.0004
-                    available_lease_cash = float(row.get("LeaseCash", 0.0))
+        debug_info["Remaining Shortfall"] = round(shortfall, 6)
 
-                    st.markdown(f"**Mileage: {mileage:,} / yr**")
+    # Step 3: Apply remaining incentives only after shortfall is covered
+    B = remaining_cash_down + remaining_lease_cash  # Down payment components
+    S = SP - remaining_trade_value  # Apply remaining trade value to sales price
 
-                    selling_price = st.number_input(
-                        f"Selling Price ($) — {term} mo / {mileage:,} mi",
-                        value=msrp,
-                        key=f"price_{term}_{mileage}"
-                    )
+    # Step 4: Adjust for any remaining shortfall (dealership covers)
+    if shortfall > 0:
+        S += shortfall  # Add remaining shortfall to capitalized cost
 
-                    with st.expander("Incentives"):
-                        lease_cash_used = st.number_input(
-                            f"Lease Cash Used ($) — Max: ${available_lease_cash:,.2f}",
-                            min_value=0.0,
-                            max_value=available_lease_cash,
-                            value=0.0,
-                            step=1.0,
-                            key=f"lease_cash_{term}_{mileage}"
-                        )
+    # Step 5: Recalculate TopVal with updated B and S
+    topVal = B - K - (
+        F * (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U + RES) +
+        (S + M + Q + τ * (F * W * (S + M - U + RES) + (S + M - U - RES)) - U - RES) / W
+    )
 
-                    money_down_slider = st.slider(
-                        f"Adjust Down Payment ($) — {term} mo / {mileage:,} mi",
-                        min_value=0,
-                        max_value=5000,
-                        value=int(default_money_down),
-                        step=50,
-                        key=f"down_{term}_{mileage}"
-                    )
+    debug_info["Final B"] = round(B, 2)
+    debug_info["Final S (incl. Shortfall)"] = round(S, 2)
+    debug_info["Final TopVal"] = round(topVal, 6)
 
-                    cash_down = money_down_slider
-                    lease_cash = lease_cash_used
+    # Step 6: Calculate CCR
+    CCR = topVal / bottomVal if bottomVal != 0 else 0.0
+    overflow = 0.0
 
-                    K = 0.0
-                    U = 0.0
-                    M = 250.0 + 650.0 + 62.50
-                    Q = 0.0
+    if CCR < 0:
+        CCR = 0.0
+        overflow = abs(topVal / bottomVal) if bottomVal != 0 else 0.0
 
-                    ccr, overflow, debug_ccr = calculate_ccr_full(
-                        SP=selling_price,
-                        B=cash_down,
-                        rebates=lease_cash,
-                        TV=trade_value,
-                        K=K,
-                        M=M,
-                        Q=Q,
-                        RES=residual_value,
-                        F=money_factor,
-                        W=term,
-                        τ=tax_rate
-                    )
+    debug_info["CCR"] = round(CCR, 6)
+    debug_info["Overflow"] = round(overflow, 6)
+    debug_info["BottomVal"] = round(bottomVal, 6)
 
-                    S = selling_price - max(0, trade_value - overflow)
-                    payment = calculate_payment_from_ccr(
-                        S=S,
-                        CCR=ccr,
-                        RES=residual_value,
-                        W=term,
-                        F=money_factor,
-                        τ=tax_rate,
-                        M=M,
-                        Q=Q
-                    )
+    return round(CCR, 6), round(overflow, 6), debug_info
 
-                    st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_value - overflow:.2f}*")
+def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M, Q=0.0):
+    cap_cost = S + M
+    adjusted_cap_cost = cap_cost - CCR
 
-                    with st.expander("🔍 Full Debug Info"):
-                        st.markdown("### CCR Calculation Inputs")
-                        st.json({
-                            "SP": selling_price,
-                            "B (Money Down + Lease Cash)": cash_down + lease_cash,
-                            "Rebates": 0.0,
-                            "TV (Trade Value)": trade_value,
-                            "K": K,
-                            "M (Doc + Acq + Fees)": M,
-                            "Q": Q,
-                            "RES": residual_value,
-                            "F (Money Factor)": money_factor,
-                            "W (Term)": term,
-                            "τ (Tax Rate)": tax_rate
-                        })
+    depreciation = (adjusted_cap_cost - RES) / W
+    rent_charge = F * (adjusted_cap_cost + RES)
+    BP = depreciation + rent_charge
+    ST = (BP * τ) * W
+    TA = S + Q + ST + M - CCR
+    AMD = (TA - RES) / W
+    ALC = F * (TA + RES)
+    MP = AMD + ALC
 
-                        st.markdown("### CCR Debug Output")
-                        st.json(debug_ccr)
-
-                        st.markdown("### Payment Breakdown")
-                        st.json(payment)
+    return {
+        "Base Payment (BP)": round(BP, 2),
+        "Sales Tax (ST)": round(ST, 2),
+        "Monthly Payment (MP)": round(MP, 2),
+        "Pre-Adjustment BP": round(BP, 6),
+        "Depreciation": round(depreciation, 6),
+        "Rent Charge": round(rent_charge, 6),
+        "Tax Rate (τ)": τ,
+        "Term (W)": W,
+        "Cap Cost Reduction (CCR)": CCR,
+        "Residual (RES)": RES,
+        "Money Factor (F)": round(F, 6),
+        "Net Cap Cost (S + M - CCR)": round(adjusted_cap_cost, 2),
+        "Cap Cost (S + M)": round(cap_cost, 2),
+        "Tax Calculation": f"{round(BP, 6)} * {round(τ, 6)} = {round(ST, 6)}"
+    }
