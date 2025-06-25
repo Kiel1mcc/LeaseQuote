@@ -85,8 +85,8 @@ if vin_input:
                     cash_down = default_money_down
                     initial_B = lease_cash_used
 
-                    # Run CCR with lease cash only
-                    ccr, overflow, debug_ccr = calculate_ccr_full(
+                    # STEP 1: Run CCR with lease cash only to get topVal
+                    ccr_initial, overflow_initial, debug_ccr_initial = calculate_ccr_full(
                         SP=selling_price,
                         B=initial_B,
                         rebates=0.0,
@@ -100,7 +100,9 @@ if vin_input:
                         τ=tax_rate
                     )
 
-                    # Fill overflow: trade first, then cash
+                    overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
+
+                    # STEP 2: Use trade and cash to cover negative topVal
                     trade_used = min(trade_value, overflow)
                     remaining_gap = overflow - trade_used
                     cash_used = min(cash_down, remaining_gap)
@@ -108,10 +110,10 @@ if vin_input:
                     remaining_trade = trade_value - trade_used
                     remaining_cash = cash_down - cash_used
 
-                    adjusted_SP = selling_price  # don't apply trade reduction yet
+                    adjusted_SP = selling_price - remaining_trade
                     total_B = initial_B + trade_used + cash_used + remaining_cash
 
-                    # Recalculate CCR with updated values
+                    # STEP 3: Recalculate CCR with updated B and SP
                     ccr, _, debug_ccr = calculate_ccr_full(
                         SP=adjusted_SP,
                         B=total_B,
@@ -125,8 +127,6 @@ if vin_input:
                         W=term,
                         τ=tax_rate
                     )
-
-                    adjusted_SP -= remaining_trade  # now reduce SP only after CCR is handled
 
                     payment = calculate_payment_from_ccr(
                         S=adjusted_SP,
