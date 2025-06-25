@@ -3,41 +3,46 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+# Constants
 SITEMAP_URL = "https://www.mathewshyundai.com/sitemap.xml"
 OUTPUT_FILE = "Locator_Detail_Updated.xlsx"
 
-# Fetch sitemap
+# Step 1: Parse sitemap
 sitemap_response = requests.get(SITEMAP_URL)
-soup = BeautifulSoup(sitemap_response.content, "xml")
-urls = [loc.get_text() for loc in soup.find_all("loc") if "/new/" in loc.get_text() and "/Hyundai/" in loc.get_text()]
+sitemap_soup = BeautifulSoup(sitemap_response.content, "xml")
+urls = [
+    loc.get_text()
+    for loc in sitemap_soup.find_all("loc")
+    if "/new/" in loc.get_text() and "/Hyundai/" in loc.get_text()
+]
 
+# Step 2: Extract data from each vehicle page
 vehicle_data = []
 
 for url in urls:
     try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-        soup = BeautifulSoup(res.text, "html.parser")
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        soup = BeautifulSoup(response.text, "html.parser")
 
-        # VIN
-        vin_tag = soup.select_one("li.vin")
-        vin = vin_tag.get_text(strip=True).replace("VIN:", "").strip() if vin_tag else ""
-
-        # Stock #
-        stock_tag = soup.select_one("li.stockNumber")
-        stock = stock_tag.get_text(strip=True).replace("Stock:", "").strip() if stock_tag else ""
-
-        # Title: year, make, model, trim
-        title_tag = soup.select_one("h1.page-title")
-        if not title_tag:
+        # Title: 2025 Hyundai Elantra SEL
+        title_el = soup.select_one("h1.page-title")
+        if not title_el:
             continue
-        title_parts = title_tag.get_text(strip=True).split()
+        title_parts = title_el.get_text(strip=True).split()
         year, make, model = title_parts[:3]
         trim = " ".join(title_parts[3:]) if len(title_parts) > 3 else ""
 
+        # VIN and Stock
+        vin_el = soup.select_one("li.vin")
+        vin = vin_el.get_text(strip=True).replace("VIN:", "").strip() if vin_el else ""
+
+        stock_el = soup.select_one("li.stockNumber")
+        stock = stock_el.get_text(strip=True).replace("Stock:", "").strip() if stock_el else ""
+
         # MSRP
-        msrp_tag = soup.select_one("div.pricing span.value")
-        if msrp_tag:
-            msrp_text = msrp_tag.get_text(strip=True).replace("$", "").replace(",", "")
+        msrp_el = soup.select_one("div.pricing span.value")
+        if msrp_el:
+            msrp_text = msrp_el.get_text(strip=True).replace("$", "").replace(",", "")
             msrp = float(msrp_text)
         else:
             msrp = None
@@ -55,12 +60,12 @@ for url in urls:
         })
 
     except Exception as e:
-        print(f"Error at {url}: {e}")
+        print(f"❌ Error parsing {url}: {e}")
 
-# Save to Excel
+# Step 3: Export
 if vehicle_data:
     df = pd.DataFrame(vehicle_data)
     df.to_excel(OUTPUT_FILE, index=False)
-    print(f"Saved {len(df)} vehicles to {OUTPUT_FILE}")
+    print(f"✅ Saved {len(df)} vehicles to {OUTPUT_FILE}")
 else:
-    print("No vehicles found.")
+    print("❌ No vehicle data found.")
