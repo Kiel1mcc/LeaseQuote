@@ -105,3 +105,33 @@ def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
     debug_info["BottomVal"] = round(bottomVal, 6)
 
     return round(CCR, 6), round(overflow, 6), debug_info
+
+def calculate_payment_from_ccr(S, CCR, RES, W, F, τ, M, Q=0.0):
+    cap_cost = S + M
+    adjusted_cap_cost = cap_cost - CCR
+
+    depreciation = (adjusted_cap_cost - RES) / W
+    rent_charge = F * (adjusted_cap_cost + RES)
+    BP = depreciation + rent_charge
+    ST = (BP * τ) * W
+    TA = S + Q + ST + M - CCR
+    AMD = (TA - RES) / W
+    ALC = F * (TA + RES)
+    MP = AMD + ALC
+
+    return {
+        "Base Payment (BP)": round(BP, 2),
+        "Sales Tax (ST)": round(ST, 2),
+        "Monthly Payment (MP)": round(MP, 2),
+        "Pre-Adjustment BP": round(BP, 6),
+        "Depreciation": round(depreciation, 6),
+        "Rent Charge": round(rent_charge, 6),
+        "Tax Rate (τ)": τ,
+        "Term (W)": W,
+        "Cap Cost Reduction (CCR)": CCR,
+        "Residual (RES)": RES,
+        "Money Factor (F)": round(F, 6),
+        "Net Cap Cost (S + M - CCR)": round(adjusted_cap_cost, 2),
+        "Cap Cost (S + M)": round(cap_cost, 2),
+        "Tax Calculation": f"{round(BP, 6)} * {round(τ, 6)} = {round(ST, 6)}"
+    }
