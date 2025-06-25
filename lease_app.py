@@ -93,7 +93,6 @@ if vin_input:
 
                     B = money_down_slider + lease_cash_used
                     K = 0.0
-                    U = 0.0
                     M = 250.0 + 650.0 + 62.50
                     Q = 0.0
                     τ = tax_rate
@@ -103,11 +102,12 @@ if vin_input:
                     SP = selling_price
                     RES = residual_value
 
+                    # Calculate CCR without subtracting trade yet
                     ccr, overflow, debug_ccr = calculate_ccr_full(
                         SP=SP,
                         B=B,
                         rebates=0.0,
-                        TV=TV,
+                        TV=0.0,  # trade value handled after CCR
                         K=K,
                         M=M,
                         Q=Q,
@@ -117,7 +117,10 @@ if vin_input:
                         τ=τ
                     )
 
-                    S = SP - max(0, TV - overflow)
+                    # Apply remaining trade AFTER covering overflow
+                    remaining_trade = max(0, TV - overflow)
+                    S = SP - remaining_trade
+
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
@@ -130,7 +133,7 @@ if vin_input:
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${remaining_trade:.2f}*")
 
                     with st.expander("🔍 Full Debug Info"):
                         st.markdown("### CCR Calculation Inputs")
@@ -138,7 +141,7 @@ if vin_input:
                             "SP": SP,
                             "B (Money Down + Lease Cash)": B,
                             "Rebates": 0.0,
-                            "TV (Trade Value)": TV,
+                            "TV (original, used post-overflow)": TV,
                             "K": K,
                             "M (Doc + Acq + Fees)": M,
                             "Q": Q,
