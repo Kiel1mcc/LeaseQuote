@@ -83,7 +83,7 @@ if vin_input:
                         )
 
                     cash_down = default_money_down
-                    total_B = initial_B + trade_used + cash_used + remaining_cash
+                    initial_B = lease_cash_used
 
                     # Run CCR with lease cash only
                     ccr, overflow, debug_ccr = calculate_ccr_full(
@@ -108,8 +108,8 @@ if vin_input:
                     remaining_trade = trade_value - trade_used
                     remaining_cash = cash_down - cash_used
 
-                    adjusted_SP = selling_price - remaining_trade
-                    total_B = initial_B + cash_used + lease_cash_used + remaining_cash
+                    adjusted_SP = selling_price  # don't apply trade reduction yet
+                    total_B = initial_B + trade_used + cash_used + remaining_cash
 
                     # Recalculate CCR with updated values
                     ccr, _, debug_ccr = calculate_ccr_full(
@@ -125,6 +125,8 @@ if vin_input:
                         W=term,
                         τ=tax_rate
                     )
+
+                    adjusted_SP -= remaining_trade  # now reduce SP only after CCR is handled
 
                     payment = calculate_payment_from_ccr(
                         S=adjusted_SP,
