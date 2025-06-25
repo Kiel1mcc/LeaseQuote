@@ -28,4 +28,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ScrapedInventory
-          path: Locator_Detail_Test.xlsx
+          path: '**/Locator_Detail_Test.xlsx'
