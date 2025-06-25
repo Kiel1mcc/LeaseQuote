@@ -132,12 +132,24 @@ if vin_input:
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
                     st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
 
-                    with st.expander("🔍 Debug Details"):
-                        st.markdown("### Debug Info")
+                    with st.expander("🔍 Full Debug Info"):
+                        st.markdown("### CCR Calculation Inputs")
+                        st.json({
+                            "SP": SP,
+                            "B (Money Down + Lease Cash)": B,
+                            "Rebates": 0.0,
+                            "TV (Trade Value)": TV,
+                            "K": K,
+                            "M (Doc + Acq + Fees)": M,
+                            "Q": Q,
+                            "RES": RES,
+                            "F (Money Factor)": F,
+                            "W (Term)": W,
+                            "τ (Tax Rate)": τ
+                        })
+
+                        st.markdown("### CCR Debug Output")
                         st.json(debug_ccr)
+
                         st.markdown("### Payment Breakdown")
-                        for k, v in payment.items():
-                            if isinstance(v, (int, float)):
-                                st.markdown(f"**{k}:** ${v:,.2f}")
-                            else:
-                                st.markdown(f"**{k}:** {v}")
+                        st.json(payment)
