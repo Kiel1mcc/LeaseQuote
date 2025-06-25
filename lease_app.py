@@ -93,60 +93,55 @@ if vin_input:
 
                     cash_down = money_down_slider
                     lease_cash = lease_cash_used
+
                     K = 0.0
                     U = 0.0
                     M = 250.0 + 650.0 + 62.50
                     Q = 0.0
-                    τ = tax_rate
-                    F = money_factor
-                    W = term
-                    TV = trade_value
-                    SP = selling_price
-                    RES = residual_value
 
                     ccr, overflow, debug_ccr = calculate_ccr_full(
-                    SP=SP,
-                    B=cash_down,  # Cash down payment
-                    rebates=lease_cash,  # Lease cash as rebates
-                    TV=TV,
-                    K=K,
-                    M=M,
-                    Q=Q,
-                    RES=RES,
-                    F=F,
-                    W=W,
-                    τ=τ
+                        SP=selling_price,
+                        B=cash_down,
+                        rebates=lease_cash,
+                        TV=trade_value,
+                        K=K,
+                        M=M,
+                        Q=Q,
+                        RES=residual_value,
+                        F=money_factor,
+                        W=term,
+                        τ=tax_rate
                     )
 
-                    S = SP - max(0, TV - overflow)
+                    S = selling_price - max(0, trade_value - overflow)
                     payment = calculate_payment_from_ccr(
                         S=S,
                         CCR=ccr,
-                        RES=RES,
-                        W=W,
-                        F=F,
-                        τ=τ,
+                        RES=residual_value,
+                        W=term,
+                        F=money_factor,
+                        τ=tax_rate,
                         M=M,
                         Q=Q
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${TV - overflow:.2f}*")
+                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${trade_value - overflow:.2f}*")
 
                     with st.expander("🔍 Full Debug Info"):
                         st.markdown("### CCR Calculation Inputs")
                         st.json({
-                            "SP": SP,
-                            "B (Money Down + Lease Cash)": B,
+                            "SP": selling_price,
+                            "B (Money Down + Lease Cash)": cash_down + lease_cash,
                             "Rebates": 0.0,
-                            "TV (Trade Value)": TV,
+                            "TV (Trade Value)": trade_value,
                             "K": K,
                             "M (Doc + Acq + Fees)": M,
                             "Q": Q,
-                            "RES": RES,
-                            "F (Money Factor)": F,
-                            "W (Term)": W,
-                            "τ (Tax Rate)": τ
+                            "RES": residual_value,
+                            "F (Money Factor)": money_factor,
+                            "W (Term)": term,
+                            "τ (Tax Rate)": tax_rate
                         })
 
                         st.markdown("### CCR Debug Output")
