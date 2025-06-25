@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import sys
+import os
 
 # Check if running in test mode
 OUTPUT_FILE = "Locator_Detail_Test.xlsx" if "--temp" in sys.argv else "Locator_Detail_Updated.xlsx"
@@ -44,7 +45,8 @@ for card in soup.select(".vehicle-card-info"):
 # Convert to DataFrame and save
 if inventory_data:
     df = pd.DataFrame(inventory_data)
-    df.to_excel(OUTPUT_FILE, index=False)
-    print(f"Saved {len(df)} vehicles to {OUTPUT_FILE}")
+    output_path = os.path.join(os.getcwd(), OUTPUT_FILE)
+    df.to_excel(output_path, index=False)
+    print(f"Saved {len(df)} vehicles to {output_path}")
 else:
     print("No vehicles found.")
