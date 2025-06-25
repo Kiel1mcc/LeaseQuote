@@ -23,7 +23,7 @@ jobs:
           pip install pandas beautifulsoup4 requests openpyxl
 
       - name: Run scraping script
-        run: python scrape_inventory.py
+        run: python update_locator_inventory.py
 
       - name: Upload output
         uses: actions/upload-artifact@v3
