@@ -91,7 +91,8 @@ if vin_input:
                         key=f"down_{term}_{mileage}"
                     )
 
-                    B = money_down_slider + lease_cash_used
+                    cash_down = money_down_slider
+                    lease_cash = lease_cash_used
                     K = 0.0
                     U = 0.0
                     M = 250.0 + 650.0 + 62.50
@@ -104,17 +105,17 @@ if vin_input:
                     RES = residual_value
 
                     ccr, overflow, debug_ccr = calculate_ccr_full(
-                        SP=SP,
-                        B=B,
-                        rebates=0.0,
-                        TV=TV,
-                        K=K,
-                        M=M,
-                        Q=Q,
-                        RES=RES,
-                        F=F,
-                        W=W,
-                        τ=τ
+                    SP=SP,
+                    B=cash_down,  # Cash down payment
+                    rebates=lease_cash,  # Lease cash as rebates
+                    TV=TV,
+                    K=K,
+                    M=M,
+                    Q=Q,
+                    RES=RES,
+                    F=F,
+                    W=W,
+                    τ=τ
                     )
 
                     S = SP - max(0, TV - overflow)
