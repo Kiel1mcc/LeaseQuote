@@ -1,7 +1,7 @@
 # lease_calculations.py
 
 def calculate_ccr_full(SP, B, rebates, TV, K, M, Q, RES, F, W, τ):
-    S = SP - TV
+    S = SP
     U = 0.00
     bottomVal = (1 + τ) * (1 - (F + 1 / W)) - τ * F * (1 + F * W)
 
