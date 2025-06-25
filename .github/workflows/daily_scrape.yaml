@@ -3,7 +3,7 @@ name: Daily Inventory Scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 8am EST (12 UTC)
+    - cron: '0 12 * * *'
 
 jobs:
   scrape:
@@ -25,6 +25,13 @@ jobs:
       - name: Run inventory scraper
         run: |
           python update_locator_inventory.py --temp
+
+      - name: List files to debug
+        run: |
+          echo "Listing directory contents:"
+          ls -lh
+          echo "Does the file exist?"
+          ls -lh Locator_Detail_Test.xlsx || echo "NOT FOUND"
 
       - name: Upload output Excel file
         uses: actions/upload-artifact@v4
