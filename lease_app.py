@@ -82,77 +82,81 @@ if vin_input:
                             key=f"lease_cash_{term}_{mileage}"
                         )
 
-                    money_down_slider = st.slider(
-                        f"Adjust Down Payment ($) — {term} mo / {mileage:,} mi",
-                        min_value=0,
-                        max_value=5000,
-                        value=int(default_money_down),
-                        step=50,
-                        key=f"down_{term}_{mileage}"
-                    )
+                    cash_down = default_money_down
+                    initial_B = lease_cash_used
 
-                    B = money_down_slider + lease_cash_used
-                    K = 0.0
-                    M = 250.0 + 650.0 + 62.50
-                    Q = 0.0
-                    τ = tax_rate
-                    F = money_factor
-                    W = term
-                    TV = trade_value
-                    SP = selling_price
-                    RES = residual_value
-
-                    # Calculate CCR without subtracting trade yet
+                    # Run CCR with lease cash only
                     ccr, overflow, debug_ccr = calculate_ccr_full(
-                        SP=SP,
-                        B=B,
+                        SP=selling_price,
+                        B=initial_B,
                         rebates=0.0,
-                        TV=0.0,  # trade value handled after CCR
-                        K=K,
-                        M=M,
-                        Q=Q,
-                        RES=RES,
-                        F=F,
-                        W=W,
-                        τ=τ
+                        TV=0.0,
+                        K=0.0,
+                        M=962.50,
+                        Q=0.0,
+                        RES=residual_value,
+                        F=money_factor,
+                        W=term,
+                        τ=tax_rate
                     )
 
-                    # Apply remaining trade AFTER covering overflow
-                    remaining_trade = max(0, TV - overflow)
-                    S = SP - remaining_trade
+                    # Fill overflow: trade first, then cash
+                    trade_used = min(trade_value, overflow)
+                    remaining_gap = overflow - trade_used
+                    cash_used = min(cash_down, remaining_gap)
+
+                    remaining_trade = trade_value - trade_used
+                    remaining_cash = cash_down - cash_used
+
+                    adjusted_SP = selling_price - remaining_trade
+                    total_B = initial_B + cash_used + lease_cash_used + remaining_cash
+
+                    # Recalculate CCR with updated values
+                    ccr, _, debug_ccr = calculate_ccr_full(
+                        SP=adjusted_SP,
+                        B=total_B,
+                        rebates=0.0,
+                        TV=0.0,
+                        K=0.0,
+                        M=962.50,
+                        Q=0.0,
+                        RES=residual_value,
+                        F=money_factor,
+                        W=term,
+                        τ=tax_rate
+                    )
 
                     payment = calculate_payment_from_ccr(
-                        S=S,
+                        S=adjusted_SP,
                         CCR=ccr,
-                        RES=RES,
-                        W=W,
-                        F=F,
-                        τ=τ,
-                        M=M,
-                        Q=Q
+                        RES=residual_value,
+                        W=term,
+                        F=money_factor,
+                        τ=tax_rate,
+                        M=962.50,
+                        Q=0.0
                     )
 
                     st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}**")
-                    st.markdown(f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, CCR: ${ccr:.2f}, Trade Remaining: ${remaining_trade:.2f}*")
+                    st.markdown(
+                        f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, "
+                        f"CCR: ${ccr:.2f}, Trade Used: ${trade_used:.2f}, Remaining Cash Added to Down: ${remaining_cash:.2f}*"
+                    )
 
                     with st.expander("🔍 Full Debug Info"):
-                        st.markdown("### CCR Calculation Inputs")
+                        st.markdown("### CCR Fill Breakdown")
                         st.json({
-                            "SP": SP,
-                            "B (Money Down + Lease Cash)": B,
-                            "Rebates": 0.0,
-                            "TV (original, used post-overflow)": TV,
-                            "K": K,
-                            "M (Doc + Acq + Fees)": M,
-                            "Q": Q,
-                            "RES": RES,
-                            "F (Money Factor)": F,
-                            "W (Term)": W,
-                            "τ (Tax Rate)": τ
+                            "TopVal Overflow": round(overflow, 2),
+                            "Trade Used for Overflow": trade_used,
+                            "Cash Used for Overflow": cash_used,
+                            "Remaining Trade (Reduced SP)": remaining_trade,
+                            "Remaining Cash (Added to Down)": remaining_cash,
+                            "Final SP": adjusted_SP,
+                            "Final B": total_B
                         })
 
-                        st.markdown("### CCR Debug Output")
+                        st.markdown("### CCR Debug")
                         st.json(debug_ccr)
 
-                        st.markdown("### Payment Breakdown")
+                        st.markdown("### Final Payment Breakdown")
                         st.json(payment)
