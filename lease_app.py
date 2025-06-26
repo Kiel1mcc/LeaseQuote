@@ -77,6 +77,13 @@ st.markdown("""
     .three-column .stContainer > div {
         width: 32%;
     }
+    /* Remove extra padding/margin from containers */
+    .stContainer {
+        padding: 0;
+    }
+    .element-container {
+        margin: 0;
+    }
     @media (max-width: 768px) {
         .three-column .stContainer {
             flex-direction: column;
@@ -120,12 +127,12 @@ except FileNotFoundError:
 
 # Right sidebar with settings
 with st.sidebar:
-    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
         customer_name = st.text_input("Customer Name", "")
         customer_phone = st.text_input("Phone Number", "")
         customer_email = st.text_input("Email Address", "")
+    
     vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
     if vin_input:
         vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
@@ -136,9 +143,7 @@ with st.sidebar:
             st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
         else:
             st.warning("❌ Vehicle not found in inventory")
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
+    
     st.header("Lease Parameters")
     selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
     selected_county = st.selectbox("County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
@@ -146,7 +151,6 @@ with st.sidebar:
     trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
 if not vin_input:
@@ -312,22 +316,23 @@ for i, option in enumerate(filtered_options):
         option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
         is_selected = option_key in st.session_state.selected_quotes
         card_class = "selected-quote" if is_selected else "quote-card"
-        with st.container():
-            st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-            st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-            payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
-            st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
-            st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
-            if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
-                if is_selected:
-                    st.session_state.selected_quotes.remove(option_key)
-                else:
-                    if len(st.session_state.selected_quotes) < 3:
-                        st.session_state.selected_quotes.append(option_key)
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Removed the st.container() wrapper that was creating the empty white box
+        st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+        st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
+        new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
+        new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
+        payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
+        st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
+        st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
+        if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
+            if is_selected:
+                st.session_state.selected_quotes.remove(option_key)
+            else:
+                if len(st.session_state.selected_quotes) < 3:
+                    st.session_state.selected_quotes.append(option_key)
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Generate Quote Section
