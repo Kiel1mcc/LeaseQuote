@@ -97,8 +97,24 @@ with st.sidebar:
 
 # Main content area
 if not vin_input:
-    st.title("🚗 Lease Quote Generator")
-    st.info("👈 Enter a VIN number in the sidebar to get started")
+    # Header with Logo
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        try:
+            st.image("drivepath_logo.png", width=200)
+        except:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                <h2 style="margin: 0; color: white;">DrivePath</h2>
+                <p style="margin: 5px 0 0 0; color: #bdc3c7;">Lease Quote Tool</p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col2:
+        st.title("🚗 Lease Quote Generator")
+        st.info("👈 Enter a VIN number in the sidebar to get started")
+    
     st.markdown("""
     ### How to use this tool:
     1. **Enter vehicle VIN** in the sidebar
@@ -130,14 +146,29 @@ make = lease_info.get("Make", "Hyundai")
 model = lease_info.get("Model", "N/A")
 trim = lease_info.get("Trim", "N/A")
 
-# Vehicle Header
-st.title("🚗 Lease Quote Generator")
-st.markdown(f"""
-<div style="background: linear-gradient(90deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-    <h2 style="margin: 0; color: white;">{model_year} {make} {model} {trim}</h2>
-    <h3 style="margin: 10px 0 0 0; color: white;">MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
-</div>
-""", unsafe_allow_html=True)
+# Header with Logo and Vehicle Info
+col1, col2 = st.columns([1, 3])
+
+with col1:
+    # DrivePath Logo (you'll need to upload the logo file to your project)
+    try:
+        st.image("drivepath_logo.png", width=200)
+    except:
+        # Fallback if logo file not found
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <h2 style="margin: 0; color: white;">DrivePath</h2>
+            <p style="margin: 5px 0 0 0; color: #bdc3c7;">Lease Quote Tool</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0; color: white;">{model_year} {make} {model} {trim}</h2>
+        <h3 style="margin: 10px 0 0 0; color: white;">MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Generate all quote options
 tier_num = int(selected_tier.split(" ")[1])
@@ -220,30 +251,25 @@ with col3:
         st.session_state.selected_quotes = []
         st.rerun()
 
-# Calculate payments and apply filters/sorting
-filtered_options = []
-for i, option in enumerate(st.session_state.quote_options):
-    if option['term'] not in term_filter or option['mileage'] not in mileage_filter:
-        continue
-    
-    # Calculate payment for sorting
+# Function to calculate payment for an option
+def calculate_option_payment(option, trade_val, cash_down, tax_rt):
     selling_price = option['selling_price']
     initial_B = option['lease_cash_used']
     
     # Initial CCR calculation
     ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
         SP=selling_price, B=initial_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rate
+        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
     )
     
     overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
     
     # Use trade and cash to cover overflow
-    trade_used = min(trade_value, overflow)
+    trade_used = min(trade_val, overflow)
     remaining_gap = overflow - trade_used
-    cash_used = min(default_money_down, remaining_gap)
-    remaining_trade = trade_value - trade_used
-    remaining_cash = default_money_down - cash_used
+    cash_used = min(cash_down, remaining_gap)
+    remaining_trade = trade_val - trade_used
+    remaining_cash = cash_down - cash_used
     
     adjusted_SP = selling_price - remaining_trade
     total_B = initial_B + trade_used + cash_used + remaining_cash
@@ -251,21 +277,37 @@ for i, option in enumerate(st.session_state.quote_options):
     # Final CCR calculation
     ccr, _, _ = calculate_ccr_full(
         SP=adjusted_SP, B=total_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rate
+        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
     )
     
     payment = calculate_payment_from_ccr(
         S=adjusted_SP, CCR=ccr, RES=option['residual_value'], W=option['term'],
-        F=option['money_factor'], τ=tax_rate, M=962.50, Q=0.0
+        F=option['money_factor'], τ=tax_rt, M=962.50, Q=0.0
     )
     
-    option['payment'] = payment['Monthly Payment (MP)']
-    option['base_payment'] = payment['Base Payment (BP)']
-    option['tax_payment'] = payment['Sales Tax (ST)']
-    option['ccr'] = ccr
-    option['index'] = i
+    return {
+        'payment': payment['Monthly Payment (MP)'],
+        'base_payment': payment['Base Payment (BP)'],
+        'tax_payment': payment['Sales Tax (ST)'],
+        'ccr': ccr,
+        'trade_used': trade_used,
+        'remaining_cash': remaining_cash
+    }
+
+# Calculate payments and apply filters/sorting
+filtered_options = []
+for i, option in enumerate(st.session_state.quote_options):
+    if option['term'] not in term_filter or option['mileage'] not in mileage_filter:
+        continue
     
-    filtered_options.append(option)
+    # Calculate current payment based on current values
+    payment_data = calculate_option_payment(option, trade_value, default_money_down, tax_rate)
+    
+    option_with_payment = option.copy()
+    option_with_payment.update(payment_data)
+    option_with_payment['index'] = i
+    
+    filtered_options.append(option_with_payment)
 
 # Sort options
 if sort_by == "Most Lease Cash Available":
@@ -298,24 +340,26 @@ for option in filtered_options:
             st.markdown("**Customize This Option:**")
             new_selling_price = st.number_input(
                 "Selling Price ($)", 
-                value=option['selling_price'],
+                value=float(option['selling_price']),
                 key=f"sp_{option_key}",
                 step=100.0
             )
             if new_selling_price != option['selling_price']:
                 st.session_state.quote_options[option['index']]['selling_price'] = new_selling_price
+                st.rerun()
         
         with col3:
             new_lease_cash = st.number_input(
                 f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})",
                 min_value=0.0,
-                max_value=option['available_lease_cash'],
-                value=option['lease_cash_used'],
+                max_value=float(option['available_lease_cash']),
+                value=float(option['lease_cash_used']),
                 key=f"lc_{option_key}",
                 step=100.0
             )
             if new_lease_cash != option['lease_cash_used']:
                 st.session_state.quote_options[option['index']]['lease_cash_used'] = new_lease_cash
+                st.rerun()
         
         with col4:
             if is_selected:
@@ -345,7 +389,10 @@ if st.session_state.selected_quotes:
         # Printable Quote
         st.markdown(f"""
         <div class="print-section">
-            <h1 style="text-align: center; color: #2E8B57;">LEASE QUOTE</h1>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2c3e50; margin-bottom: 10px;">DrivePath</h1>
+                <h2 style="color: #2E8B57; margin: 0;">LEASE QUOTE</h2>
+            </div>
             <hr>
             <h3>Vehicle Information</h3>
             <p><strong>{model_year} {make} {model} {trim}</strong></p>
