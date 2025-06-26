@@ -53,10 +53,28 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stSelec
     border: 1px solid #d1d5db !important;
 }
 
-/* Target multiselect */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div {
+/* Target multiselect containers more specifically - the actual field areas */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Target the multiselect widget container */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div > div {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* More specific multiselect field targeting */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] [role="combobox"] {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Target the actual multiselect input area */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+    background-color: white !important;
 }
 
 /* Remove white background from checkbox - make it transparent */
