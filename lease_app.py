@@ -10,7 +10,7 @@ st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar
 # FINAL CSS - Based on debug results, target stMarkdownContainer elements
 st.markdown("""
 <style>
-/* Target the right column using the correct structure we found in debug */
+/* Fix: Only target the right column, not affecting main content */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
@@ -18,20 +18,19 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
     border: 1px solid #e1e5e9 !important;
 }
 
-/* Target all markdown containers in the right column */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMarkdownContainer"] {
+/* Remove the markdown container styling that's making expanders fully white */
+/* div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMarkdownContainer"] {
     background-color: white !important;
     border-radius: 0.25rem !important;
     margin-bottom: 0.5rem !important;
     border: 1px solid #e1e5e9 !important;
     padding: 0.5rem !important;
-}
+} */
 
-/* Target expanders specifically */
+/* Keep expanders with gray background, only input fields white */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stExpander"] {
-    background-color: white !important;
-    border: 1px solid #e1e5e9 !important;
-    border-radius: 0.25rem !important;
+    background-color: transparent !important;
+    border: none !important;
     margin-bottom: 0.5rem !important;
 }
 
@@ -189,22 +188,6 @@ make = lease_info.get("Make", "Hyundai")
 model = lease_info.get("Model", "N/A")
 trim = lease_info.get("Trim", "N/A")
 
-# Header section
-col1, col2 = st.columns([1, 3])
-with col1:
-    try:
-        logo = Image.open("drivepath_logo.png")
-        st.image(logo, width=300)
-    except:
-        st.markdown("<h2>DrivePath</h2>", unsafe_allow_html=True)
-with col2:
-    st.markdown(f"""
-        <div style='background:#1e3a8a;padding:20px;color:white;border-radius:10px'>
-        <h2>{model_year} {make} {model} {trim}</h2>
-        <h3>MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
-        </div>
-    """, unsafe_allow_html=True)
-
 # Build quote options
 tier_num = int(selected_tier.split(" ")[1])
 mileage_options = [10000, 12000, 15000]
@@ -312,6 +295,22 @@ with right_col:
 
 # Main content area
 with main_col:
+    # Header section
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        try:
+            logo = Image.open("drivepath_logo.png")
+            st.image(logo, width=300)
+        except:
+            st.markdown("<h2>DrivePath</h2>", unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"""
+            <div style='background:#1e3a8a;padding:20px;color:white;border-radius:10px'>
+            <h2>{model_year} {make} {model} {trim}</h2>
+            <h3>MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
+            </div>
+        """, unsafe_allow_html=True)
+
     # Filter and sort options
     filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
 
