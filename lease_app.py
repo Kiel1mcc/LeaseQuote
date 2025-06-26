@@ -117,7 +117,7 @@ if vin_data.empty:
 
 vehicle = vin_data.iloc[0]
 model_number = vehicle["ModelNumber"]
-msrp = vehicle["MSRP"]
+msrp = float(vehicle["MSRP"])
 
 lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
 if lease_matches.empty:
@@ -176,7 +176,7 @@ for term in lease_terms:
             'residual_value': residual_value,
             'money_factor': money_factor,
             'available_lease_cash': available_lease_cash,
-            'selling_price': msrp,
+            'selling_price': float(msrp),
             'lease_cash_used': 0.0
         })
 
@@ -187,7 +187,7 @@ col1, col2, col3 = st.columns([2, 2, 1])
 
 with col1:
     st.subheader("🎛️ Bulk Controls")
-    bulk_selling_price = st.number_input("Apply Selling Price to All", value=msrp, step=100.0)
+    bulk_selling_price = st.number_input("Apply Selling Price to All", value=float(msrp), step=100.0)
     if st.button("📝 Update All Selling Prices"):
         for option in st.session_state.quote_options:
             option['selling_price'] = bulk_selling_price
