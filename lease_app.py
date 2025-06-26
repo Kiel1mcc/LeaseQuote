@@ -117,12 +117,14 @@ def load_data():
     lease_programs.columns = lease_programs.columns.str.strip()
     vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
     vehicle_data.columns = vehicle_data.columns.str.strip()
-    return lease_programs, vehicle_data
+    county_tax_rates = pd.read_csv("County_Tax_Rates.csv")
+    county_tax_rates.columns = county_tax_rates.columns.str.strip()
+    return lease_programs, vehicle_data, county_tax_rates
 
 try:
-    lease_programs, vehicle_data = load_data()
+    lease_programs, vehicle_data, county_tax_rates = load_data()
 except FileNotFoundError:
-    st.error("⚠️ Data files not found. Please ensure 'All_Lease_Programs_Database.csv' and 'Locator_Detail_Updated.xlsx' are in the correct directory.")
+    st.error("⚠️ Data files not found. Please ensure 'All_Lease_Programs_Database.csv', 'Locator_Detail_Updated.xlsx', and 'County_Tax_Rates.csv' are in the correct directory.")
     st.stop()
 
 # Right sidebar with settings
@@ -146,20 +148,11 @@ with st.sidebar:
     
     st.header("Lease Parameters")
     selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
-    # Updated county list with all Indiana counties, default to Marion
-    counties = [
-        "Adams", "Allen", "Bartholomew", "Benton", "Blackford", "Boone", "Brown", "Carroll", "Cass", "Clark",
-        "Clay", "Clinton", "Crawford", "Daviess", "Dearborn", "Decatur", "DeKalb", "Delaware", "Dubois", "Elkhart",
-        "Fayette", "Floyd", "Fountain", "Franklin", "Fulton", "Gibson", "Grant", "Greene", "Hamilton", "Hancock",
-        "Harrison", "Hendricks", "Henry", "Howard", "Huntington", "Jackson", "Jasper", "Jay", "Jefferson", "Jennings",
-        "Johnson", "Knox", "Kosciusko", "LaGrange", "Lake", "LaPorte", "Lawrence", "Madison", "Marion", "Marshall",
-        "Martin", "Miami", "Monroe", "Montgomery", "Morgan", "Newton", "Noble", "Ohio", "Orange", "Owen",
-        "Parke", "Perry", "Pike", "Porter", "Posey", "Pulaski", "Putnam", "Randolph", "Ripley", "Rush",
-        "St. Joseph", "Scott", "Shelby", "Spencer", "Starke", "Steuben", "Sullivan", "Switzerland", "Tippecanoe", "Tipton",
-        "Union", "Vanderburgh", "Vermillion", "Vigo", "Wabash", "Warren", "Warrick", "Washington", "Wayne", "Wells",
-        "White", "Whitley"
-    ]
+    # Updated county list from County_Tax_Rates.csv, default to Marion
+    counties = sorted(county_tax_rates["County"].tolist())
     selected_county = st.selectbox("County:", counties, index=counties.index("Marion"), help="Select your county for tax calculations.")
+    # Set tax rate based on selected county
+    tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
     st.subheader("Financial Settings")
     trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
@@ -236,7 +229,6 @@ with col2:
 
 # Generate quote options
 tier_num = int(selected_tier.split(" ")[1])
-tax_rate = 0.0725
 mileage_options = [10000, 12000, 15000]
 lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
