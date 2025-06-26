@@ -76,8 +76,9 @@ st.markdown("""
     }
     .three-column .stContainer > div {
         width: 32%;
-        padding: 0; /* Remove padding within columns */
-        margin-top: 0; /* Ensure no top margin */
+        padding: 0; /* Remove all padding */
+        margin-top: 0; /* Remove top margin */
+        padding-top: 0 !important; /* Override any internal padding */
     }
     /* Remove extra padding/margin from containers */
     .stContainer {
@@ -111,6 +112,10 @@ st.markdown("""
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
+    /* Adjust parent container to pull content up if needed */
+    .three-column {
+        margin-top: -10px; /* Slight negative margin to compensate if needed */
+    }
     @media (max-width: 768px) {
         .three-column .stContainer {
             flex-direction: column;
@@ -120,6 +125,9 @@ st.markdown("""
         }
         .main-content {
             padding: 0;
+        }
+        .three-column {
+            margin-top: 0; /* Reset on mobile */
         }
     }
     @media print {
