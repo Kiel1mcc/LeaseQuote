@@ -5,12 +5,17 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS for professional, three-column styling
+# Custom CSS to remove the top white bar and adjust layout
 st.markdown("""
 <style>
-    /* General styling */
+    /* Hide the default Streamlit header/menu bar */
+    header {
+        display: none;
+    }
+    /* Remove top padding and ensure content starts at the top */
     .main-content {
-        padding: 20px;
+        padding: 0;
+        margin-top: 0;
         font-family: 'Helvetica', Arial, sans-serif;
     }
     .quote-card {
@@ -80,7 +85,7 @@ st.markdown("""
             width: 100%;
         }
         .main-content {
-            padding: 10px;
+            padding: 0;
         }
     }
     @media print {
@@ -88,6 +93,9 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Set page config to minimize header and padding
+st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
 # Initialize session state
 if 'selected_quotes' not in st.session_state:
