@@ -101,6 +101,16 @@ st.markdown("""
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
+    /* Aggressive reset for all block elements within columns */
+    [data-testid="column"] * {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* Target Streamlit's block container more specifically */
+    [data-testid="block-container"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
     @media (max-width: 768px) {
         .three-column .stContainer {
             flex-direction: column;
@@ -333,7 +343,7 @@ for i, option in enumerate(filtered_options):
         option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
         is_selected = option_key in st.session_state.selected_quotes
         card_class = "selected-quote" if is_selected else "quote-card"
-        st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+        st.markdown(f'<div class="{card_class}" style="margin-top: 0 !important; padding-top: 0 !important;">', unsafe_allow_html=True)
         st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
         new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
         new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
