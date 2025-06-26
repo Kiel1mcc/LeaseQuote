@@ -21,7 +21,7 @@ st.markdown("""
     .quote-card {
         border: 1px solid #e0e0e0;
         border-radius: 10px;
-        padding: 15px;
+        padding: 0px;
         margin: 0 0 15px 0; /* Remove top margin, keep bottom margin */
         background-color: #ffffff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
