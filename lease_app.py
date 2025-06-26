@@ -19,7 +19,7 @@ st.markdown("""
         font-family: 'Helvetica', Arial, sans-serif;
     }
     .quote-card {
-        border: 10px solid #e0e0e0;
+        border: 1px solid #e0e0e0;
         border-radius: 10px;
         padding: 0px;
         margin: 0 0 15px 0; /* Remove top margin, keep bottom margin */
