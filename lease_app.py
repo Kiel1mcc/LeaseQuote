@@ -1,5 +1,3 @@
-# Full updated lease_app.py with styled Filters & Sorting section using columns
-
 import streamlit as st
 import pandas as pd
 from lease_calculations import calculate_ccr_full, calculate_payment_from_ccr
@@ -9,143 +7,92 @@ import json
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
-# Add custom CSS for consistent styling
+# Custom CSS to style the right sidebar
 st.markdown("""
 <style>
-    .right-sidebar {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e9ecef;
-        margin-bottom: 1rem;
-    }
-    
-    .sidebar-section {
-        background-color: white;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .sidebar-header {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.75rem;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 0.5rem;
-    }
-    
-    /* Style form elements in right sidebar to match left sidebar */
-    .right-sidebar input[type="number"],
-    .right-sidebar .stNumberInput input,
-    .right-sidebar .stTextInput input,
-    .right-sidebar .stSelectbox select,
-    .right-sidebar .stMultiSelect > div {
-        background-color: #ffffff !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 6px !important;
-        padding: 8px 12px !important;
-        font-size: 14px !important;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
-    }
-    
-    .right-sidebar input[type="number"]:focus,
-    .right-sidebar .stNumberInput input:focus,
-    .right-sidebar .stTextInput input:focus,
-    .right-sidebar .stSelectbox select:focus {
-        border-color: #80bdff !important;
-        outline: 0 !important;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-    
-    /* Style number input containers */
-    .right-sidebar .stNumberInput > div > div {
-        border-radius: 6px !important;
-        border: 1px solid #ced4da !important;
-        background-color: #ffffff !important;
-    }
-    
-    /* Style selectbox containers */
-    .right-sidebar .stSelectbox > div > div {
-        border-radius: 6px !important;
-        border: 1px solid #ced4da !important;
-        background-color: #ffffff !important;
-    }
-    
-    /* Style multiselect containers */
-    .right-sidebar .stMultiSelect > div > div {
-        border-radius: 6px !important;
-        border: 1px solid #ced4da !important;
-        background-color: #ffffff !important;
-    }
-    
-    /* Style checkbox */
-    .right-sidebar .stCheckbox {
-        padding: 8px 0 !important;
-    }
-    
-    .right-sidebar .stCheckbox label {
-        font-size: 14px !important;
-        color: #495057 !important;
-    }
-    
-    /* Style labels */
-    .right-sidebar label {
-        font-weight: 500 !important;
-        color: #495057 !important;
-        margin-bottom: 4px !important;
-        font-size: 14px !important;
-    }
-    
-    .quote-card {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-    
-    .quote-card:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
-    }
-    
-    .selected-quote {
-        background: #e3f2fd;
-        border: 2px solid #2196f3;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 8px rgba(33,150,243,0.2);
-    }
-    
-    .term-mileage {
-        font-weight: 600;
-        color: #1976d2;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-    }
-    
-    .payment-highlight {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #2e7d32;
-        margin: 8px 0;
-    }
-    
-    .caption-text {
-        font-size: 0.8rem;
-        color: #666;
-        margin-bottom: 8px;
-    }
-    
-    .main-content {
-        padding-left: 1rem;
-    }
+.right-sidebar {
+    background-color: #f0f2f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e6e9ef;
+    height: fit-content;
+    position: sticky;
+    top: 1rem;
+}
+
+.right-sidebar .stExpander {
+    background-color: white;
+    border: 1px solid #e6e9ef;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.right-sidebar .stSelectbox > div > div {
+    background-color: white;
+}
+
+.right-sidebar .stMultiSelect > div > div {
+    background-color: white;
+}
+
+.right-sidebar .stNumberInput > div > div > input {
+    background-color: white;
+}
+
+.right-sidebar .stCheckbox {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #e6e9ef;
+}
+
+.sidebar-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #262730;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e6e9ef;
+}
+
+.quote-card {
+    background: white;
+    border: 1px solid #e6e9ef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.selected-quote {
+    background: #e0f2fe;
+    border: 2px solid #0284c7;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.term-mileage {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.payment-highlight {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #059669;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+.caption-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -170,6 +117,7 @@ except FileNotFoundError:
     st.error("⚠️ Data files not found. Please ensure required files are present.")
     st.stop()
 
+# Left Sidebar
 with st.sidebar:
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
@@ -219,6 +167,7 @@ make = lease_info.get("Make", "Hyundai")
 model = lease_info.get("Model", "N/A")
 trim = lease_info.get("Trim", "N/A")
 
+# Header section
 col1, col2 = st.columns([1, 3])
 with col1:
     try:
@@ -263,42 +212,55 @@ for term in lease_terms:
 
 st.session_state.quote_options = quote_options
 
-main_col, right_col = st.columns([3, 1], gap="large")
+# Main layout with right sidebar
+main_col, right_col = st.columns([2.5, 1], gap="large")
 
+# Right Sidebar with matching styling
 with right_col:
     st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
-    
-    # Vehicle & Customer Info Header
-    st.markdown('<div class="sidebar-header">Vehicle & Customer Info</div>', unsafe_allow_html=True)
-    
-    # Financial Settings Section
-    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-header">Financial Settings</div>', unsafe_allow_html=True)
     
-    trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
-    default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
-    apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
-    st.session_state['apply_markup'] = apply_markup
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Filters & Sorting Section
-    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-header">Filters & Sorting</div>', unsafe_allow_html=True)
-    
-    sort_options = {
-        "Lowest Payment": "payment",
-        "Lowest Term": "term",
-        "Lowest Mileage": "mileage",
-        "Most Lease Cash Available": "available_lease_cash"
-    }
-    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.expander("Trade & Down Payment", expanded=True):
+        trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
+        default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
+        apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
+        st.session_state['apply_markup'] = apply_markup
+
+    with st.expander("Filters & Sorting", expanded=True):
+        sort_options = {
+            "Lowest Payment": "payment",
+            "Lowest Term": "term",
+            "Lowest Mileage": "mileage",
+            "Most Lease Cash Available": "available_lease_cash"
+        }
+        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+        term_filter = st.multiselect(
+            "Filter by Term:", 
+            sorted(list(set(opt['term'] for opt in quote_options))), 
+            default=sorted(list(set(opt['term'] for opt in quote_options)))
+        )
+        mileage_filter = st.multiselect(
+            "Filter by Mileage:", 
+            sorted(list(set(opt['mileage'] for opt in quote_options))), 
+            default=sorted(list(set(opt['mileage'] for opt in quote_options)))
+        )
+
+    # Additional right sidebar content
+    with st.expander("Quote Summary", expanded=True):
+        st.write(f"**Selected Quotes:** {len(st.session_state.selected_quotes)}/3")
+        if st.session_state.selected_quotes:
+            st.write("**Selected Options:**")
+            for quote_key in st.session_state.selected_quotes:
+                parts = quote_key.split('_')
+                st.write(f"• {parts[0]} months, {int(parts[1]):,} mi/yr")
+        
+        if st.button("Clear All Selections", type="secondary"):
+            st.session_state.selected_quotes = []
+            st.rerun()
+
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Helper function for payment calculation
 def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
     initial_B = lease_cash_used
     ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
@@ -330,40 +292,72 @@ def calculate_option_payment(selling_price, lease_cash_used, residual_value, mon
         'remaining_cash': remaining_cash
     }
 
+# Main content area
 with main_col:
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
+    # Filter and sort options
     filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
 
     if sort_by == "Most Lease Cash Available":
         filtered_options.sort(key=lambda x: x['available_lease_cash'], reverse=True)
     elif sort_by == "Lowest Payment":
-        filtered_options.sort(key=lambda x: calculate_option_payment(x['selling_price'], x['lease_cash_used'], x['residual_value'], x['money_factor'], x['term'], trade_value, default_money_down, tax_rate)['payment'])
+        filtered_options.sort(key=lambda x: calculate_option_payment(
+            x['selling_price'], x['lease_cash_used'], x['residual_value'], 
+            x['money_factor'], x['term'], trade_value, default_money_down, tax_rate
+        )['payment'])
     else:
         filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
     st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-    cols = st.columns(3, gap="small")
+    
+    # Display quote cards
+    cols = st.columns(2, gap="medium")
     for i, option in enumerate(filtered_options):
-        with cols[i % 3]:
+        with cols[i % 2]:
             option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
             is_selected = option_key in st.session_state.selected_quotes
             card_class = "selected-quote" if is_selected else "quote-card"
 
             st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
             st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-            payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
+            
+            new_selling_price = st.number_input(
+                "Selling Price ($)", 
+                value=float(option['selling_price']), 
+                key=f"sp_{option_key}", 
+                step=100.0
+            )
+            new_lease_cash = st.number_input(
+                f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", 
+                min_value=0.0, 
+                max_value=float(option['available_lease_cash']), 
+                value=float(option['lease_cash_used']), 
+                key=f"lc_{option_key}", 
+                step=100.0
+            )
+            
+            payment_data = calculate_option_payment(
+                new_selling_price, new_lease_cash, option['residual_value'], 
+                option['money_factor'], option['term'], trade_value, default_money_down, tax_rate
+            )
+            
             st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
             st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
-            if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", type="primary" if not is_selected else "secondary"):
+            
+            button_text = "Remove" if is_selected else "Select"
+            button_type = "secondary" if is_selected else "primary"
+            
+            if st.button(button_text, key=f"action_{option_key}", type=button_type):
                 if is_selected:
                     st.session_state.selected_quotes.remove(option_key)
                 else:
                     if len(st.session_state.selected_quotes) < 3:
                         st.session_state.selected_quotes.append(option_key)
+                    else:
+                        st.warning("Maximum 3 quotes can be selected")
                 st.rerun()
+            
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
