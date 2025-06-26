@@ -3,9 +3,9 @@ import pandas as pd
 from lease_calculations import calculate_ccr_full, calculate_payment_from_ccr
 from PIL import Image
 
-# Load and display logo
+# Load and display logo with increased size
 logo = Image.open("drivepath_logo.png")
-st.image(logo, width=200)
+st.image(logo, width=300)
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide")
 
@@ -16,10 +16,10 @@ lease_programs.columns = lease_programs.columns.str.strip()
 vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
 vehicle_data.columns = vehicle_data.columns.str.strip()
 
-# Sidebar inputs with improved labels and help text
+# Sidebar inputs with professional styling
 with st.sidebar:
-    st.header("Lease Parameters 🎯")
-    vin_input = st.text_input("Enter VIN (e.g., 1HGCM82633A123456):", "", help="Enter the Vehicle Identification Number to start.")
+    st.title("Lease Parameters")
+    vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
     selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
     selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
     trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
@@ -46,7 +46,7 @@ if vin_input:
             model = lease_info.get("Model", "N/A")
             trim = lease_info.get("Trim", "N/A")
 
-            st.markdown(f"### Vehicle: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
+            st.markdown(f"### Vehicle Details: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
 
             tier_num = int(selected_tier.split(" ")[1])
             tax_rate = 0.0725
@@ -55,7 +55,7 @@ if vin_input:
 
             for term in lease_terms:
                 term_group = lease_matches[lease_matches["Term"] == term]
-                st.subheader(f"{term}-Month Lease Options 📅")
+                st.subheader(f"{term}-Month Lease Options")
 
                 for mileage in mileage_options:
                     row = term_group.iloc[0]
@@ -69,7 +69,7 @@ if vin_input:
                         money_factor += 0.0004
                     available_lease_cash = float(row.get("LeaseCash", 0.0))
 
-                    st.markdown(f"**Mileage: {mileage:,} miles / year 🚗**")
+                    st.markdown(f"Mileage: {mileage:,} miles per year")
 
                     selling_price = st.number_input(
                         f"Selling Price ($) — {term} months / {mileage:,} miles",
@@ -78,7 +78,7 @@ if vin_input:
                         help="Adjust the selling price for your lease term and mileage."
                     )
 
-                    with st.expander("Incentives 💰", expanded=False):
+                    with st.expander("Incentives", expanded=False):
                         lease_cash_used = st.number_input(
                             f"Lease Cash Used ($) — Max: ${available_lease_cash:,.2f}",
                             min_value=0.0,
@@ -146,13 +146,13 @@ if vin_input:
                         Q=0.0
                     )
 
-                    st.markdown(f"**Monthly Payment: ${payment['Monthly Payment (MP)']:.2f} 💸**")
+                    st.markdown(f"Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}")
                     st.markdown(
-                        f"*Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, "
-                        f"CCR: ${ccr:.2f}, Trade Used: ${trade_used:.2f}, Remaining Cash Added to Down: ${remaining_cash:.2f}*"
+                        f"Breakdown: Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, "
+                        f"CCR: ${ccr:.2f}, Trade Used: ${trade_used:.2f}, Remaining Cash Added to Down: ${remaining_cash:.2f}"
                     )
 
-                    with st.expander("🔍 Full Debug Info 📊", expanded=False):
+                    with st.expander("Detailed Breakdown", expanded=False):
                         st.markdown("### CCR Fill Breakdown")
                         st.json({
                             "TopVal Overflow": round(overflow, 2),
