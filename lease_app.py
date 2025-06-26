@@ -101,10 +101,11 @@ st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar
 
 # Display quote options in three columns
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
-
-
-
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
+
+
+
+# Subheader moved after 'filtered_options' is defined
 with st.container():
     columns = st.columns(3, gap="small")
     for i, option in enumerate(filtered_options):
