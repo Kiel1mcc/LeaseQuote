@@ -84,14 +84,14 @@ st.markdown("""
     .element-container {
         margin: 0;
     }
-    /* Right column content styling */
+    /* Right column content styling to match left sidebar */
     .right-content {
         max-width: 100%;
         overflow: hidden;
-        background-color: #f8f9fa; /* Match left sidebar background */
-        padding: 10px; /* Add some padding for consistency */
-        border-left: 1px solid #e0e0e0; /* Subtle border to match sidebar */
-        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
+        background-color: #f0f2f6; /* Exact match to left sidebar background */
+        padding: 15px; /* Match sidebar padding */
+        border-left: 1px solid #ddd; /* Match sidebar border */
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* Match sidebar shadow */
     }
     /* Mobile adjustment */
     @media (max-width: 768px) {
@@ -146,7 +146,8 @@ with st.sidebar:
         customer_name = st.text_input("Customer Name", "")
         customer_phone = st.text_input("Phone Number", "")
         customer_email = st.text_input("Email Address", "")
-    
+        quote_date = st.date_input("Quote Date", value=datetime.now())
+
     with st.expander("Lease Parameters", expanded=True):
         vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
         if vin_input:
@@ -348,7 +349,7 @@ with main_col:
                 <p><strong>Name:</strong> {customer_name or 'Not provided'}</p>
                 <p><strong>Phone:</strong> {customer_phone or 'Not provided'}</p>
                 <p><strong>Email:</strong> {customer_email or 'Not provided'}</p>
-                <p><strong>Date:</strong> {datetime.now().strftime('%B %d, %Y %I:%M %p EDT')}</p>
+                <p><strong>Date:</strong> {quote_date.strftime('%B %d, %Y')}</p>
                 <h3>Lease Options</h3>
             """, unsafe_allow_html=True)
             for i, selected_key in enumerate(st.session_state.selected_quotes, 1):
