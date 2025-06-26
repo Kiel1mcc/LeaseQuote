@@ -5,33 +5,68 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS for professional styling
+# Custom CSS for professional, state-of-the-art styling
 st.markdown("""
 <style>
-    .quote-card {
-        border: 1px solid #ddd;
-        border-radius: 10px;
+    /* General styling */
+    .main-content {
         padding: 20px;
-        margin: 10px 0;
-        background-color: #f9f9f9;
+        font-family: 'Helvetica', Arial, sans-serif;
+    }
+    .quote-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .selected-quote {
         border: 2px solid #4CAF50;
         background-color: #f0fff0;
+        box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
     }
     .payment-highlight {
-        font-size: 24px;
-        font-weight: bold;
+        font-size: 22px;
+        font-weight: 600;
         color: #2E8B57;
+        margin: 5px 0;
+    }
+    .caption-text {
+        font-size: 12px;
+        color: #666;
+        margin: 0;
     }
     .print-section {
-        background-color: white;
+        background-color: #ffffff;
         padding: 20px;
         border-radius: 10px;
         margin: 20px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header-info {
+        background: linear-gradient(90deg, #1e3a8a, #1e40af);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .sidebar .stExpander {
+        margin-bottom: 10px;
+    }
+    .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput, .sidebar .stCheckbox {
+        margin-bottom: 10px;
     }
     @media print {
         .no-print { display: none !important; }
+    }
+    @media (max-width: 768px) {
+        .quote-card {
+            margin: 10px 0;
+        }
+        .main-content {
+            padding: 10px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -59,6 +94,7 @@ except FileNotFoundError:
 
 # Sidebar with customer and vehicle info
 with st.sidebar:
+    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
         customer_name = st.text_input("Customer Name", "")
@@ -74,7 +110,9 @@ with st.sidebar:
             st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
         else:
             st.warning("❌ Vehicle not found in inventory")
-    st.divider()
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
     st.header("Lease Parameters")
     selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
     selected_county = st.selectbox("County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
@@ -82,6 +120,7 @@ with st.sidebar:
     trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
 if not vin_input:
@@ -146,9 +185,9 @@ with col1:
         """, unsafe_allow_html=True)
 with col2:
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-        <h2 style="margin: 0; color: white;">{model_year} {make} {model} {trim}</h2>
-        <h3 style="margin: 10px 0 0 0; color: white;">MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
+    <div class="header-info">
+        <h2 style="margin: 0;">{model_year} {make} {model} {trim}</h2>
+        <h3 style="margin: 10px 0 0 0;">MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
     </div>
     """, unsafe_allow_html=True)
 
@@ -250,12 +289,12 @@ filtered_options = [opt for opt in st.session_state.quote_options if opt['term']
 if sort_by == "Most Lease Cash Available":
     filtered_options.sort(key=lambda x: x['available_lease_cash'], reverse=True)
 elif sort_by == "Lowest Payment":
-    # Sort based on initial payment (can be adjusted if needed)
     filtered_options.sort(key=lambda x: calculate_option_payment(x['selling_price'], x['lease_cash_used'], x['residual_value'], x['money_factor'], x['term'], trade_value, default_money_down, tax_rate)['payment'])
 else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
 # Display quote options with dynamic recalculation
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
 for option in filtered_options:
     option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
@@ -266,42 +305,42 @@ for option in filtered_options:
         col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         with col1:
             st.markdown(f"**{option['term']} Months | {option['mileage']:,} mi/yr**")
-            # Dynamically calculate payment with current input values
             new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
             new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
             payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
             st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
-            st.caption(f"Base: ${payment_data['base_payment']:.2f} + Tax: ${payment_data['tax_payment']:.2f}")
+            st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
         with col2:
-            st.markdown("Customize This Option:")
+            st.markdown("**Customize Option:**")
         with col3:
-            pass  # Moved inputs to col1 for direct payment recalculation
+            pass
         with col4:
             if is_selected:
-                if st.button("❌ Remove", key=f"remove_{option_key}"):
+                if st.button("Remove", key=f"remove_{option_key}", help="Remove this quote from selection"):
                     st.session_state.selected_quotes.remove(option_key)
                     st.rerun()
             else:
                 if len(st.session_state.selected_quotes) < 3:
-                    if st.button("✅ Select", key=f"select_{option_key}"):
+                    if st.button("Select", key=f"select_{option_key}", help="Add this quote to selection"):
                         st.session_state.selected_quotes.append(option_key)
                         st.rerun()
                 else:
-                    st.button("📝 Full", disabled=True, key=f"full_{option_key}")
+                    st.button("Full", disabled=True, key=f"full_{option_key}")
         st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Generate Quote Section
 if st.session_state.selected_quotes:
     st.divider()
     st.subheader("Generate Customer Quote")
-    if st.button("🖨️ Generate Printable Quote", type="primary"):
+    if st.button("Generate Printable Quote", type="primary"):
         st.markdown('<div class="print-section no-print">', unsafe_allow_html=True)
-        st.markdown("### 📋 Quote Preview (Click Print button below to print)")
+        st.markdown("### Quote Preview (Click Print button below to print)")
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown(f"""
         <div class="print-section">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #2c3e50; margin-bottom: 10px;">DrivePath</h1>
+                <h1 style="color: #1e3a8a; margin-bottom: 10px;">DrivePath</h1>
                 <h2 style="color: #2E8B57; margin: 0;">LEASE QUOTE</h2>
             </div>
             <hr>
@@ -318,12 +357,11 @@ if st.session_state.selected_quotes:
         for i, selected_key in enumerate(st.session_state.selected_quotes, 1):
             term, mileage, index = selected_key.split('_')
             option = next(opt for opt in filtered_options if opt['index'] == int(index))
-            # Use the latest input values for the printable quote
             new_selling_price = st.session_state.quote_options[option['index']].get('selling_price', option['selling_price'])
             new_lease_cash = st.session_state.quote_options[option['index']].get('lease_cash_used', option['lease_cash_used'])
             payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
             st.markdown(f"""
-            <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+            <div style="border: 1px solid #e0e0e0; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                 <h4>Option {i}: {option['term']} Months | {option['mileage']:,} miles/year</h4>
                 <p style="font-size: 20px; color: #2E8B57;"><strong>Monthly Payment: ${payment_data['payment']:.2f}</strong></p>
                 <p><strong>Selling Price:</strong> ${new_selling_price:,.2f}</p>
@@ -349,8 +387,8 @@ if st.session_state.selected_quotes:
             window.print();
         }
         </script>
-        <button onclick="printQuote()" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
-            🖨️ Print Quote
+        <button onclick="printQuote()" style="background-color: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+            Print Quote
         </button>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
