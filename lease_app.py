@@ -37,6 +37,68 @@ st.markdown("""
         padding-bottom: 0.5rem;
     }
     
+    /* Style form elements in right sidebar to match left sidebar */
+    .right-sidebar input[type="number"],
+    .right-sidebar .stNumberInput input,
+    .right-sidebar .stTextInput input,
+    .right-sidebar .stSelectbox select,
+    .right-sidebar .stMultiSelect > div {
+        background-color: #ffffff !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+    
+    .right-sidebar input[type="number"]:focus,
+    .right-sidebar .stNumberInput input:focus,
+    .right-sidebar .stTextInput input:focus,
+    .right-sidebar .stSelectbox select:focus {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    }
+    
+    /* Style number input containers */
+    .right-sidebar .stNumberInput > div > div {
+        border-radius: 6px !important;
+        border: 1px solid #ced4da !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Style selectbox containers */
+    .right-sidebar .stSelectbox > div > div {
+        border-radius: 6px !important;
+        border: 1px solid #ced4da !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Style multiselect containers */
+    .right-sidebar .stMultiSelect > div > div {
+        border-radius: 6px !important;
+        border: 1px solid #ced4da !important;
+        background-color: #ffffff !important;
+    }
+    
+    /* Style checkbox */
+    .right-sidebar .stCheckbox {
+        padding: 8px 0 !important;
+    }
+    
+    .right-sidebar .stCheckbox label {
+        font-size: 14px !important;
+        color: #495057 !important;
+    }
+    
+    /* Style labels */
+    .right-sidebar label {
+        font-weight: 500 !important;
+        color: #495057 !important;
+        margin-bottom: 4px !important;
+        font-size: 14px !important;
+    }
+    
     .quote-card {
         background: white;
         border: 1px solid #e9ecef;
