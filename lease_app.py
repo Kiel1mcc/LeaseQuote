@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS to remove the top white bar and adjust layout
+# Custom CSS to remove the top white bar, adjust layout, and add right sidebar
 st.markdown("""
 <style>
     /* Hide the default Streamlit header/menu bar */
@@ -17,6 +17,7 @@ st.markdown("""
         padding: 0;
         margin-top: 0;
         font-family: 'Helvetica', Arial, sans-serif;
+        margin-right: 320px; /* Adjust for right sidebar width */
     }
     .quote-card {
         border: 1px solid #e0e0e0;
@@ -84,6 +85,19 @@ st.markdown("""
     .element-container {
         margin: 0;
     }
+    /* Right sidebar styling */
+    .right-sidebar {
+        position: fixed;
+        right: 0;
+        top: 0;
+        width: 300px;
+        height: 100%;
+        background-color: #f8f9fa;
+        padding: 20px;
+        overflow-y: auto;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+    /* Adjust main content for right sidebar on mobile */
     @media (max-width: 768px) {
         .three-column .stContainer {
             flex-direction: column;
@@ -92,11 +106,18 @@ st.markdown("""
             width: 100%;
         }
         .main-content {
-            padding: 0;
+            margin-right: 0;
+        }
+        .right-sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            margin-top: 20px;
         }
     }
     @media print {
         .no-print { display: none !important; }
+        .right-sidebar { display: none !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -127,7 +148,7 @@ except FileNotFoundError:
     st.error("⚠️ Data files not found. Please ensure 'All_Lease_Programs_Database.csv', 'Locator_Detail_Updated.xlsx', and 'County_Tax_Rates.csv' are in the correct directory.")
     st.stop()
 
-# Right sidebar with settings
+# Left sidebar with Vehicle & Customer Info
 with st.sidebar:
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
@@ -135,28 +156,42 @@ with st.sidebar:
         customer_phone = st.text_input("Phone Number", "")
         customer_email = st.text_input("Email Address", "")
     
-    vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
-    if vin_input:
-        vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
-        if not vin_data.empty:
-            vehicle = vin_data.iloc[0]
-            st.success("✅ Vehicle Found!")
-            st.write(f"**Model:** {vehicle.get('ModelNumber', 'N/A')}")
-            st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
-        else:
-            st.warning("❌ Vehicle not found in inventory")
-    
-    st.header("Lease Parameters")
-    selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
-    # Updated county list from County_Tax_Rates.csv, default to Marion
-    counties = sorted(county_tax_rates["County"].tolist())
-    selected_county = st.selectbox("County:", counties, index=counties.index("Marion"), help="Select your county for tax calculations.")
-    # Set tax rate based on selected county
-    tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
+    with st.expander("Lease Parameters", expanded=True):
+        vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
+        if vin_input:
+            vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
+            if not vin_data.empty:
+                vehicle = vin_data.iloc[0]
+                st.success("✅ Vehicle Found!")
+                st.write(f"**Model:** {vehicle.get('ModelNumber', 'N/A')}")
+                st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
+            else:
+                st.warning("❌ Vehicle not found in inventory")
+        
+        selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
+        counties = sorted(county_tax_rates["County"].tolist())
+        selected_county = st.selectbox("County:", counties, index=counties.index("Marion"), help="Select your county for tax calculations.")
+        tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
+
+# Right sidebar with Financial Settings and Filters
+st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
+with st.container():
     st.subheader("Financial Settings")
     trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
+
+    st.subheader("Filters & Sorting")
+    sort_options = {
+        "Lowest Payment": "payment",
+        "Lowest Term": "term",
+        "Lowest Mileage": "mileage",
+        "Most Lease Cash Available": "available_lease_cash"
+    }
+    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['term'] for opt in st.session_state.quote_options))))
+    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))))
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
 if not vin_input:
@@ -258,49 +293,8 @@ for term in lease_terms:
 
 st.session_state.quote_options = quote_options
 
-# Filters and Sorting (moved to main content area)
-st.subheader("Filters & Sorting")
-sort_options = {
-    "Lowest Payment": "payment",
-    "Lowest Term": "term",
-    "Lowest Mileage": "mileage",
-    "Most Lease Cash Available": "available_lease_cash"
-}
-sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
-
-# Function to calculate payment
-def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
-    initial_B = lease_cash_used
-    ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
-        SP=selling_price, B=initial_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=residual_value, F=money_factor, W=term, τ=tax_rt
-    )
-    overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
-    trade_used = min(trade_val, overflow)
-    remaining_gap = overflow - trade_used
-    cash_used = min(cash_down, remaining_gap)
-    remaining_trade = trade_val - trade_used
-    remaining_cash = cash_down - cash_used
-    adjusted_SP = selling_price - remaining_trade
-    total_B = initial_B + trade_used + cash_used + remaining_cash
-    ccr, _, _ = calculate_ccr_full(
-        SP=adjusted_SP, B=total_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=residual_value, F=money_factor, W=term, τ=tax_rt
-    )
-    payment = calculate_payment_from_ccr(
-        S=adjusted_SP, CCR=ccr, RES=residual_value, W=term,
-        F=money_factor, τ=tax_rt, M=962.50, Q=0.0
-    )
-    return {
-        'payment': payment['Monthly Payment (MP)'],
-        'base_payment': payment['Base Payment (BP)'],
-        'tax_payment': payment['Sales Tax (ST)'],
-        'ccr': ccr,
-        'trade_used': trade_used,
-        'remaining_cash': remaining_cash
-    }
+# Main content area with lease options
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 # Apply filters without pre-calculating payments
 filtered_options = [opt for opt in st.session_state.quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
@@ -313,7 +307,6 @@ else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
 # Display quote options in three columns
-st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
 cols = st.columns(3, gap="small")
 for i, option in enumerate(filtered_options):
@@ -322,7 +315,6 @@ for i, option in enumerate(filtered_options):
         is_selected = option_key in st.session_state.selected_quotes
         card_class = "selected-quote" if is_selected else "quote-card"
         
-        # Removed the st.container() wrapper that was creating the empty white box
         st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
         st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
         new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
@@ -405,3 +397,35 @@ if st.session_state.selected_quotes:
         st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.info("👆 Select up to 3 lease options above to generate a customer quote")
+
+# Function to calculate payment (kept outside for scope)
+def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
+    initial_B = lease_cash_used
+    ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
+        SP=selling_price, B=initial_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
+        RES=residual_value, F=money_factor, W=term, τ=tax_rt
+    )
+    overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
+    trade_used = min(trade_val, overflow)
+    remaining_gap = overflow - trade_used
+    cash_used = min(cash_down, remaining_gap)
+    remaining_trade = trade_val - trade_used
+    remaining_cash = cash_down - cash_used
+    adjusted_SP = selling_price - remaining_trade
+    total_B = initial_B + trade_used + cash_used + remaining_cash
+    ccr, _, _ = calculate_ccr_full(
+        SP=adjusted_SP, B=total_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
+        RES=residual_value, F=money_factor, W=term, τ=tax_rt
+    )
+    payment = calculate_payment_from_ccr(
+        S=adjusted_SP, CCR=ccr, RES=residual_value, W=term,
+        F=money_factor, τ=tax_rt, M=962.50, Q=0.0
+    )
+    return {
+        'payment': payment['Monthly Payment (MP)'],
+        'base_payment': payment['Base Payment (BP)'],
+        'tax_payment': payment['Sales Tax (ST)'],
+        'ccr': ccr,
+        'trade_used': trade_used,
+        'remaining_cash': remaining_cash
+    }
