@@ -106,7 +106,7 @@ st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 
 
-st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
+# (Temporarily removed to avoid NameError until filtered_options is confirmed defined)
 with st.container():
     columns = st.columns(3, gap="small")
     for i, option in enumerate(filtered_options):
