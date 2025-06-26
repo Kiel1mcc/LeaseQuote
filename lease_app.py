@@ -22,7 +22,7 @@ st.markdown("""
         border: 1px solid #e0e0e0;
         border-radius: 10px;
         padding: 15px;
-        margin: 15px 0;
+        margin: 0 0 15px 0; /* Remove top margin, keep bottom margin */
         background-color: #ffffff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         height: 100%; /* Ensure consistent height */
@@ -42,7 +42,7 @@ st.markdown("""
         font-size: 18px;
         font-weight: 600;
         color: #1e3a8a;
-        margin: 5px 0;
+        margin: 0 0 5px 0; /* Remove top margin */
     }
     .caption-text {
         font-size: 12px;
@@ -76,6 +76,8 @@ st.markdown("""
     }
     .three-column .stContainer > div {
         width: 32%;
+        padding: 0; /* Remove padding within columns */
+        margin-top: 0; /* Ensure no top margin */
     }
     /* Remove extra padding/margin from containers */
     .stContainer {
@@ -83,6 +85,12 @@ st.markdown("""
     }
     .element-container {
         margin: 0;
+        padding: 0;
+    }
+    /* Target specific column content to remove top spacing */
+    [data-testid="column"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
     @media (max-width: 768px) {
         .three-column .stContainer {
@@ -316,8 +324,6 @@ for i, option in enumerate(filtered_options):
         option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
         is_selected = option_key in st.session_state.selected_quotes
         card_class = "selected-quote" if is_selected else "quote-card"
-        
-        # Removed the st.container() wrapper that was creating the empty white box
         st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
         st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
         new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
