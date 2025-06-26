@@ -262,7 +262,7 @@ elif sort_by == "Lowest Payment":
 else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
-# Display quote options
+# Display quote options with dynamic recalculation
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
 for option in filtered_options:
     option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
@@ -273,19 +273,22 @@ for option in filtered_options:
         col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         with col1:
             st.markdown(f"**{option['term']} Months | {option['mileage']:,} mi/yr**")
-            st.markdown(f'<div class="payment-highlight">${option["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
-            st.caption(f"Base: ${option['base_payment']:.2f} + Tax: ${option['tax_payment']:.2f}")
+            # Recalculate payment with updated values
+            updated_option = option.copy()
+            updated_option['selling_price'] = st.session_state.quote_options[option['index']]['selling_price']
+            updated_option['lease_cash_used'] = st.session_state.quote_options[option['index']]['lease_cash_used']
+            payment_data = calculate_option_payment(updated_option, trade_value, default_money_down, tax_rate)
+            st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
+            st.caption(f"Base: ${payment_data['base_payment']:.2f} + Tax: ${payment_data['tax_payment']:.2f}")
         with col2:
             st.markdown("Customize This Option:")
-            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-            if new_selling_price != option['selling_price']:
+            new_selling_price = st.number_input("Selling Price ($)", value=float(updated_option['selling_price']), key=f"sp_{option_key}", step=100.0)
+            if new_selling_price != updated_option['selling_price']:
                 st.session_state.quote_options[option['index']]['selling_price'] = new_selling_price
-                st.rerun()
         with col3:
-            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-            if new_lease_cash != option['lease_cash_used']:
+            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(updated_option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
+            if new_lease_cash != updated_option['lease_cash_used']:
                 st.session_state.quote_options[option['index']]['lease_cash_used'] = new_lease_cash
-                st.rerun()
         with col4:
             if is_selected:
                 if st.button("❌ Remove", key=f"remove_{option_key}"):
@@ -328,12 +331,14 @@ if st.session_state.selected_quotes:
         for i, selected_key in enumerate(st.session_state.selected_quotes, 1):
             term, mileage, index = selected_key.split('_')
             option = next(opt for opt in filtered_options if opt['index'] == int(index))
+            updated_option = st.session_state.quote_options[option['index']].copy()
+            payment_data = calculate_option_payment(updated_option, trade_value, default_money_down, tax_rate)
             st.markdown(f"""
             <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
                 <h4>Option {i}: {option['term']} Months | {option['mileage']:,} miles/year</h4>
-                <p style="font-size: 20px; color: #2E8B57;"><strong>Monthly Payment: ${option['payment']:.2f}</strong></p>
-                <p><strong>Selling Price:</strong> ${option['selling_price']:,.2f}</p>
-                <p><strong>Lease Cash Applied:</strong> ${option['lease_cash_used']:,.2f}</p>
+                <p style="font-size: 20px; color: #2E8B57;"><strong>Monthly Payment: ${payment_data['payment']:.2f}</strong></p>
+                <p><strong>Selling Price:</strong> ${updated_option['selling_price']:,.2f}</p>
+                <p><strong>Lease Cash Applied:</strong> ${updated_option['lease_cash_used']:,.2f}</p>
                 <p><strong>Trade Value:</strong> ${trade_value:,.2f}</p>
                 <p><strong>Cash Down:</strong> ${default_money_down:,.2f}</p>
             </div>
