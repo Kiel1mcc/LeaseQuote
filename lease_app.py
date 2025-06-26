@@ -5,6 +5,14 @@ from PIL import Image
 from datetime import datetime
 import json
 
+# Ensure ``filtered_options`` is defined to avoid ``NameError`` when the page
+# renders.  The original code expects this variable to be populated earlier in
+# the application flow, but when that logic is skipped or removed the variable
+# may be undefined.  Defining it as an empty list keeps the UI functional and
+# prevents a crash.
+if "filtered_options" not in globals():
+    filtered_options: list[dict] = []
+
 # Custom CSS to remove the top white bar and adjust layout
 st.markdown("""
 <style>
