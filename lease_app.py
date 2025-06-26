@@ -139,19 +139,6 @@ with st.sidebar:
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
     st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
-    st.header("Filters & Sorting")
-    sort_options = {
-        "Lowest Payment": "payment",
-        "Lowest Term": "term",
-        "Lowest Mileage": "mileage",
-        "Most Lease Cash Available": "available_lease_cash"
-    }
-    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
 if not vin_input:
@@ -254,7 +241,17 @@ for term in lease_terms:
 
 st.session_state.quote_options = quote_options
 
-# Controls Section (now in right sidebar, handled above)
+# Filters and Sorting (moved to main content area)
+st.subheader("Filters & Sorting")
+sort_options = {
+    "Lowest Payment": "payment",
+    "Lowest Term": "term",
+    "Lowest Mileage": "mileage",
+    "Most Lease Cash Available": "available_lease_cash"
+}
+sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
+mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
 
 # Function to calculate payment
 def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
