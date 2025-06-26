@@ -7,15 +7,32 @@ import json
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
-# Direct CSS targeting the actual Streamlit column structure
+# CSS based on the actual left sidebar properties
 st.markdown("""
 <style>
-/* Target the right column directly using CSS nth-child selector */
+/* Target the right column to match left sidebar properties */
 div[data-testid="column"]:nth-child(2) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
     border-radius: 0.5rem !important;
     border: 1px solid #e1e5e9 !important;
+    
+    /* Match left sidebar properties */
+    box-sizing: border-box !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
+    font-size: 16px !important;
+    line-height: 25.6px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    position: relative !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) !important;
+    text-size-adjust: 100% !important;
+    unicode-bidi: isolate !important;
+    user-select: auto !important;
+    -webkit-font-smoothing: auto !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
 }
 
 /* Style expanders in the right column to have white backgrounds */
@@ -23,6 +40,8 @@ div[data-testid="column"]:nth-child(2) .streamlit-expanderHeader {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
     border-radius: 0.25rem 0.25rem 0 0 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 div[data-testid="column"]:nth-child(2) .streamlit-expanderContent {
@@ -30,27 +49,38 @@ div[data-testid="column"]:nth-child(2) .streamlit-expanderContent {
     border: 1px solid #e1e5e9 !important;
     border-top: none !important;
     border-radius: 0 0 0.25rem 0.25rem !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 /* Style all form inputs in the right column - make them WHITE */
 div[data-testid="column"]:nth-child(2) .stNumberInput > div > div > input {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
+    font-size: 16px !important;
 }
 
 div[data-testid="column"]:nth-child(2) .stSelectbox > div > div {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 div[data-testid="column"]:nth-child(2) .stMultiSelect > div > div {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 div[data-testid="column"]:nth-child(2) .stTextInput > div > div > input {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 /* Also target the input elements more specifically */
@@ -58,12 +88,18 @@ div[data-testid="column"]:nth-child(2) input[type="number"],
 div[data-testid="column"]:nth-child(2) input[type="text"] {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
+    font-size: 16px !important;
+    box-sizing: border-box !important;
 }
 
 /* Make sure select dropdowns are white */
 div[data-testid="column"]:nth-child(2) select {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 /* Style checkboxes in the right column */
@@ -73,13 +109,16 @@ div[data-testid="column"]:nth-child(2) .stCheckbox {
     border-radius: 0.25rem !important;
     border: 1px solid #e1e5e9 !important;
     margin: 0.25rem 0 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 /* Style buttons in the right column */
 div[data-testid="column"]:nth-child(2) .stButton > button {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
-    color: #262730 !important;
+    color: rgb(49, 51, 63) !important;
+    font-family: "Source Sans", sans-serif !important;
 }
 
 div[data-testid="column"]:nth-child(2) .stButton > button:hover {
@@ -129,6 +168,7 @@ div[data-testid="column"]:nth-child(2) .stButton > button:hover {
 </style>
 """, unsafe_allow_html=True)
 
+# [Rest of the code remains the same as previous version...]
 if 'selected_quotes' not in st.session_state:
     st.session_state.selected_quotes = []
 if 'quote_options' not in st.session_state:
