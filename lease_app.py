@@ -76,45 +76,50 @@ st.markdown("""
     }
     .three-column .stContainer > div {
         width: 32%;
-        padding: 0; /* Remove all padding */
-        margin-top: 0; /* Remove top margin */
-        padding-top: 0 !important; /* Override any internal padding */
+        padding: 0 !important; /* Forcefully remove all padding */
+        margin-top: 0 !important; /* Forcefully remove margin */
+        padding-top: 0 !important; /* Explicitly remove top padding */
     }
     /* Remove extra padding/margin from containers */
     .stContainer {
-        padding: 0;
+        padding: 0 !important;
     }
     .element-container {
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     /* Target specific column content to remove top spacing */
     [data-testid="column"] {
         margin-top: 0 !important;
         padding-top: 0 !important;
+        padding: 0 !important; /* Ensure no padding on all sides */
     }
     [data-testid="stVerticalBlock"] {
         margin-top: 0 !important;
         padding-top: 0 !important;
+        padding: 0 !important;
     }
     /* Ensure the first element in each column has no top margin */
     [data-testid="column"] > div:first-child {
         margin-top: 0 !important;
         padding-top: 0 !important;
+        padding: 0 !important;
     }
     /* Aggressive reset for all block elements within columns */
     [data-testid="column"] * {
         margin-top: 0 !important;
         padding-top: 0 !important;
+        padding: 0 !important;
     }
     /* Target Streamlit's block container more specifically */
     [data-testid="block-container"] {
         margin-top: 0 !important;
         padding-top: 0 !important;
+        padding: 0 !important;
     }
-    /* Adjust parent container to pull content up if needed */
+    /* Adjust parent container to pull content up */
     .three-column {
-        margin-top: -10px; /* Slight negative margin to compensate if needed */
+        margin-top: -5px; /* Slight negative margin to pull up */
     }
     @media (max-width: 768px) {
         .three-column .stContainer {
@@ -342,30 +347,32 @@ elif sort_by == "Lowest Payment":
 else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
-# Display quote options in three columns
+# Display quote options in dynamic columns
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-cols = st.columns(3, gap="small")
-for i, option in enumerate(filtered_options):
-    with cols[i % 3]:
-        option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
-        is_selected = option_key in st.session_state.selected_quotes
-        card_class = "selected-quote" if is_selected else "quote-card"
-        st.markdown(f'<div class="{card_class}" style="margin-top: 0 !important; padding-top: 0 !important;">', unsafe_allow_html=True)
-        st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-        new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-        new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-        payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
-        st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
-        st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
-        if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
-            if is_selected:
-                st.session_state.selected_quotes.remove(option_key)
-            else:
-                if len(st.session_state.selected_quotes) < 3:
-                    st.session_state.selected_quotes.append(option_key)
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+for i in range(0, len(filtered_options), 3):
+    row = st.columns(min(3, len(filtered_options) - i), gap="small")
+    for j in range(len(row)):
+        option = filtered_options[i + j]
+        with row[j]:
+            option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
+            is_selected = option_key in st.session_state.selected_quotes
+            card_class = "selected-quote" if is_selected else "quote-card"
+            st.markdown(f'<div class="{card_class}" style="margin-top: 0 !important; padding-top: 0 !important;">', unsafe_allow_html=True)
+            st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
+            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
+            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
+            payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
+            st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
+            st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
+            if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
+                if is_selected:
+                    st.session_state.selected_quotes.remove(option_key)
+                else:
+                    if len(st.session_state.selected_quotes) < 3:
+                        st.session_state.selected_quotes.append(option_key)
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Generate Quote Section
