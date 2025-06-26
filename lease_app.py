@@ -213,12 +213,11 @@ with col3:
         st.rerun()
 
 # Function to calculate payment
-def calculate_option_payment(option, trade_val, cash_down, tax_rt):
-    selling_price = option['selling_price']
-    initial_B = option['lease_cash_used']
+def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
+    initial_B = lease_cash_used
     ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
         SP=selling_price, B=initial_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
+        RES=residual_value, F=money_factor, W=term, τ=tax_rt
     )
     overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
     trade_used = min(trade_val, overflow)
@@ -230,11 +229,11 @@ def calculate_option_payment(option, trade_val, cash_down, tax_rt):
     total_B = initial_B + trade_used + cash_used + remaining_cash
     ccr, _, _ = calculate_ccr_full(
         SP=adjusted_SP, B=total_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
-        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
+        RES=residual_value, F=money_factor, W=term, τ=tax_rt
     )
     payment = calculate_payment_from_ccr(
-        S=adjusted_SP, CCR=ccr, RES=option['residual_value'], W=option['term'],
-        F=option['money_factor'], τ=tax_rt, M=962.50, Q=0.0
+        S=adjusted_SP, CCR=ccr, RES=residual_value, W=term,
+        F=money_factor, τ=tax_rt, M=962.50, Q=0.0
     )
     return {
         'payment': payment['Monthly Payment (MP)'],
@@ -245,20 +244,14 @@ def calculate_option_payment(option, trade_val, cash_down, tax_rt):
         'remaining_cash': remaining_cash
     }
 
-# Calculate payments and apply filters/sorting
-filtered_options = []
-for option in st.session_state.quote_options:
-    if option['term'] not in term_filter or option['mileage'] not in mileage_filter:
-        continue
-    payment_data = calculate_option_payment(option, trade_value, default_money_down, tax_rate)
-    option_with_payment = option.copy()
-    option_with_payment.update(payment_data)
-    filtered_options.append(option_with_payment)
+# Apply filters without pre-calculating payments
+filtered_options = [opt for opt in st.session_state.quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
 
 if sort_by == "Most Lease Cash Available":
     filtered_options.sort(key=lambda x: x['available_lease_cash'], reverse=True)
 elif sort_by == "Lowest Payment":
-    filtered_options.sort(key=lambda x: x['payment'])
+    # Sort based on initial payment (can be adjusted if needed)
+    filtered_options.sort(key=lambda x: calculate_option_payment(x['selling_price'], x['lease_cash_used'], x['residual_value'], x['money_factor'], x['term'], trade_value, default_money_down, tax_rate)['payment'])
 else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
@@ -273,22 +266,16 @@ for option in filtered_options:
         col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         with col1:
             st.markdown(f"**{option['term']} Months | {option['mileage']:,} mi/yr**")
-            # Recalculate payment with updated values
-            updated_option = option.copy()
-            updated_option['selling_price'] = st.session_state.quote_options[option['index']]['selling_price']
-            updated_option['lease_cash_used'] = st.session_state.quote_options[option['index']]['lease_cash_used']
-            payment_data = calculate_option_payment(updated_option, trade_value, default_money_down, tax_rate)
+            # Dynamically calculate payment with current input values
+            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
+            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
+            payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
             st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
             st.caption(f"Base: ${payment_data['base_payment']:.2f} + Tax: ${payment_data['tax_payment']:.2f}")
         with col2:
             st.markdown("Customize This Option:")
-            new_selling_price = st.number_input("Selling Price ($)", value=float(updated_option['selling_price']), key=f"sp_{option_key}", step=100.0)
-            if new_selling_price != updated_option['selling_price']:
-                st.session_state.quote_options[option['index']]['selling_price'] = new_selling_price
         with col3:
-            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(updated_option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-            if new_lease_cash != updated_option['lease_cash_used']:
-                st.session_state.quote_options[option['index']]['lease_cash_used'] = new_lease_cash
+            pass  # Moved inputs to col1 for direct payment recalculation
         with col4:
             if is_selected:
                 if st.button("❌ Remove", key=f"remove_{option_key}"):
@@ -331,14 +318,16 @@ if st.session_state.selected_quotes:
         for i, selected_key in enumerate(st.session_state.selected_quotes, 1):
             term, mileage, index = selected_key.split('_')
             option = next(opt for opt in filtered_options if opt['index'] == int(index))
-            updated_option = st.session_state.quote_options[option['index']].copy()
-            payment_data = calculate_option_payment(updated_option, trade_value, default_money_down, tax_rate)
+            # Use the latest input values for the printable quote
+            new_selling_price = st.session_state.quote_options[option['index']].get('selling_price', option['selling_price'])
+            new_lease_cash = st.session_state.quote_options[option['index']].get('lease_cash_used', option['lease_cash_used'])
+            payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
             st.markdown(f"""
             <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
                 <h4>Option {i}: {option['term']} Months | {option['mileage']:,} miles/year</h4>
                 <p style="font-size: 20px; color: #2E8B57;"><strong>Monthly Payment: ${payment_data['payment']:.2f}</strong></p>
-                <p><strong>Selling Price:</strong> ${updated_option['selling_price']:,.2f}</p>
-                <p><strong>Lease Cash Applied:</strong> ${updated_option['lease_cash_used']:,.2f}</p>
+                <p><strong>Selling Price:</strong> ${new_selling_price:,.2f}</p>
+                <p><strong>Lease Cash Applied:</strong> ${new_lease_cash:,.2f}</p>
                 <p><strong>Trade Value:</strong> ${trade_value:,.2f}</p>
                 <p><strong>Cash Down:</strong> ${default_money_down:,.2f}</p>
             </div>
