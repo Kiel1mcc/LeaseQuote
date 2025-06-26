@@ -2,170 +2,363 @@ import streamlit as st
 import pandas as pd
 from lease_calculations import calculate_ccr_full, calculate_payment_from_ccr
 from PIL import Image
+from datetime import datetime
+import json
 
-# Load and display logo with increased size
-logo = Image.open("drivepath_logo.png")
-st.image(logo, width=300)
+# Custom CSS for professional styling
+st.markdown("""
+<style>
+    .quote-card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        background-color: #f9f9f9;
+    }
+    .selected-quote {
+        border: 2px solid #4CAF50;
+        background-color: #f0fff0;
+    }
+    .payment-highlight {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2E8B57;
+    }
+    .print-section {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    @media print {
+        .no-print { display: none !important; }
+    }
+</style>
+""", unsafe_allow_html=True)
 
-st.set_page_config(page_title="Lease Quote Tool", layout="wide")
+# Initialize session state
+if 'selected_quotes' not in st.session_state:
+    st.session_state.selected_quotes = []
+if 'quote_options' not in st.session_state:
+    st.session_state.quote_options = []
 
-# Load data
-lease_programs = pd.read_csv("All_Lease_Programs_Database.csv", encoding="utf-8-sig")
-lease_programs.columns = lease_programs.columns.str.strip()
+# Load data with caching
+@st.cache_data
+def load_data():
+    lease_programs = pd.read_csv("All_Lease_Programs_Database.csv", encoding="utf-8-sig")
+    lease_programs.columns = lease_programs.columns.str.strip()
+    vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
+    vehicle_data.columns = vehicle_data.columns.str.strip()
+    return lease_programs, vehicle_data
 
-vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
-vehicle_data.columns = vehicle_data.columns.str.strip()
+try:
+    lease_programs, vehicle_data = load_data()
+except FileNotFoundError:
+    st.error("⚠️ Data files not found. Please ensure 'All_Lease_Programs_Database.csv' and 'Locator_Detail_Updated.xlsx' are in the correct directory.")
+    st.stop()
 
-# Sidebar inputs with professional styling
+# Sidebar with customer and vehicle info
 with st.sidebar:
-    st.title("Lease Parameters")
+    st.header("Vehicle & Customer Info")
+    with st.expander("Customer Information", expanded=True):
+        customer_name = st.text_input("Customer Name", "")
+        customer_phone = st.text_input("Phone Number", "")
+        customer_email = st.text_input("Email Address", "")
     vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
-    selected_tier = st.selectbox("Select Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
-    selected_county = st.selectbox("Select County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
-    trade_value = st.number_input("Trade Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
-    default_money_down = st.number_input("Default Down Payment ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
+    if vin_input:
+        vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
+        if not vin_data.empty:
+            vehicle = vin_data.iloc[0]
+            st.success("✅ Vehicle Found!")
+            st.write(f"**Model:** {vehicle.get('ModelNumber', 'N/A')}")
+            st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
+        else:
+            st.warning("❌ Vehicle not found in inventory")
+    st.divider()
+    st.header("Lease Parameters")
+    selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
+    selected_county = st.selectbox("County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
+    st.subheader("Financial Settings")
+    trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
+    default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
 
-# VIN match
-if vin_input:
-    vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
-    if vin_data.empty:
-        st.warning("Vehicle not found in inventory. Please check the VIN and try again.")
-    else:
-        vehicle = vin_data.iloc[0]
-        model_number = vehicle["ModelNumber"]
-        msrp = vehicle["MSRP"]
+# Main content area
+if not vin_input:
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        try:
+            logo = Image.open("drivepath_logo.png")
+            st.image(logo, width=300)
+        except:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                <h2 style="margin: 0; color: white;">DrivePath</h2>
+                <p style="margin: 5px 0 0 0; color: #bdc3c7;">Lease Quote Tool</p>
+            </div>
+            """, unsafe_allow_html=True)
+    with col2:
+        st.title("Lease Quote Generator")
+        st.info("👈 Enter a VIN number in the sidebar to get started")
+    st.markdown("""
+    ### How to use this tool:
+    1. **Enter vehicle VIN** in the sidebar
+    2. **Set customer parameters** (tier, county, trade value, etc.)
+    3. **Review and customize** lease options
+    4. **Select up to 3 quotes** for the customer
+    5. **Generate printable quote**
+    """)
+    st.stop()
 
-        lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
-        if lease_matches.empty:
-            st.error("No lease program found for this model number. Contact support for assistance.")
-        else:
-            lease_info = lease_matches.iloc[0]
-            model_year = lease_info.get("Year", "N/A")
-            make = lease_info.get("Make", "Hyundai")
-            model = lease_info.get("Model", "N/A")
-            trim = lease_info.get("Trim", "N/A")
+# Process VIN and generate options
+vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
+if vin_data.empty:
+    st.error("❌ Vehicle not found in inventory. Please check the VIN number.")
+    st.stop()
 
-            st.markdown(f"### Vehicle Details: {model_year} {make} {model} {trim} — MSRP: ${msrp:,.2f}")
+vehicle = vin_data.iloc[0]
+model_number = vehicle["ModelNumber"]
+msrp = float(vehicle["MSRP"])
 
-            tier_num = int(selected_tier.split(" ")[1])
-            tax_rate = 0.0725
-            mileage_options = [10000, 12000, 15000]
-            lease_terms = sorted(lease_matches["Term"].dropna().unique())
+lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
+if lease_matches.empty:
+    st.error("❌ No lease program found for this model number.")
+    st.stop()
 
-            for term in lease_terms:
-                term_group = lease_matches[lease_matches["Term"] == term]
-                st.subheader(f"{term}-Month Lease Options")
+lease_info = lease_matches.iloc[0]
+model_year = lease_info.get("Year", "N/A")
+make = lease_info.get("Make", "Hyundai")
+model = lease_info.get("Model", "N/A")
+trim = lease_info.get("Trim", "N/A")
 
-                for mileage in mileage_options:
-                    row = term_group.iloc[0]
-                    base_residual = float(row["Residual"])
-                    adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
-                    residual_value = round(msrp * adjusted_residual, 2)
+# Header with logo and vehicle info
+col1, col2 = st.columns([1, 3])
+with col1:
+    try:
+        logo = Image.open("drivepath_logo.png")
+        st.image(logo, width=300)
+    except:
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+            <h2 style="margin: 0; color: white;">DrivePath</h2>
+            <p style="margin: 5px 0 0 0; color: #bdc3c7;">Lease Quote Tool</p>
+        </div>
+        """, unsafe_allow_html=True)
+with col2:
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0; color: white;">{model_year} {make} {model} {trim}</h2>
+        <h3 style="margin: 10px 0 0 0; color: white;">MSRP: ${msrp:,.2f} | VIN: {vin_input}</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-                    mf_col = f"Tier {tier_num}"
-                    money_factor = float(row[mf_col])
-                    if apply_markup:
-                        money_factor += 0.0004
-                    available_lease_cash = float(row.get("LeaseCash", 0.0))
+# Generate quote options
+tier_num = int(selected_tier.split(" ")[1])
+tax_rate = 0.0725
+mileage_options = [10000, 12000, 15000]
+lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
-                    st.markdown(f"Mileage: {mileage:,} miles per year")
+quote_options = []
+for term in lease_terms:
+    term_group = lease_matches[lease_matches["Term"] == term]
+    for mileage in mileage_options:
+        row = term_group.iloc[0]
+        base_residual = float(row["Residual"])
+        adjusted_residual = base_residual + 0.01 if mileage == 10000 else base_residual - 0.02 if mileage == 15000 else base_residual
+        residual_value = round(msrp * adjusted_residual, 2)
+        mf_col = f"Tier {tier_num}"
+        money_factor = float(row[mf_col])
+        if apply_markup:
+            money_factor += 0.0004
+        available_lease_cash = float(row.get("LeaseCash", 0.0))
+        quote_options.append({
+            'term': int(term),
+            'mileage': mileage,
+            'residual_value': residual_value,
+            'money_factor': money_factor,
+            'available_lease_cash': available_lease_cash,
+            'selling_price': float(msrp),
+            'lease_cash_used': 0.0,
+            'index': len(quote_options)
+        })
 
-                    selling_price = st.number_input(
-                        f"Selling Price ($) — {term} months / {mileage:,} miles",
-                        value=msrp,
-                        key=f"price_{term}_{mileage}",
-                        help="Adjust the selling price for your lease term and mileage."
-                    )
+st.session_state.quote_options = quote_options
 
-                    with st.expander("Incentives", expanded=False):
-                        lease_cash_used = st.number_input(
-                            f"Lease Cash Used ($) — Max: ${available_lease_cash:,.2f}",
-                            min_value=0.0,
-                            max_value=available_lease_cash,
-                            value=0.0,
-                            step=1.0,
-                            key=f"lease_cash_{term}_{mileage}",
-                            help="Apply available lease cash toward your deal."
-                        )
+# Controls Section
+col1, col2, col3 = st.columns([2, 2, 1])
+with col1:
+    st.subheader("Bulk Controls")
+    bulk_selling_price = st.number_input("Apply Selling Price to All", value=float(msrp), step=100.0)
+    if st.button("Update All Selling Prices"):
+        for option in st.session_state.quote_options:
+            option['selling_price'] = bulk_selling_price
+        st.success("✅ All selling prices updated!")
+        st.rerun()
+with col2:
+    st.subheader("Filters & Sorting")
+    sort_options = {
+        "Lowest Payment": "payment",
+        "Lowest Term": "term",
+        "Lowest Mileage": "mileage",
+        "Most Lease Cash Available": "available_lease_cash"
+    }
+    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
+    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
+with col3:
+    st.subheader("Selected Quotes")
+    st.write(f"**{len(st.session_state.selected_quotes)}/3** selected")
+    if st.button("Clear All"):
+        st.session_state.selected_quotes = []
+        st.rerun()
 
-                    cash_down = default_money_down
-                    initial_B = lease_cash_used
+# Function to calculate payment
+def calculate_option_payment(option, trade_val, cash_down, tax_rt):
+    selling_price = option['selling_price']
+    initial_B = option['lease_cash_used']
+    ccr_initial, _, debug_ccr_initial = calculate_ccr_full(
+        SP=selling_price, B=initial_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
+        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
+    )
+    overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
+    trade_used = min(trade_val, overflow)
+    remaining_gap = overflow - trade_used
+    cash_used = min(cash_down, remaining_gap)
+    remaining_trade = trade_val - trade_used
+    remaining_cash = cash_down - cash_used
+    adjusted_SP = selling_price - remaining_trade
+    total_B = initial_B + trade_used + cash_used + remaining_cash
+    ccr, _, _ = calculate_ccr_full(
+        SP=adjusted_SP, B=total_B, rebates=0.0, TV=0.0, K=0.0, M=962.50, Q=0.0,
+        RES=option['residual_value'], F=option['money_factor'], W=option['term'], τ=tax_rt
+    )
+    payment = calculate_payment_from_ccr(
+        S=adjusted_SP, CCR=ccr, RES=option['residual_value'], W=option['term'],
+        F=option['money_factor'], τ=tax_rt, M=962.50, Q=0.0
+    )
+    return {
+        'payment': payment['Monthly Payment (MP)'],
+        'base_payment': payment['Base Payment (BP)'],
+        'tax_payment': payment['Sales Tax (ST)'],
+        'ccr': ccr,
+        'trade_used': trade_used,
+        'remaining_cash': remaining_cash
+    }
 
-                    # STEP 1: Run CCR with lease cash only to get topVal
-                    ccr_initial, overflow_initial, debug_ccr_initial = calculate_ccr_full(
-                        SP=selling_price,
-                        B=initial_B,
-                        rebates=0.0,
-                        TV=0.0,
-                        K=0.0,
-                        M=962.50,
-                        Q=0.0,
-                        RES=residual_value,
-                        F=money_factor,
-                        W=term,
-                        τ=tax_rate
-                    )
+# Calculate payments and apply filters/sorting
+filtered_options = []
+for option in st.session_state.quote_options:
+    if option['term'] not in term_filter or option['mileage'] not in mileage_filter:
+        continue
+    payment_data = calculate_option_payment(option, trade_value, default_money_down, tax_rate)
+    option_with_payment = option.copy()
+    option_with_payment.update(payment_data)
+    filtered_options.append(option_with_payment)
 
-                    overflow = abs(debug_ccr_initial.get("Initial TopVal", 0.0)) if debug_ccr_initial.get("Initial TopVal", 0.0) < 0 else 0
+if sort_by == "Most Lease Cash Available":
+    filtered_options.sort(key=lambda x: x['available_lease_cash'], reverse=True)
+elif sort_by == "Lowest Payment":
+    filtered_options.sort(key=lambda x: x['payment'])
+else:
+    filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
-                    # STEP 2: Use trade and cash to cover negative topVal
-                    trade_used = min(trade_value, overflow)
-                    remaining_gap = overflow - trade_used
-                    cash_used = min(cash_down, remaining_gap)
+# Display quote options
+st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
+for option in filtered_options:
+    option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
+    is_selected = option_key in st.session_state.selected_quotes
+    card_class = "selected-quote" if is_selected else "quote-card"
+    with st.container():
+        st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+        with col1:
+            st.markdown(f"**{option['term']} Months | {option['mileage']:,} mi/yr**")
+            st.markdown(f'<div class="payment-highlight">${option["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
+            st.caption(f"Base: ${option['base_payment']:.2f} + Tax: ${option['tax_payment']:.2f}")
+        with col2:
+            st.markdown("Customize This Option:")
+            new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
+            if new_selling_price != option['selling_price']:
+                st.session_state.quote_options[option['index']]['selling_price'] = new_selling_price
+                st.rerun()
+        with col3:
+            new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
+            if new_lease_cash != option['lease_cash_used']:
+                st.session_state.quote_options[option['index']]['lease_cash_used'] = new_lease_cash
+                st.rerun()
+        with col4:
+            if is_selected:
+                if st.button("❌ Remove", key=f"remove_{option_key}"):
+                    st.session_state.selected_quotes.remove(option_key)
+                    st.rerun()
+            else:
+                if len(st.session_state.selected_quotes) < 3:
+                    if st.button("✅ Select", key=f"select_{option_key}"):
+                        st.session_state.selected_quotes.append(option_key)
+                        st.rerun()
+                else:
+                    st.button("📝 Full", disabled=True, key=f"full_{option_key}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-                    remaining_trade = trade_value - trade_used
-                    remaining_cash = cash_down - cash_used
-
-                    adjusted_SP = selling_price - remaining_trade
-                    total_B = initial_B + trade_used + cash_used + remaining_cash
-
-                    # STEP 3: Recalculate CCR with updated B and SP
-                    ccr, _, debug_ccr = calculate_ccr_full(
-                        SP=adjusted_SP,
-                        B=total_B,
-                        rebates=0.0,
-                        TV=0.0,
-                        K=0.0,
-                        M=962.50,
-                        Q=0.0,
-                        RES=residual_value,
-                        F=money_factor,
-                        W=term,
-                        τ=tax_rate
-                    )
-
-                    payment = calculate_payment_from_ccr(
-                        S=adjusted_SP,
-                        CCR=ccr,
-                        RES=residual_value,
-                        W=term,
-                        F=money_factor,
-                        τ=tax_rate,
-                        M=962.50,
-                        Q=0.0
-                    )
-
-                    st.markdown(f"Monthly Payment: ${payment['Monthly Payment (MP)']:.2f}")
-                    st.markdown(
-                        f"Breakdown: Base: ${payment['Base Payment (BP)']:.2f}, Tax: ${payment['Sales Tax (ST)']:.2f}, "
-                        f"CCR: ${ccr:.2f}, Trade Used: ${trade_used:.2f}, Remaining Cash Added to Down: ${remaining_cash:.2f}"
-                    )
-
-                    with st.expander("Detailed Breakdown", expanded=False):
-                        st.markdown("### CCR Fill Breakdown")
-                        st.json({
-                            "TopVal Overflow": round(overflow, 2),
-                            "Trade Used for Overflow": trade_used,
-                            "Cash Used for Overflow": cash_used,
-                            "Remaining Trade (Reduced SP)": remaining_trade,
-                            "Remaining Cash (Added to Down)": remaining_cash,
-                            "Final SP": adjusted_SP,
-                            "Final B": total_B
-                        })
-
-                        st.markdown("### CCR Debug")
-                        st.json(debug_ccr)
-
-                        st.markdown("### Final Payment Breakdown")
-                        st.json(payment)
+# Generate Quote Section
+if st.session_state.selected_quotes:
+    st.divider()
+    st.subheader("Generate Customer Quote")
+    if st.button("🖨️ Generate Printable Quote", type="primary"):
+        st.markdown('<div class="print-section no-print">', unsafe_allow_html=True)
+        st.markdown("### 📋 Quote Preview (Click Print button below to print)")
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="print-section">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2c3e50; margin-bottom: 10px;">DrivePath</h1>
+                <h2 style="color: #2E8B57; margin: 0;">LEASE QUOTE</h2>
+            </div>
+            <hr>
+            <h3>Vehicle Information</h3>
+            <p><strong>{model_year} {make} {model} {trim}</strong></p>
+            <p><strong>VIN:</strong> {vin_input} | <strong>MSRP:</strong> ${msrp:,.2f}</p>
+            <h3>Customer Information</h3>
+            <p><strong>Name:</strong> {customer_name or 'Not provided'}</p>
+            <p><strong>Phone:</strong> {customer_phone or 'Not provided'}</p>
+            <p><strong>Email:</strong> {customer_email or 'Not provided'}</p>
+            <p><strong>Date:</strong> {datetime.now().strftime('%B %d, %Y %I:%M %p EDT')}</p>
+            <h3>Lease Options</h3>
+        """, unsafe_allow_html=True)
+        for i, selected_key in enumerate(st.session_state.selected_quotes, 1):
+            term, mileage, index = selected_key.split('_')
+            option = next(opt for opt in filtered_options if opt['index'] == int(index))
+            st.markdown(f"""
+            <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                <h4>Option {i}: {option['term']} Months | {option['mileage']:,} miles/year</h4>
+                <p style="font-size: 20px; color: #2E8B57;"><strong>Monthly Payment: ${option['payment']:.2f}</strong></p>
+                <p><strong>Selling Price:</strong> ${option['selling_price']:,.2f}</p>
+                <p><strong>Lease Cash Applied:</strong> ${option['lease_cash_used']:,.2f}</p>
+                <p><strong>Trade Value:</strong> ${trade_value:,.2f}</p>
+                <p><strong>Cash Down:</strong> ${default_money_down:,.2f}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("""
+            <hr>
+            <p style="font-size: 12px; color: #666;">
+                * Quote valid for 3 days from date shown above<br>
+                * All payments subject to approved credit<br>
+                * Tax, title, and license fees additional<br>
+                * See dealer for complete details
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="no-print">', unsafe_allow_html=True)
+        st.markdown("""
+        <script>
+        function printQuote() {
+            window.print();
+        }
+        </script>
+        <button onclick="printQuote()" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+            🖨️ Print Quote
+        </button>
+        """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+else:
+    st.info("👆 Select up to 3 lease options above to generate a customer quote")
