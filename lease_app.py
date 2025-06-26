@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS to remove unnecessary white boxes and adjust layout
+# Custom CSS to adjust layout
 st.markdown("""
 <style>
     header { display: none; }
@@ -52,16 +52,6 @@ st.markdown("""
     }
     .sidebar .stExpander, .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput, .sidebar .stCheckbox {
         margin-bottom: 10px;
-    }
-    .three-column .stContainer {
-        display: flex;
-        justify-content: space-between;
-    }
-    .three-column .stContainer > div { width: 32%; }
-    @media (max-width: 768px) {
-        .three-column .stContainer { flex-direction: column; }
-        .three-column .stContainer > div { width: 100%; }
-        .main-content { padding: 0; }
     }
     @media print { .no-print { display: none !important; } }
 </style>
@@ -145,7 +135,6 @@ for term in lease_terms:
 st.session_state.quote_options = quote_options
 
 # Calculate payments
-sort_by = "Lowest Payment"
 filtered_options = quote_options
 filtered_options.sort(key=lambda x: calculate_payment_from_ccr(
     S=x['selling_price'],
@@ -169,7 +158,20 @@ with st.container():
             card_class = "quote-card"
             st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
             st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-            st.markdown(f'<div class="payment-highlight">${calculate_payment_from_ccr(S=option["selling_price"], CCR=0, RES=option["residual_value"], W=option["term"], F=option["money_factor"], τ=tax_rate, M=962.50, Q=0.0)["Monthly Payment (MP)"]:.2f}/mo</div>', unsafe_allow_html=True)
+            selling_price = st.number_input("Selling Price ($)", min_value=0.0, value=option["selling_price"], key=f"sp_{option_key}", step=100.0, format="%.2f")
+            lease_cash_used = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:.2f})", min_value=0.0, max_value=option['available_lease_cash'], value=option['lease_cash_used'], key=f"lc_{option_key}", step=50.0, format="%.2f")
+            monthly_data = calculate_payment_from_ccr(
+                S=selling_price,
+                CCR=lease_cash_used + default_money_down + trade_value,
+                RES=option['residual_value'],
+                W=option['term'],
+                F=option['money_factor'],
+                τ=tax_rate,
+                M=962.50,
+                Q=0.0
+            )
+            st.markdown(f'<div class="payment-highlight">${monthly_data["Monthly Payment (MP)"]:.2f}/mo</div>', unsafe_allow_html=True)
+            st.caption(f"Base: ${monthly_data['Base Payment (BP)']:.2f} + Tax: ${monthly_data['Tax']:.2f}")
             st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
