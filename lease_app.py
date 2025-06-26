@@ -7,10 +7,10 @@ import json
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
-# FINAL CSS - Based on debug results, target stMarkdownContainer elements
+# Clean, final CSS for right sidebar styling
 st.markdown("""
 <style>
-/* Fix: Only target the right column, not affecting main content */
+/* Right sidebar styling to match left sidebar */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
@@ -18,66 +18,39 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
     border: 1px solid #e1e5e9 !important;
 }
 
-/* Remove the markdown container styling that's making expanders fully white */
-/* div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMarkdownContainer"] {
-    background-color: white !important;
-    border-radius: 0.25rem !important;
-    margin-bottom: 0.5rem !important;
-    border: 1px solid #e1e5e9 !important;
-    padding: 0.5rem !important;
-} */
-
-/* Keep expanders with gray background, only input fields white */
+/* Keep expanders transparent with gray background */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stExpander"] {
     background-color: transparent !important;
     border: none !important;
     margin-bottom: 0.5rem !important;
 }
 
-/* Target all input elements in right column */
+/* White backgrounds for all input fields */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) input {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
 
-/* Target number input specifically */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stNumberInput"] input {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* Target selectbox */
+/* White backgrounds for selectbox */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stSelectbox"] > div {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
 
-/* Target multiselect containers more specifically - the actual field areas */
+/* White backgrounds for multiselect fields */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
 
-/* Target the multiselect widget container */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* More specific multiselect field targeting */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] [role="combobox"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
 
-/* Target the actual multiselect input area */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-    background-color: white !important;
-}
-
-/* Remove white background from checkbox - make it transparent */
+/* Transparent checkbox (no white box) */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stCheckbox"] {
     background-color: transparent !important;
     padding: 0 !important;
@@ -85,45 +58,7 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stCheck
     margin: 0.25rem 0 !important;
 }
 
-/* Make sure selectbox has white background */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stSelectbox"] > div > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* Make sure multiselect has white background */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* More specific targeting for multiselect containers */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
-    padding: 0.5rem !important;
-}
-
-/* Target the multiselect widget container specifically */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* Target the multiselect inner container */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* Target the actual select element */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) select {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* Target buttons */
+/* White backgrounds for buttons */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
@@ -193,7 +128,7 @@ except FileNotFoundError:
     st.error("⚠️ Data files not found. Please ensure required files are present.")
     st.stop()
 
-# Left Sidebar (unchanged)
+# Left Sidebar
 with st.sidebar:
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
@@ -307,7 +242,7 @@ def calculate_option_payment(selling_price, lease_cash_used, residual_value, mon
         'remaining_cash': remaining_cash
     }
 
-# Right Sidebar - Clean version without debug
+# Right Sidebar
 with right_col:
     st.header("Financial Settings")
     
