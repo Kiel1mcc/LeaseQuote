@@ -304,9 +304,12 @@ else:
 # Display quote options in three columns
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-for i, option in enumerate(filtered_options):
-    col = st.columns(3, gap="small")[i % 3]
-    with col:
+
+with st.container():
+    cols = st.columns(3, gap="small")
+    for i, option in enumerate(filtered_options):
+        with cols[i % 3]:
+
         option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
         is_selected = option_key in st.session_state.selected_quotes
         card_class = "selected-quote" if is_selected else "quote-card"
