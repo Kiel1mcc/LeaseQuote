@@ -309,10 +309,9 @@ with st.container():
     cols = st.columns(3, gap="small")
     for i, option in enumerate(filtered_options):
         with cols[i % 3]:
-
-        option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
-        is_selected = option_key in st.session_state.selected_quotes
-        card_class = "selected-quote" if is_selected else "quote-card"
+            option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
+            is_selected = option_key in st.session_state.selected_quotes
+            card_class = "selected-quote" if is_selected else "quote-card"
         with st.container():
             st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
             st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
