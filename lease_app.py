@@ -127,30 +127,29 @@ st.session_state.quote_options = quote_options
 main_col, right_col = st.columns([3, 1], gap="large")
 
 with right_col:
-    with st.container():
-        st.markdown("""
-        <div style='background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px;'>
-        <h4 style='margin-bottom: 10px;'>Vehicle & Customer Info</h4>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div style='background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px;'>
+    <h4 style='margin-bottom: 10px;'>Vehicle & Customer Info</h4>
+    """, unsafe_allow_html=True)
 
-        with st.expander("Financial Settings", expanded=True):
-            trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
-            default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
-            apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
-            st.session_state['apply_markup'] = apply_markup
+    with st.expander("Financial Settings", expanded=True):
+        trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
+        default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
+        apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
+        st.session_state['apply_markup'] = apply_markup
 
-        with st.expander("Filters & Sorting", expanded=True):
-            sort_options = {
-                "Lowest Payment": "payment",
-                "Lowest Term": "term",
-                "Lowest Mileage": "mileage",
-                "Most Lease Cash Available": "available_lease_cash"
-            }
-            sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-            term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-            mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
+    with st.expander("Filters & Sorting", expanded=True):
+        sort_options = {
+            "Lowest Payment": "payment",
+            "Lowest Term": "term",
+            "Lowest Mileage": "mileage",
+            "Most Lease Cash Available": "available_lease_cash"
+        }
+        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+        term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
+        mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 with main_col:
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
