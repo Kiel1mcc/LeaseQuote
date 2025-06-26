@@ -59,13 +59,30 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMulti
     border: 1px solid #d1d5db !important;
 }
 
-/* Target checkbox */
+/* Remove white background from checkbox - make it transparent */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stCheckbox"] {
-    background-color: white !important;
-    padding: 0.5rem !important;
-    border-radius: 0.25rem !important;
-    border: 1px solid #e1e5e9 !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
     margin: 0.25rem 0 !important;
+}
+
+/* Make sure selectbox has white background */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stSelectbox"] > div > div {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Make sure multiselect has white background */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Target the actual select element */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) select {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
 }
 
 /* Target buttons */
