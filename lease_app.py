@@ -88,6 +88,10 @@ st.markdown("""
     .right-content {
         max-width: 100%;
         overflow: hidden;
+        background-color: #f8f9fa; /* Match left sidebar background */
+        padding: 10px; /* Add some padding for consistency */
+        border-left: 1px solid #e0e0e0; /* Subtle border to match sidebar */
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
     }
     /* Mobile adjustment */
     @media (max-width: 768px) {
@@ -96,6 +100,11 @@ st.markdown("""
         }
         .three-column .stContainer > div {
             width: 100%;
+        }
+        .right-content {
+            border-left: none; /* Remove border on mobile */
+            box-shadow: none; /* Remove shadow on mobile */
+            padding: 0; /* Reset padding on mobile */
         }
     }
     @media print {
