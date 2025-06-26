@@ -133,12 +133,12 @@ with right_col:
     with st.container():
         st.markdown("<div style='background-color:#f1f5f9; padding:20px; border-radius:10px; border:1px solid #e0e0e0;'>", unsafe_allow_html=True)
         with st.expander("Financial Settings", expanded=True):
-        st.markdown("<div style='background-color:#f1f5f9; padding:10px; border-radius:10px;'>", unsafe_allow_html=True)
+            st.markdown("<div style='background-color:#f1f5f9; padding:10px; border-radius:10px;'>", unsafe_allow_html=True)
         trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
         default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
         apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
-        st.session_state['apply_markup'] = apply_markup
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.session_state['apply_markup'] = apply_markup
+            st.markdown("</div>", unsafe_allow_html=True)
 
     with st.expander("Filters & Sorting", expanded=True):
         st.markdown("<div style='background-color:#ffffff; padding:10px; border-radius:10px;'>", unsafe_allow_html=True)
