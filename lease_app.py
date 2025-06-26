@@ -7,54 +7,91 @@ import json
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
-# Custom CSS to style the right sidebar
+# Enhanced CSS to match left sidebar styling exactly
 st.markdown("""
 <style>
 .right-sidebar {
-    background-color: #f0f2f6;
-    padding: 1rem;
+    background-color: #f0f2f6 !important;
+    padding: 1rem !important;
     border-radius: 0.5rem;
-    border: 1px solid #e6e9ef;
     height: fit-content;
     position: sticky;
     top: 1rem;
+    border: 1px solid #e1e5e9;
 }
 
-.right-sidebar .stExpander {
-    background-color: white;
-    border: 1px solid #e6e9ef;
-    border-radius: 0.25rem;
-    margin-bottom: 0.5rem;
-}
-
-.right-sidebar .stSelectbox > div > div {
-    background-color: white;
-}
-
-.right-sidebar .stMultiSelect > div > div {
-    background-color: white;
-}
-
-.right-sidebar .stNumberInput > div > div > input {
-    background-color: white;
-}
-
-.right-sidebar .stCheckbox {
-    background-color: white;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    border: 1px solid #e6e9ef;
-}
-
-.sidebar-header {
+/* Style the right sidebar header to match left sidebar */
+.right-sidebar .sidebar-header {
     font-size: 1.25rem;
     font-weight: 600;
     color: #262730;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e6e9ef;
+    border-bottom: 1px solid #e1e5e9;
 }
 
+/* Make all expanders in right sidebar have white background */
+.right-sidebar .streamlit-expanderHeader {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+    border-radius: 0.25rem !important;
+}
+
+.right-sidebar .streamlit-expanderContent {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+    border-top: none !important;
+    border-radius: 0 0 0.25rem 0.25rem !important;
+}
+
+/* Style all input fields in right sidebar */
+.right-sidebar .stNumberInput > div > div > input {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+.right-sidebar .stSelectbox > div > div {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+.right-sidebar .stMultiSelect > div > div {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+.right-sidebar .stTextInput > div > div > input {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+/* Style checkboxes in right sidebar */
+.right-sidebar .stCheckbox {
+    background-color: white !important;
+    padding: 0.5rem !important;
+    border-radius: 0.25rem !important;
+    border: 1px solid #e1e5e9 !important;
+    margin: 0.25rem 0 !important;
+}
+
+/* Style buttons in right sidebar */
+.right-sidebar .stButton > button {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+    color: #262730 !important;
+}
+
+.right-sidebar .stButton > button:hover {
+    background-color: #f8f9fa !important;
+    border-color: #d1d5db !important;
+}
+
+/* Ensure proper spacing for right sidebar elements */
+.right-sidebar .element-container {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Quote card styling */
 .quote-card {
     background: white;
     border: 1px solid #e6e9ef;
@@ -117,7 +154,7 @@ except FileNotFoundError:
     st.error("⚠️ Data files not found. Please ensure required files are present.")
     st.stop()
 
-# Left Sidebar
+# Left Sidebar (unchanged)
 with st.sidebar:
     st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
@@ -215,51 +252,6 @@ st.session_state.quote_options = quote_options
 # Main layout with right sidebar
 main_col, right_col = st.columns([2.5, 1], gap="large")
 
-# Right Sidebar with matching styling
-with right_col:
-    st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-header">Financial Settings</div>', unsafe_allow_html=True)
-    
-    with st.expander("Trade & Down Payment", expanded=True):
-        trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
-        default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
-        apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
-        st.session_state['apply_markup'] = apply_markup
-
-    with st.expander("Filters & Sorting", expanded=True):
-        sort_options = {
-            "Lowest Payment": "payment",
-            "Lowest Term": "term",
-            "Lowest Mileage": "mileage",
-            "Most Lease Cash Available": "available_lease_cash"
-        }
-        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-        term_filter = st.multiselect(
-            "Filter by Term:", 
-            sorted(list(set(opt['term'] for opt in quote_options))), 
-            default=sorted(list(set(opt['term'] for opt in quote_options)))
-        )
-        mileage_filter = st.multiselect(
-            "Filter by Mileage:", 
-            sorted(list(set(opt['mileage'] for opt in quote_options))), 
-            default=sorted(list(set(opt['mileage'] for opt in quote_options)))
-        )
-
-    # Additional right sidebar content
-    with st.expander("Quote Summary", expanded=True):
-        st.write(f"**Selected Quotes:** {len(st.session_state.selected_quotes)}/3")
-        if st.session_state.selected_quotes:
-            st.write("**Selected Options:**")
-            for quote_key in st.session_state.selected_quotes:
-                parts = quote_key.split('_')
-                st.write(f"• {parts[0]} months, {int(parts[1]):,} mi/yr")
-        
-        if st.button("Clear All Selections", type="secondary"):
-            st.session_state.selected_quotes = []
-            st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
 # Helper function for payment calculation
 def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
     initial_B = lease_cash_used
@@ -291,6 +283,50 @@ def calculate_option_payment(selling_price, lease_cash_used, residual_value, mon
         'trade_used': trade_used,
         'remaining_cash': remaining_cash
     }
+
+# Right Sidebar with matching styling
+with right_col:
+    st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-header">Financial Settings</div>', unsafe_allow_html=True)
+    
+    with st.expander("Trade & Down Payment", expanded=True):
+        trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
+        default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
+        apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
+        st.session_state['apply_markup'] = apply_markup
+
+    with st.expander("Filters & Sorting", expanded=True):
+        sort_options = {
+            "Lowest Payment": "payment",
+            "Lowest Term": "term",
+            "Lowest Mileage": "mileage",
+            "Most Lease Cash Available": "available_lease_cash"
+        }
+        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+        term_filter = st.multiselect(
+            "Filter by Term:", 
+            sorted(list(set(opt['term'] for opt in quote_options))), 
+            default=sorted(list(set(opt['term'] for opt in quote_options)))
+        )
+        mileage_filter = st.multiselect(
+            "Filter by Mileage:", 
+            sorted(list(set(opt['mileage'] for opt in quote_options))), 
+            default=sorted(list(set(opt['mileage'] for opt in quote_options)))
+        )
+
+    with st.expander("Quote Summary", expanded=True):
+        st.write(f"**Selected Quotes:** {len(st.session_state.selected_quotes)}/3")
+        if st.session_state.selected_quotes:
+            st.write("**Selected Options:**")
+            for quote_key in st.session_state.selected_quotes:
+                parts = quote_key.split('_')
+                st.write(f"• {parts[0]} months, {int(parts[1]):,} mi/yr")
+        
+        if st.button("Clear All Selections", type="secondary"):
+            st.session_state.selected_quotes = []
+            st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
 with main_col:
