@@ -92,6 +92,15 @@ st.markdown("""
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
+    [data-testid="stVerticalBlock"] {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    /* Ensure the first element in each column has no top margin */
+    [data-testid="column"] > div:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
     @media (max-width: 768px) {
         .three-column .stContainer {
             flex-direction: column;
