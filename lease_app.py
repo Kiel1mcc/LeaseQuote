@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS to remove the top white bar and adjust layout
+# Custom CSS to remove unnecessary white boxes and adjust layout
 st.markdown("""
 <style>
     header { display: none; }
@@ -14,7 +14,6 @@ st.markdown("""
         border: 1px solid #e0e0e0;
         border-radius: 10px;
         padding: 15px;
-        margin: 15px 0;
         background-color: #ffffff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         height: 100%;
@@ -168,24 +167,9 @@ with st.container():
         with columns[i % 3]:
             option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
             card_class = "quote-card"
-
-            with st.container():
-                st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-                st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-                new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-                new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-                payment_data = calculate_payment_from_ccr(
-                    S=new_selling_price,
-                    CCR=0,
-                    RES=option['residual_value'],
-                    W=option['term'],
-                    F=option['money_factor'],
-                    τ=tax_rate,
-                    M=962.50,
-                    Q=0.0
-                )
-                st.markdown(f'<div class="payment-highlight">${payment_data["Monthly Payment (MP)"]:.2f}/mo</div>', unsafe_allow_html=True)
-                st.markdown(f'<p class="caption-text">Base: ${payment_data["Base Payment (BP)"]:.2f} + Tax: ${payment_data["Sales Tax (ST)"]:.2f}</p>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+            st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
+            st.markdown(f'<div class="payment-highlight">${calculate_payment_from_ccr(S=option["selling_price"], CCR=0, RES=option["residual_value"], W=option["term"], F=option["money_factor"], τ=tax_rate, M=962.50, Q=0.0)["Monthly Payment (MP)"]:.2f}/mo</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
