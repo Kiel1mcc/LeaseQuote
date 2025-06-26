@@ -7,74 +7,71 @@ import json
 
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
-# More targeted CSS based on the dev tools inspection
+# DEBUG CSS - Add colored borders to see what we're actually targeting
 st.markdown("""
 <style>
-/* Target the specific section element for the right sidebar */
-section[data-testid="stSidebar"] + div div[data-testid="column"]:nth-child(2),
+/* DEBUG: Add bright colored borders to see what elements we're targeting */
+
+/* Test 1: Target ALL columns and give them different colors */
+div[data-testid="column"] {
+    border: 3px solid red !important;
+    margin: 2px !important;
+}
+
+/* Test 2: Target the second column specifically */
 div[data-testid="column"]:nth-child(2) {
-    background-color: #f0f2f6 !important;
-    padding: 1rem !important;
-    border-radius: 0.5rem !important;
-    
-    /* Properties from dev tools inspection */
-    box-sizing: border-box !important;
-    position: relative !important;
-    user-select: auto !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: transparent transparent !important;
-    overflow: auto !important;
+    border: 5px solid blue !important;
+    background-color: yellow !important;
 }
 
-/* Target the stAppEmbeddingId container if needed */
-div[data-testid="stAppEmbeddingId"] div[data-testid="column"]:nth-child(2) {
-    background-color: #f0f2f6 !important;
+/* Test 3: Target columns by position in layout */
+div[data-testid="column"]:last-child {
+    border: 5px solid green !important;
+    background-color: orange !important;
 }
 
-/* More specific targeting for expanders */
-div[data-testid="column"]:nth-child(2) div[data-testid="stExpander"] {
-    background-color: white !important;
-    border: 1px solid #e1e5e9 !important;
-    border-radius: 0.25rem !important;
-    margin-bottom: 0.5rem !important;
+/* Test 4: Target the main container */
+div[data-testid="stHorizontalBlock"] div[data-testid="column"]:nth-child(2) {
+    border: 5px solid purple !important;
+    background-color: pink !important;
 }
 
-/* Target expander headers specifically */
-div[data-testid="column"]:nth-child(2) div[data-testid="stExpander"] summary {
-    background-color: white !important;
-    border-radius: 0.25rem 0.25rem 0 0 !important;
-    padding: 0.75rem !important;
+/* Test 5: More specific targeting */
+section[data-testid="stSidebar"] ~ div div[data-testid="column"]:nth-child(2) {
+    border: 5px solid cyan !important;
+    background-color: lightblue !important;
 }
 
-/* Target expander content */
-div[data-testid="column"]:nth-child(2) div[data-testid="stExpander"] div[role="region"] {
-    background-color: white !important;
-    padding: 0.75rem !important;
+/* Test 6: Target by class if it exists */
+.element-container {
+    border: 1px dashed orange !important;
 }
 
-/* Input fields - more specific targeting */
-div[data-testid="column"]:nth-child(2) input {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
-    padding: 0.5rem 0.75rem !important;
+/* Test 7: Target all streamlit elements in right area */
+div[data-testid="column"]:nth-child(2) * {
+    border: 1px dotted red !important;
 }
 
-/* Select boxes */
-div[data-testid="column"]:nth-child(2) select {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
+/* Test 8: Try targeting the block container */
+div[data-testid="block-container"] div[data-testid="column"]:nth-child(2) {
+    border: 8px solid magenta !important;
+    background-color: lightgreen !important;
 }
 
-/* Buttons */
-div[data-testid="column"]:nth-child(2) button {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
+/* Debug info - show data attributes */
+[data-testid]::before {
+    content: attr(data-testid);
+    position: absolute;
+    top: -20px;
+    left: 0;
+    background: black;
+    color: white;
+    padding: 2px 4px;
+    font-size: 10px;
+    z-index: 1000;
 }
 
-/* Quote card styling */
+/* Quote card styling (unchanged) */
 .quote-card {
     background: white;
     border: 1px solid #e6e9ef;
@@ -116,7 +113,6 @@ div[data-testid="column"]:nth-child(2) button {
 </style>
 """, unsafe_allow_html=True)
 
-# [Rest of the code remains the same as the previous version...]
 if 'selected_quotes' not in st.session_state:
     st.session_state.selected_quotes = []
 if 'quote_options' not in st.session_state:
@@ -268,8 +264,13 @@ def calculate_option_payment(selling_price, lease_cash_used, residual_value, mon
         'remaining_cash': remaining_cash
     }
 
-# Right Sidebar
+# Right Sidebar - ADD DEBUG INFO
 with right_col:
+    # Add debug info at the top
+    st.markdown("### 🐛 DEBUG INFO")
+    st.markdown("**This is the RIGHT SIDEBAR**")
+    st.markdown("Look for colored borders and labels!")
+    
     st.header("Financial Settings")
     
     with st.expander("Trade & Down Payment", expanded=True):
@@ -311,6 +312,10 @@ with right_col:
 
 # Main content area
 with main_col:
+    # Add debug info here too
+    st.markdown("### 🐛 DEBUG INFO - MAIN CONTENT")
+    st.markdown("**This is the MAIN CONTENT AREA**")
+    
     # Filter and sort options
     filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
 
