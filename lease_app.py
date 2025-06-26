@@ -84,6 +84,11 @@ st.markdown("""
     .element-container {
         margin: 0;
     }
+    /* Right column content styling */
+    .right-content {
+        max-width: 100%;
+        overflow: hidden;
+    }
     /* Mobile adjustment */
     @media (max-width: 768px) {
         .three-column .stContainer {
@@ -154,21 +159,24 @@ with st.sidebar:
 main_col, right_col = st.columns([3, 1], gap="large")
 
 with right_col:
-    st.subheader("Financial Settings")
-    trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
-    default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
-    apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
+    with st.container():
+        st.markdown('<div class="right-content">', unsafe_allow_html=True)
+        st.subheader("Financial Settings")
+        trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
+        default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
+        apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
 
-    st.subheader("Filters & Sorting")
-    sort_options = {
-        "Lowest Payment": "payment",
-        "Lowest Term": "term",
-        "Lowest Mileage": "mileage",
-        "Most Lease Cash Available": "available_lease_cash"
-    }
-    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['term'] for opt in st.session_state.quote_options))))
-    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))))
+        st.subheader("Filters & Sorting")
+        sort_options = {
+            "Lowest Payment": "payment",
+            "Lowest Term": "term",
+            "Lowest Mileage": "mileage",
+            "Most Lease Cash Available": "available_lease_cash"
+        }
+        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+        term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['term'] for opt in st.session_state.quote_options))))
+        mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))), default=sorted(list(set(opt['mileage'] for opt in st.session_state.quote_options))))
+        st.markdown('</div>', unsafe_allow_html=True)
 
 with main_col:
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
