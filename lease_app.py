@@ -79,6 +79,26 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMulti
     border: 1px solid #d1d5db !important;
 }
 
+/* More specific targeting for multiselect containers */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 0.5rem !important;
+}
+
+/* Target the multiselect widget container specifically */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
+/* Target the multiselect inner container */
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] > div > div {
+    background-color: white !important;
+    border: 1px solid #d1d5db !important;
+}
+
 /* Target the actual select element */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) select {
     background-color: white !important;
