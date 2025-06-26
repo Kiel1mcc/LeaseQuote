@@ -284,17 +284,31 @@ def calculate_option_payment(selling_price, lease_cash_used, residual_value, mon
         'remaining_cash': remaining_cash
     }
 
-# Right Sidebar with matching styling
+# Right Sidebar with direct HTML styling to match left sidebar
 with right_col:
-    st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-header">Financial Settings</div>', unsafe_allow_html=True)
+    # Create a container with inline styling to ensure it applies
+    st.markdown("""
+    <div style="
+        background-color: #f0f2f6 !important;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 0;
+        min-height: 500px;
+    ">
+    """, unsafe_allow_html=True)
     
+    st.markdown('<h4 style="color: #262730; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e1e5e9;">Financial Settings</h4>', unsafe_allow_html=True)
+    
+    # Wrap each expander in a white container
+    st.markdown('<div style="background-color: white; border-radius: 0.25rem; margin-bottom: 0.5rem; border: 1px solid #e1e5e9;">', unsafe_allow_html=True)
     with st.expander("Trade & Down Payment", expanded=True):
         trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
         default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
         apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
         st.session_state['apply_markup'] = apply_markup
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown('<div style="background-color: white; border-radius: 0.25rem; margin-bottom: 0.5rem; border: 1px solid #e1e5e9;">', unsafe_allow_html=True)
     with st.expander("Filters & Sorting", expanded=True):
         sort_options = {
             "Lowest Payment": "payment",
@@ -313,7 +327,9 @@ with right_col:
             sorted(list(set(opt['mileage'] for opt in quote_options))), 
             default=sorted(list(set(opt['mileage'] for opt in quote_options)))
         )
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown('<div style="background-color: white; border-radius: 0.25rem; margin-bottom: 0.5rem; border: 1px solid #e1e5e9;">', unsafe_allow_html=True)
     with st.expander("Quote Summary", expanded=True):
         st.write(f"**Selected Quotes:** {len(st.session_state.selected_quotes)}/3")
         if st.session_state.selected_quotes:
@@ -325,7 +341,9 @@ with right_col:
         if st.button("Clear All Selections", type="secondary"):
             st.session_state.selected_quotes = []
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    # Close the main container
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
