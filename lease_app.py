@@ -120,7 +120,7 @@ except FileNotFoundError:
 
 # Right sidebar with settings
 with st.sidebar:
-        st.header("Vehicle & Customer Info")
+    st.header("Vehicle & Customer Info")
     with st.expander("Customer Information", expanded=True):
         customer_name = st.text_input("Customer Name", "")
         customer_phone = st.text_input("Phone Number", "")
