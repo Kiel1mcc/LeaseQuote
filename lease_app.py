@@ -137,7 +137,7 @@ with right_col:
         trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
         default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
         apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False)
-                    st.session_state['apply_markup'] = apply_markup
+            st.session_state['apply_markup'] = apply_markup
             st.markdown("</div>", unsafe_allow_html=True)
 
     with st.expander("Filters & Sorting", expanded=True):
