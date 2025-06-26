@@ -128,6 +128,9 @@ main_col, right_col = st.columns([3, 1], gap="large")
 
 with right_col:
     with st.container():
+        st.markdown("<div style='background-color: #f0f2f6; padding: 10px 15px; border-radius: 10px; border: 1px solid #d9d9d9;'>", unsafe_allow_html=True)
+        st.header("Vehicle & Customer Info", anchor=False)
+
         with st.expander("Financial Settings", expanded=True):
             trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
             default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0)
@@ -145,20 +148,7 @@ with right_col:
             term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
             mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
 
-    with st.expander("Filters & Sorting", expanded=True):
-        st.markdown("<div style='background-color:#ffffff; padding:10px; border-radius:10px;'>", unsafe_allow_html=True)
-        st.subheader("Filters & Sorting")
-        sort_options = {
-            "Lowest Payment": "payment",
-            "Lowest Term": "term",
-            "Lowest Mileage": "mileage",
-            "Most Lease Cash Available": "available_lease_cash"
-        }
-        sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-        term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-        mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
         st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
 with main_col:
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
