@@ -5,7 +5,7 @@ from PIL import Image
 from datetime import datetime
 import json
 
-# Custom CSS for professional, state-of-the-art styling
+# Custom CSS for professional, three-column styling
 st.markdown("""
 <style>
     /* General styling */
@@ -20,6 +20,7 @@ st.markdown("""
         margin: 15px 0;
         background-color: #ffffff;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        height: 100%; /* Ensure consistent height */
     }
     .selected-quote {
         border: 2px solid #4CAF50;
@@ -27,9 +28,15 @@ st.markdown("""
         box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
     }
     .payment-highlight {
-        font-size: 22px;
-        font-weight: 600;
+        font-size: 24px;
+        font-weight: 700;
         color: #2E8B57;
+        margin: 5px 0;
+    }
+    .term-mileage {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e3a8a;
         margin: 5px 0;
     }
     .caption-text {
@@ -57,16 +64,27 @@ st.markdown("""
     .sidebar .stTextInput, .sidebar .stSelectbox, .sidebar .stNumberInput, .sidebar .stCheckbox {
         margin-bottom: 10px;
     }
-    @media print {
-        .no-print { display: none !important; }
+    /* Three-column layout */
+    .three-column .stContainer {
+        display: flex;
+        justify-content: space-between;
+    }
+    .three-column .stContainer > div {
+        width: 32%;
     }
     @media (max-width: 768px) {
-        .quote-card {
-            margin: 10px 0;
+        .three-column .stContainer {
+            flex-direction: column;
+        }
+        .three-column .stContainer > div {
+            width: 100%;
         }
         .main-content {
             padding: 10px;
         }
+    }
+    @media print {
+        .no-print { display: none !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -92,7 +110,7 @@ except FileNotFoundError:
     st.error("⚠️ Data files not found. Please ensure 'All_Lease_Programs_Database.csv' and 'Locator_Detail_Updated.xlsx' are in the correct directory.")
     st.stop()
 
-# Sidebar with customer and vehicle info
+# Right sidebar with settings
 with st.sidebar:
     st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
     st.header("Vehicle & Customer Info")
@@ -120,6 +138,19 @@ with st.sidebar:
     trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0, help="Value of your trade-in vehicle.")
     default_money_down = st.number_input("Customer Cash Down ($)", min_value=0.0, value=0.0, step=100.0, help="Initial cash payment toward the lease.")
     apply_markup = st.checkbox("Apply Money Factor Markup (+0.0004)", value=False, help="Add a small markup to the money factor if desired.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
+    st.header("Filters & Sorting")
+    sort_options = {
+        "Lowest Payment": "payment",
+        "Lowest Term": "term",
+        "Lowest Mileage": "mileage",
+        "Most Lease Cash Available": "available_lease_cash"
+    }
+    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
+    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
+    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content area
@@ -223,33 +254,7 @@ for term in lease_terms:
 
 st.session_state.quote_options = quote_options
 
-# Controls Section
-col1, col2, col3 = st.columns([2, 2, 1])
-with col1:
-    st.subheader("Bulk Controls")
-    bulk_selling_price = st.number_input("Apply Selling Price to All", value=float(msrp), step=100.0)
-    if st.button("Update All Selling Prices"):
-        for option in st.session_state.quote_options:
-            option['selling_price'] = bulk_selling_price
-        st.success("✅ All selling prices updated!")
-        st.rerun()
-with col2:
-    st.subheader("Filters & Sorting")
-    sort_options = {
-        "Lowest Payment": "payment",
-        "Lowest Term": "term",
-        "Lowest Mileage": "mileage",
-        "Most Lease Cash Available": "available_lease_cash"
-    }
-    sort_by = st.selectbox("Sort by:", list(sort_options.keys()))
-    term_filter = st.multiselect("Filter by Term:", sorted(list(set(opt['term'] for opt in quote_options))), default=sorted(list(set(opt['term'] for opt in quote_options))))
-    mileage_filter = st.multiselect("Filter by Mileage:", sorted(list(set(opt['mileage'] for opt in quote_options))), default=sorted(list(set(opt['mileage'] for opt in quote_options))))
-with col3:
-    st.subheader("Selected Quotes")
-    st.write(f"**{len(st.session_state.selected_quotes)}/3** selected")
-    if st.button("Clear All"):
-        st.session_state.selected_quotes = []
-        st.rerun()
+# Controls Section (now in right sidebar, handled above)
 
 # Function to calculate payment
 def calculate_option_payment(selling_price, lease_cash_used, residual_value, money_factor, term, trade_val, cash_down, tax_rt):
@@ -293,40 +298,31 @@ elif sort_by == "Lowest Payment":
 else:
     filtered_options.sort(key=lambda x: x[sort_options[sort_by]])
 
-# Display quote options with dynamic recalculation
+# Display quote options in three columns
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-for option in filtered_options:
-    option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
-    is_selected = option_key in st.session_state.selected_quotes
-    card_class = "selected-quote" if is_selected else "quote-card"
-    with st.container():
-        st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
-        with col1:
-            st.markdown(f"**{option['term']} Months | {option['mileage']:,} mi/yr**")
+cols = st.columns(3, gap="small")
+for i, option in enumerate(filtered_options):
+    with cols[i % 3]:
+        option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
+        is_selected = option_key in st.session_state.selected_quotes
+        card_class = "selected-quote" if is_selected else "quote-card"
+        with st.container():
+            st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+            st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
             new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
             new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
             payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
             st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
             st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
-        with col2:
-            st.markdown("**Customize Option:**")
-        with col3:
-            pass
-        with col4:
-            if is_selected:
-                if st.button("Remove", key=f"remove_{option_key}", help="Remove this quote from selection"):
+            if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
+                if is_selected:
                     st.session_state.selected_quotes.remove(option_key)
-                    st.rerun()
-            else:
-                if len(st.session_state.selected_quotes) < 3:
-                    if st.button("Select", key=f"select_{option_key}", help="Add this quote to selection"):
-                        st.session_state.selected_quotes.append(option_key)
-                        st.rerun()
                 else:
-                    st.button("Full", disabled=True, key=f"full_{option_key}")
-        st.markdown('</div>', unsafe_allow_html=True)
+                    if len(st.session_state.selected_quotes) < 3:
+                        st.session_state.selected_quotes.append(option_key)
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Generate Quote Section
