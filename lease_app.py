@@ -128,7 +128,7 @@ main_col, right_col = st.columns([3, 1], gap="large")
 
 with right_col:
     st.markdown("""
-    <div style='background-color:#f8f9fa; padding:20px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1);'>
+    <div style='background-color:#f1f5f9; padding:20px; border-radius:10px; border:1px solid #e0e0e0;'>
     """, unsafe_allow_html=True)
     with st.expander("Financial Settings", expanded=True):
         trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
