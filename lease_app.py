@@ -32,11 +32,36 @@ div[data-testid="column"]:nth-child(2) .streamlit-expanderContent {
     border-radius: 0 0 0.25rem 0.25rem !important;
 }
 
-/* Style all form inputs in the right column */
-div[data-testid="column"]:nth-child(2) .stNumberInput > div > div > input,
-div[data-testid="column"]:nth-child(2) .stSelectbox > div > div,
-div[data-testid="column"]:nth-child(2) .stMultiSelect > div > div,
+/* Style all form inputs in the right column - make them WHITE */
+div[data-testid="column"]:nth-child(2) .stNumberInput > div > div > input {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+div[data-testid="column"]:nth-child(2) .stSelectbox > div > div {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+div[data-testid="column"]:nth-child(2) .stMultiSelect > div > div {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
 div[data-testid="column"]:nth-child(2) .stTextInput > div > div > input {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+/* Also target the input elements more specifically */
+div[data-testid="column"]:nth-child(2) input[type="number"],
+div[data-testid="column"]:nth-child(2) input[type="text"] {
+    background-color: white !important;
+    border: 1px solid #e1e5e9 !important;
+}
+
+/* Make sure select dropdowns are white */
+div[data-testid="column"]:nth-child(2) select {
     background-color: white !important;
     border: 1px solid #e1e5e9 !important;
 }
