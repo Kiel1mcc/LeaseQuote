@@ -14,7 +14,8 @@ if "filtered_options" not in globals():
     filtered_options: list[dict] = []
 
 # Custom CSS to remove the top white bar and adjust layout
-st.markdown("""
+st.markdown(
+    """
 <style>
     /* Hide the default Streamlit header/menu bar */
     header {
@@ -100,10 +101,68 @@ st.markdown("""
         .no-print { display: none !important; }
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Set page config to minimize header and padding
-st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded"
+)
+
+
+def calculate_option_payment(
+    selling_price: float,
+    lease_cash: float,
+    residual_value: float,
+    money_factor: float,
+    term: int,
+    trade_value: float,
+    down_payment: float,
+    tax_rate: float,
+) -> dict:
+    """Return simplified payment details for an option.
+
+    This helper avoids a NameError when ``calculate_option_payment`` is expected
+    but not implemented in the demo app. It provides a minimal calculation using
+    the existing functions from ``lease_calculations``.
+    """
+
+    res_amount = selling_price * (
+        residual_value if residual_value <= 1 else residual_value / 100
+    )
+
+    ccr, _, _ = calculate_ccr_full(
+        SP=selling_price,
+        B=down_payment,
+        rebates=lease_cash,
+        TV=trade_value,
+        K=0.0,
+        M=0.0,
+        Q=0.0,
+        RES=res_amount,
+        F=money_factor,
+        W=term,
+        τ=tax_rate,
+    )
+
+    payment_info = calculate_payment_from_ccr(
+        selling_price,
+        ccr,
+        res_amount,
+        term,
+        money_factor,
+        tax_rate,
+        0.0,
+        0.0,
+    )
+
+    return {
+        "payment": payment_info["Monthly Payment (MP)"],
+        "base_payment": payment_info["Base Payment (BP)"],
+        "tax_payment": payment_info["Sales Tax (ST)"],
+    }
+
 
 # ... all unchanged code above ...
 
@@ -111,7 +170,8 @@ st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 # st.subheader moved below after filtered_options is defined
 
-
+if not filtered_options:
+    st.info("No lease programs loaded. Please upload data or adjust settings.")
 
 
 # (Temporarily removed to avoid NameError until filtered_options is confirmed defined)
@@ -125,14 +185,49 @@ with st.container():
 
             with st.container():
                 st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
-                st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
-                new_selling_price = st.number_input("Selling Price ($)", value=float(option['selling_price']), key=f"sp_{option_key}", step=100.0)
-                new_lease_cash = st.number_input(f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})", min_value=0.0, max_value=float(option['available_lease_cash']), value=float(option['lease_cash_used']), key=f"lc_{option_key}", step=100.0)
-                payment_data = calculate_option_payment(new_selling_price, new_lease_cash, option['residual_value'], option['money_factor'], option['term'], trade_value, default_money_down, tax_rate)
-                st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>', unsafe_allow_html=True)
-                st.markdown(f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>',
+                    unsafe_allow_html=True,
+                )
+                new_selling_price = st.number_input(
+                    "Selling Price ($)",
+                    value=float(option["selling_price"]),
+                    key=f"sp_{option_key}",
+                    step=100.0,
+                )
+                new_lease_cash = st.number_input(
+                    f"Lease Cash Used (Max: ${option['available_lease_cash']:,.2f})",
+                    min_value=0.0,
+                    max_value=float(option["available_lease_cash"]),
+                    value=float(option["lease_cash_used"]),
+                    key=f"lc_{option_key}",
+                    step=100.0,
+                )
+                payment_data = calculate_option_payment(
+                    new_selling_price,
+                    new_lease_cash,
+                    option["residual_value"],
+                    option["money_factor"],
+                    option["term"],
+                    trade_value,
+                    default_money_down,
+                    tax_rate,
+                )
+                st.markdown(
+                    f'<div class="payment-highlight">${payment_data["payment"]:.2f}/mo</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f'<p class="caption-text">Base: ${payment_data["base_payment"]:.2f} + Tax: ${payment_data["tax_payment"]:.2f}</p>',
+                    unsafe_allow_html=True,
+                )
 
-                if st.button("Select" if not is_selected else "Remove", key=f"action_{option_key}", help="Add or remove this quote from selection", type="primary" if not is_selected else "secondary"):
+                if st.button(
+                    "Select" if not is_selected else "Remove",
+                    key=f"action_{option_key}",
+                    help="Add or remove this quote from selection",
+                    type="primary" if not is_selected else "secondary",
+                ):
                     if is_selected:
                         st.session_state.selected_quotes.remove(option_key)
                     else:
@@ -140,8 +235,8 @@ with st.container():
                             st.session_state.selected_quotes.append(option_key)
                     st.rerun()
 
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ... continue with the quote generation section ...
