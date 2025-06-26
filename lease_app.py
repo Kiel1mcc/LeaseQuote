@@ -128,8 +128,10 @@ main_col, right_col = st.columns([3, 1], gap="large")
 
 with right_col:
     with st.container():
-        st.markdown("<div style='background-color: #f0f2f6; padding: 10px 15px; border-radius: 10px; border: 1px solid #d9d9d9;'>", unsafe_allow_html=True)
-        st.header("Vehicle & Customer Info", anchor=False)
+        st.markdown("""
+        <div style='background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px;'>
+        <h4 style='margin-bottom: 10px;'>Vehicle & Customer Info</h4>
+        """, unsafe_allow_html=True)
 
         with st.expander("Financial Settings", expanded=True):
             trade_value = st.number_input("Trade-in Value ($)", min_value=0.0, value=0.0, step=100.0)
