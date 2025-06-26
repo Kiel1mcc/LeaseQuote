@@ -137,7 +137,6 @@ with st.sidebar:
             st.warning("❌ Vehicle not found in inventory")
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div style="margin-top: 20px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div style="padding: 10px; background-color: #f8f9fa; border-radius: 10px;">', unsafe_allow_html=True)
     st.header("Lease Parameters")
     selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Choose your credit tier for lease terms.")
     selected_county = st.selectbox("County:", ["Adams", "Franklin", "Marion"], help="Select your county for tax calculations.")
