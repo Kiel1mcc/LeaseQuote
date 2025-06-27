@@ -91,24 +91,24 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
 }
 
 /* Far right column styling to match sidebar */
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) {
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
     border-radius: 0.5rem !important;
     border: 1px solid #e1e5e9 !important;
 }
 
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) input,
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) div[data-testid="stSelectbox"] > div,
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"],
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) div[data-testid="stMultiSelect"] [role="combobox"],
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) button {
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) input,
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stSelectbox"] > div,
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stMultiSelect"] div[data-baseweb="select"],
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stMultiSelect"] [role="combobox"],
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) button {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
 
-section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(2) div[data-testid="stCheckbox"] {
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stCheckbox"] {
     background-color: transparent !important;
     padding: 0 !important;
     border: none !important;
