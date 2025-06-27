@@ -9,8 +9,8 @@ div[data-testid="stSelectbox"] > div {
 }
 div[data-testid="stNumberInput"] {
     background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
+    border: none !important; /* Remove individual input borders */
+    border-radius: 0 !important;
     box-shadow: none !important;
 }
 div[data-testid="stCheckbox"] {
@@ -119,21 +119,22 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 .quote-card,
 .selected-quote {
     background: white;
-    border: 2px solid #1e3a8a; /* Visible border */
+    border: 2px solid #1e3a8a; /* Single box border */
     border-radius: 0.5rem;
-    padding: 0.5rem; /* Reduced padding to minimize white space */
-    margin: 0 0 1rem 0; /* Remove top margin to eliminate gaps */
+    padding: 0.5rem;
+    margin: 0 0 1rem 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem; /* Even tighter spacing */
+    gap: 0.25rem;
 }
 
-/* Ensure all elements are tightly contained */
+/* Ensure all content is contained within the card */
 .quote-card div[data-testid="stNumberInput"],
 .quote-card div[data-testid="stMarkdownContainer"] {
     margin: 0 !important;
     padding: 0 !important;
+    border: none !important; /* Remove individual input borders */
 }
 
 .term-mileage {
@@ -168,5 +169,3 @@ div[data-testid="stHorizontalBlock"] {
     margin: 0 !important;
 }
 </style>
-"""
-
