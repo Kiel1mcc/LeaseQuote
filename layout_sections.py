@@ -5,7 +5,9 @@ from typing import List, Dict, Tuple, Any
 
 LOGO_PATH = "drivepath_logo.png"
 LOGO_WIDTH = 300
-DEFAULT_SORT_BY = "payment"
+# Default sorting option shown in the sidebar. Must match one of the keys used
+# in utils.sort_quote_options so sorting works without errors.
+DEFAULT_SORT_BY = "Lowest Payment"
 
 
 def render_header(
