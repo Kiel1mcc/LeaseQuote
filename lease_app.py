@@ -84,7 +84,7 @@ def render_quote_card(
     money_down: float,
     tax_rate: float
 ) -> None:
-    """Display a single quote card with boxed layout and monthly payment."""
+    """Display a single quote card."""
     if "selected_quotes" not in st.session_state:
         st.session_state.selected_quotes = set()
     is_selected = option_key in st.session_state.selected_quotes
@@ -92,13 +92,11 @@ def render_quote_card(
 
     st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
 
-    # Display term and mileage
     st.markdown(
         f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>',
         unsafe_allow_html=True
     )
 
-    # Selling Price input
     new_selling_price = st.number_input(
         "Selling Price ($)",
         value=float(option['selling_price']),
@@ -107,7 +105,6 @@ def render_quote_card(
         min_value=0.0
     )
 
-    # Lease Cash Used input
     new_lease_cash = st.number_input(
         f"Lease Cash Used (Max: ${option['available_lease_cash']:.2f})",
         min_value=0.0,
@@ -115,21 +112,6 @@ def render_quote_card(
         value=float(option['lease_cash_used']),
         key=f"lc_{option_key}",
         step=100.0,
-    )
-
-    # Calculate and display monthly payment
-    monthly_payment = calculate_option_payment(
-        new_selling_price,
-        option['residual_value'],
-        option['money_factor'],
-        new_lease_cash,
-        trade_value,
-        money_down,
-        tax_rate
-    )
-    st.markdown(
-        f'<div class="payment-highlight">${monthly_payment:,.2f}/mo</div>',
-        unsafe_allow_html=True
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
