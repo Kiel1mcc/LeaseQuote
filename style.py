@@ -91,22 +91,14 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
 }
 
 /* Quote card styling */
-.quote-card {
+.quote-card,
+.selected-quote {
     background: white;
     border: 1px solid #e6e9ef;
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.selected-quote {
-    background: #e0f2fe;
-    border: 2px solid #0284c7;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .term-mileage {
