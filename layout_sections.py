@@ -47,8 +47,18 @@ def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[in
     """Render filters for lease terms and mileages."""
     terms = sorted({opt["term"] for opt in quote_options})
     mileages = sorted({opt["mileage"] for opt in quote_options})
-    term_filter = st.multiselect("Select Lease Terms", options=terms, key="term_filter")
-    mileage_filter = st.multiselect("Select Mileages", options=mileages, key="mileage_filter")
+    term_filter = st.multiselect(
+        "Select Lease Terms",
+        options=terms,
+        default=terms,
+        key="term_filter",
+    )
+    mileage_filter = st.multiselect(
+        "Select Mileages",
+        options=mileages,
+        default=mileages,
+        key="mileage_filter",
+    )
     return term_filter, mileage_filter
 
 
