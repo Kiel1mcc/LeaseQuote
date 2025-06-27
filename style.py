@@ -119,17 +119,27 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 .quote-card,
 .selected-quote {
     background: white;
-    border: 1px solid #e6e9ef;
+    border: 2px solid #1e3a8a; /* Visible border */
     border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem; /* Reduced padding to minimize white space */
+    margin: 0 0 1rem 0; /* Remove top margin to eliminate gaps */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* Even tighter spacing */
+}
+
+/* Ensure all elements are tightly contained */
+.quote-card div[data-testid="stNumberInput"],
+.quote-card div[data-testid="stMarkdownContainer"] {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .term-mileage {
     font-weight: 600;
     color: #374151;
-    margin-bottom: 0.5rem;
+    margin: 0;
 }
 
 .payment-highlight {
@@ -137,14 +147,24 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     font-weight: 700;
     color: #059669;
     text-align: center;
-    margin: 0.5rem 0;
+    margin: 0;
+    background-color: #f0fff4;
+    padding: 0.25rem;
+    border-radius: 0.375rem;
 }
 
 .caption-text {
     font-size: 0.875rem;
     color: #6b7280;
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin: 0;
+}
+
+/* Remove extra column padding and gaps */
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+    padding: 0 !important;
+}
+div[data-testid="stHorizontalBlock"] {
+    margin: 0 !important;
 }
 </style>
-"""
