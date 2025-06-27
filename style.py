@@ -35,7 +35,8 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
     border-radius: 0.25rem !important;
     margin: 0.1rem !important;
 }
-/* Right sidebar styling to match left sidebar */
+
+/* Right sidebar styling */
 .right-sidebar {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
@@ -47,23 +48,14 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
     border: none !important;
     margin-bottom: 0.5rem !important;
 }
-.right-sidebar input {
+.right-sidebar input,
+.right-sidebar div[data-testid="stSelectbox"] > div,
+.right-sidebar div[data-testid="stMultiSelect"] div[data-baseweb="select"],
+.right-sidebar div[data-testid="stMultiSelect"] [role="combobox"],
+.right-sidebar button {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
-}
-.right-sidebar div[data-testid="stSelectbox"] > div {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-}
-.right-sidebar div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
-}
-.right-sidebar div[data-testid="stMultiSelect"] [role="combobox"] {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
 }
 .right-sidebar div[data-testid="stCheckbox"] {
     background-color: transparent !important;
@@ -71,12 +63,8 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
     border: none !important;
     margin: 0.25rem 0 !important;
 }
-.right-sidebar button {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.375rem !important;
-}
-/* Far right column styling */
+
+/* Match far right column */
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
@@ -99,47 +87,63 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     margin: 0.25rem 0 !important;
 }
 
-/* Quote card styling - updated */
-.quote-card,
-.selected-quote {
-    background: white;
-    border: 2px solid #1e3a8a;
-    border-radius: 0.75rem;
+/* DEBUG STYLING FOR QUOTE CARDS */
+.quote-card, .selected-quote {
+    border: 3px dashed red !important;
+    position: relative;
     padding: 1rem;
-    margin-bottom: 1.25rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    margin-bottom: 1rem;
 }
-.quote-card div[data-testid="stNumberInput"],
-.quote-card div[data-testid="stMarkdownContainer"] {
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
+.quote-card::before, .selected-quote::before {
+    content: "QUOTE CARD CONTAINER";
+    position: absolute;
+    top: -1.25rem;
+    left: 0;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: red;
 }
-.term-mileage {
-    font-weight: 600;
-    color: #374151;
-    margin: 0;
-}
-.payment-highlight {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #059669;
-    text-align: center;
-    margin: 0;
-    background-color: #f0fff4;
+.quote-card .term-mileage {
+    border: 2px dotted orange;
     padding: 0.25rem;
-    border-radius: 0.375rem;
 }
+.quote-card .term-mileage::before {
+    content: "TERM LABEL";
+    font-size: 0.65rem;
+    color: orange;
+    display: block;
+}
+.quote-card div[data-testid="stNumberInput"] {
+    border: 2px solid green;
+    padding: 0.25rem;
+}
+.quote-card div[data-testid="stNumberInput"]::before {
+    content: "NUMBER INPUT";
+    font-size: 0.65rem;
+    color: green;
+    display: block;
+}
+.quote-card .payment-highlight {
+    border: 2px solid blue;
+    background-color: #e0f7ff !important;
+    position: relative;
+}
+.quote-card .payment-highlight::before {
+    content: "PAYMENT HIGHLIGHT";
+    position: absolute;
+    top: -1.25rem;
+    left: 0;
+    font-size: 0.65rem;
+    color: blue;
+}
+
+/* Caption and inner spacing */
 .caption-text {
     font-size: 0.875rem;
     color: #6b7280;
     text-align: center;
     margin: 0;
 }
-/* Remove extra column padding and gaps */
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
     padding: 0 !important;
 }
