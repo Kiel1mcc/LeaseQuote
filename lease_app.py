@@ -121,6 +121,7 @@ def main() -> None:
             with cols[i % 3]:
                 option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
                 render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
+    st.markdown('<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>', unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
