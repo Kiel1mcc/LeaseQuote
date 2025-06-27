@@ -119,14 +119,11 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 .quote-card,
 .selected-quote {
     background: white;
-    border: 2px solid #e6e9ef;
+    border: 1px solid #e6e9ef;
     border-radius: 0.5rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .term-mileage {
@@ -141,9 +138,6 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     color: #059669;
     text-align: center;
     margin: 0.5rem 0;
-    background-color: #f0fff4;
-    padding: 0.5rem;
-    border-radius: 0.375rem;
 }
 
 .caption-text {
@@ -154,10 +148,3 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 }
 </style>
 """
-
-### Notes:
-- **Boxing Options**: The `.quote-card` and `.selected-quote` classes in `style.py` now use a thicker border (`2px`), increased padding (`1.5rem`), and a larger margin (`1.5rem`) to create a more defined box around each option. The `display: flex; flex-direction: column; gap: 1rem;` ensures a clean vertical layout.
-- **Monthly Payment**: The `render_quote_card` function now calculates and displays the monthly payment using `calculate_option_payment`, styled with `.payment-highlight` for emphasis.
-- **No Changes to `lease_app.py`**: The main app logic remains unchanged as the updates are handled in the layout and style files.
-
-Please ensure the `utils.py` file contains the `calculate_option_payment` function, or let me know if you need help implementing it. Test the updated code and let me know if you'd like further adjustments!
