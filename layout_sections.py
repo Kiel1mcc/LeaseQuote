@@ -1,15 +1,28 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from utils import calculate_option_payment
+from typing import List, Dict, Tuple, Any
 
-def render_header(model_year: str, make: str, model: str, trim: str, msrp: float, vin: str) -> None:
+LOGO_PATH = "drivepath_logo.png"
+LOGO_WIDTH = 300
+DEFAULT_SORT_BY = "payment"
+
+
+def render_header(
+    model_year: str,
+    make: str,
+    model: str,
+    trim: str,
+    msrp: float,
+    vin: str
+) -> None:
     """Display the header with vehicle info and logo."""
     col1, col2 = st.columns([1, 3])
     with col1:
         try:
-            logo = Image.open("drivepath_logo.png")
-            st.image(logo, width=300)
-        except Exception:
+            logo = Image.open(LOGO_PATH)
+            st.image(logo, width=LOGO_WIDTH)
+        except (FileNotFoundError, UnidentifiedImageError):
             st.markdown("<h2>DrivePath</h2>", unsafe_allow_html=True)
     with col2:
         st.markdown(
@@ -22,31 +35,44 @@ def render_header(model_year: str, make: str, model: str, trim: str, msrp: float
             unsafe_allow_html=True,
         )
 
-def render_right_sidebar(quote_options):
+
+def render_trade_down_section() -> Tuple[float, float]:
+    """Render trade value and money down input section."""
+    trade_value = st.number_input("Trade Value ($)", min_value=0.0, key="trade_value")
+    money_down = st.number_input("Money Down ($)", min_value=0.0, key="default_money_down")
+    return trade_value, money_down
+
+
+def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[int], List[int]]:
+    """Render filters for lease terms and mileages."""
+    terms = sorted({opt["term"] for opt in quote_options})
+    mileages = sorted({opt["mileage"] for opt in quote_options})
+    term_filter = st.multiselect("Select Lease Terms", options=terms, key="term_filter")
+    mileage_filter = st.multiselect("Select Mileages", options=mileages, key="mileage_filter")
+    return term_filter, mileage_filter
+
+
+def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, float, str, List[int], List[int]]:
     """Render sidebar with trade value, filters, and summary."""
     st.header("Financial Settings")
-
     with st.expander("Trade & Down Payment", expanded=True):
-        trade_value = st.number_input("Trade Value ($)", min_value=0, key="trade_value")
-        default_money_down = st.number_input("Money Down ($)", min_value=0, key="default_money_down")
-
+        trade_value, money_down = render_trade_down_section()
     with st.expander("Filters"):
-        term_filter = st.multiselect(
-            "Select Lease Terms",
-            options=sorted({opt["term"] for opt in quote_options}),
-            key="term_filter",
-        )
-        mileage_filter = st.multiselect(
-            "Select Mileages",
-            options=sorted({opt["mileage"] for opt in quote_options}),
-            key="mileage_filter",
-        )
+        term_filter, mileage_filter = render_filters_section(quote_options)
+    sort_by = DEFAULT_SORT_BY  # This could be made user-configurable in the future
+    return trade_value, money_down, sort_by, term_filter, mileage_filter
 
-    sort_by = "payment"  # Default sort logic placeholder
-    return trade_value, default_money_down, sort_by, term_filter, mileage_filter
 
-def render_quote_card(option, option_key, trade_value, default_money_down, tax_rate):
+def render_quote_card(
+    option: Dict[str, Any],
+    option_key: str,
+    trade_value: float,
+    money_down: float,
+    tax_rate: float
+) -> None:
     """Display a single quote card."""
+    if "selected_quotes" not in st.session_state:
+        st.session_state.selected_quotes = set()
     is_selected = option_key in st.session_state.selected_quotes
     css_class = "selected-quote" if is_selected else "quote-card"
 
@@ -62,6 +88,7 @@ def render_quote_card(option, option_key, trade_value, default_money_down, tax_r
         value=float(option['selling_price']),
         key=f"sp_{option_key}",
         step=100.0,
+        min_value=0.0
     )
 
     new_lease_cash = st.number_input(
