@@ -8,8 +8,29 @@ import json
 st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
 
 # Clean, final CSS for right sidebar styling
+# Debug mode + Final CSS styling
 st.markdown("""
 <style>
+/* DEBUG MODE: Outline all Streamlit elements for layout diagnosis */
+div[data-testid] {
+    outline: 1px dashed red !important;
+}
+div[data-testid="stSidebar"] {
+    outline: 2px solid blue !important;
+}
+div[data-testid="column"] {
+    outline: 1px solid green !important;
+}
+div[data-testid="stExpander"] {
+    outline: 2px dashed orange !important;
+}
+div[data-testid="stSelectbox"], 
+div[data-testid="stTextInput"], 
+div[data-testid="stNumberInput"], 
+div[data-testid="stButton"] {
+    outline: 1px dashed purple !important;
+}
+
 /* Right sidebar styling to match left sidebar */
 div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
     background-color: #f0f2f6 !important;
@@ -106,6 +127,7 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 if 'selected_quotes' not in st.session_state:
     st.session_state.selected_quotes = []
