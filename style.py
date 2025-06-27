@@ -168,3 +168,5 @@ div[data-testid="stHorizontalBlock"] {
     margin: 0 !important;
 }
 </style>
+"""
+
