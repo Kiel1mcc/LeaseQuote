@@ -8,7 +8,7 @@ Install the required packages from `requirements.txt` and launch Streamlit:
 
 ```bash
 pip install -r requirements.txt
-streamlit run lease_app.py
+streamlit run main.py
 ```
 
 ## Adjusting settings
