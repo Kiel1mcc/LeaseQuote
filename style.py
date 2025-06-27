@@ -36,7 +36,7 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
     margin: 0.1rem !important;
 }
 /* Right sidebar styling to match left sidebar */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
+.right-sidebar {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
     border-radius: 0.5rem !important;
@@ -44,39 +44,39 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
 }
 
 /* Keep expanders transparent with gray background */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stExpander"] {
+.right-sidebar div[data-testid="stExpander"] {
     background-color: transparent !important;
     border: none !important;
     margin-bottom: 0.5rem !important;
 }
 
 /* White backgrounds for all input fields */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) input {
+.right-sidebar input {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
 
 /* White backgrounds for selectbox */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stSelectbox"] > div {
+.right-sidebar div[data-testid="stSelectbox"] > div {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
 
 /* White backgrounds for multiselect fields */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
+.right-sidebar div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
 
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMultiSelect"] [role="combobox"] {
+.right-sidebar div[data-testid="stMultiSelect"] [role="combobox"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
 
 /* Transparent checkbox (no white box) */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stCheckbox"] {
+.right-sidebar div[data-testid="stCheckbox"] {
     background-color: transparent !important;
     padding: 0 !important;
     border: none !important;
@@ -84,7 +84,7 @@ div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stCheck
 }
 
 /* White backgrounds for buttons */
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
+.right-sidebar button {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
