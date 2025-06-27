@@ -66,11 +66,13 @@ def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[in
 
 def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, float, str, List[int], List[int]]:
     """Render sidebar with trade value, filters, and summary."""
+    st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
     st.header("Financial Settings")
     with st.expander("Trade & Down Payment", expanded=True):
         trade_value, money_down = render_trade_down_section()
     with st.expander("Filters"):
         term_filter, mileage_filter = render_filters_section(quote_options)
+    st.markdown('</div>', unsafe_allow_html=True)
     sort_by = DEFAULT_SORT_BY  # This could be made user-configurable in the future
     return trade_value, money_down, sort_by, term_filter, mileage_filter
 
