@@ -1,128 +1,135 @@
 import streamlit as st
-from data_loader import load_data
-from layout_sections import render_header, render_right_sidebar, render_quote_card
-from utils import sort_quote_options
-from style import BASE_CSS
+from PIL import Image, UnidentifiedImageError
+from utils import calculate_option_payment
+from typing import List, Dict, Tuple, Any
+
+LOGO_PATH = "drivepath_logo.png"
+LOGO_WIDTH = 300
+# Default sorting option shown in the sidebar. Must match one of the keys used
+# in utils.sort_quote_options so sorting works without errors.
+DEFAULT_SORT_BY = "Lowest Payment"
 
 
-def main() -> None:
-    st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="expanded")
-    st.markdown(BASE_CSS, unsafe_allow_html=True)
-
-    if 'selected_quotes' not in st.session_state:
-        st.session_state.selected_quotes = []
-    if 'quote_options' not in st.session_state:
-        st.session_state.quote_options = []
-
-    try:
-        lease_programs, vehicle_data, county_tax_rates = load_data()
-    except FileNotFoundError:
-        st.error("⚠️ Data files not found. Please ensure required files are present.")
-        st.stop()
-
-    # Left Sidebar
-    with st.sidebar:
-        st.header("Vehicle & Customer Info")
-        with st.expander("Customer Information", expanded=True):
-            st.text_input("Customer Name", "")
-            st.text_input("Phone Number", "")
-            st.text_input("Email Address", "")
-
-        with st.expander("Lease Parameters", expanded=True):
-            vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
-            if vin_input:
-                vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
-                if not vin_data.empty:
-                    vehicle = vin_data.iloc[0]
-                    st.success("✅ Vehicle Found!")
-                    st.write(f"**Model:** {vehicle.get('ModelNumber', 'N/A')}")
-                    st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
-                else:
-                    st.warning("❌ Vehicle not found in inventory")
-
-            selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)])
-            counties = sorted(county_tax_rates["County"].tolist())
-            selected_county = st.selectbox("County:", counties, index=counties.index("Marion"))
-            tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
-
-    if not vin_input:
-        st.title("Lease Quote Generator")
-        st.info("👈 Enter a VIN number in the sidebar to get started")
-        st.stop()
-
-    vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
-    if vin_data.empty:
-        st.error("❌ Vehicle not found in inventory. Please check the VIN number.")
-        st.stop()
-
-    vehicle = vin_data.iloc[0]
-    model_number = vehicle["ModelNumber"]
-    msrp = float(vehicle["MSRP"])
-
-    lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
-    if lease_matches.empty:
-        st.error("❌ No lease program found for this model number.")
-        st.stop()
-
-    lease_info = lease_matches.iloc[0]
-    model_year = lease_info.get("Year", "N/A")
-    make = lease_info.get("Make", "Hyundai")
-    model = lease_info.get("Model", "N/A")
-    trim = lease_info.get("Trim", "N/A")
-
-    # Build quote options
-    tier_num = int(selected_tier.split(" ")[1])
-    mileage_options = [10000, 12000, 15000]
-    lease_terms = sorted(lease_matches["Term"].dropna().unique())
-
-    quote_options = []
-    for term in lease_terms:
-        term_group = lease_matches[lease_matches["Term"] == term]
-        for mileage in mileage_options:
-            row = term_group.iloc[0]
-            base_residual = float(row["Residual"])
-            adjusted_residual = (
-                base_residual + 0.01 if mileage == 10000 else
-                base_residual - 0.02 if mileage == 15000 else
-                base_residual
-            )
-            residual_value = round(msrp * adjusted_residual, 2)
-            mf_col = f"Tier {tier_num}"
-            money_factor = float(row[mf_col])
-            available_lease_cash = float(row.get("LeaseCash", 0.0))
-            quote_options.append({
-                'term': int(term),
-                'mileage': mileage,
-                'residual_value': residual_value,
-                'money_factor': money_factor + (0.0004 if st.session_state.get('apply_markup') else 0),
-                'available_lease_cash': available_lease_cash,
-                'selling_price': float(msrp),
-                'lease_cash_used': 0.0,
-                'index': len(quote_options)
-            })
-
-    st.session_state.quote_options = quote_options
-
-    # Layout columns
-    main_col, right_col = st.columns([2.5, 1], gap="large")
-
-    with right_col:
-        trade_value, default_money_down, sort_by, term_filter, mileage_filter = render_right_sidebar(quote_options)
-
-    with main_col:
-        render_header(model_year, make, model, trim, msrp, vin_input)
-
-        filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
-        filtered_options = sort_quote_options(filtered_options, sort_by, trade_value, default_money_down, tax_rate)
-
-        st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-        cols = st.columns(3, gap="medium")
-        for i, option in enumerate(filtered_options):
-            with cols[i % 3]:
-                option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
-                render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
-    st.markdown('<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>', unsafe_allow_html=True)
+def render_header(
+    model_year: str,
+    make: str,
+    model: str,
+    trim: str,
+    msrp: float,
+    vin: str
+) -> None:
+    """Display the header with vehicle info and logo."""
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        try:
+            logo = Image.open(LOGO_PATH)
+            st.image(logo, width=LOGO_WIDTH)
+        except (FileNotFoundError, UnidentifiedImageError):
+            st.markdown("<h2>DrivePath</h2>", unsafe_allow_html=True)
+    with col2:
+        st.markdown(
+            f"""
+            <div style='background:#1e3a8a;padding:20px;color:white;border-radius:10px'>
+                <h2>{model_year} {make} {model} {trim}</h2>
+                <h3>MSRP: ${msrp:,.2f} | VIN: {vin}</h3>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
-if __name__ == "__main__":
-    main()
+def render_trade_down_section() -> Tuple[float, float]:
+    """Render trade value and money down input section."""
+    trade_value = st.number_input("Trade Value ($)", min_value=0.0, key="trade_value")
+    money_down = st.number_input("Money Down ($)", min_value=0.0, key="default_money_down")
+    return trade_value, money_down
+
+
+def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[int], List[int]]:
+    """Render filters for lease terms and mileages."""
+    terms = sorted({opt["term"] for opt in quote_options})
+    mileages = sorted({opt["mileage"] for opt in quote_options})
+    term_filter = st.multiselect(
+        "Select Lease Terms",
+        options=terms,
+        default=terms,
+        key="term_filter",
+    )
+    mileage_filter = st.multiselect(
+        "Select Mileages",
+        options=mileages,
+        default=mileages,
+        key="mileage_filter",
+    )
+    return term_filter, mileage_filter
+
+
+def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, float, str, List[int], List[int]]:
+    """Render sidebar with trade value, filters, and summary."""
+    st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
+    st.header("Financial Settings")
+    with st.expander("Trade & Down Payment", expanded=True):
+        trade_value, money_down = render_trade_down_section()
+    with st.expander("Filters"):
+        term_filter, mileage_filter = render_filters_section(quote_options)
+    st.markdown('</div>', unsafe_allow_html=True)
+    sort_by = DEFAULT_SORT_BY  # This could be made user-configurable in the future
+    return trade_value, money_down, sort_by, term_filter, mileage_filter
+
+
+def render_quote_card(
+    option: Dict[str, Any],
+    option_key: str,
+    trade_value: float,
+    money_down: float,
+    tax_rate: float
+) -> None:
+    """Display a single quote card with boxed layout and monthly payment."""
+    if "selected_quotes" not in st.session_state:
+        st.session_state.selected_quotes = set()
+    is_selected = option_key in st.session_state.selected_quotes
+    css_class = "selected-quote" if is_selected else "quote-card"
+
+    st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
+
+    # Display term and mileage
+    st.markdown(
+        f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>',
+        unsafe_allow_html=True
+    )
+
+    # Selling Price input
+    new_selling_price = st.number_input(
+        "Selling Price ($)",
+        value=float(option['selling_price']),
+        key=f"sp_{option_key}",
+        step=100.0,
+        min_value=0.0
+    )
+
+    # Lease Cash Used input
+    new_lease_cash = st.number_input(
+        f"Lease Cash Used (Max: ${option['available_lease_cash']:.2f})",
+        min_value=0.0,
+        max_value=float(option['available_lease_cash']),
+        value=float(option['lease_cash_used']),
+        key=f"lc_{option_key}",
+        step=100.0,
+    )
+
+    # Calculate and display monthly payment
+    monthly_payment = calculate_option_payment(
+        new_selling_price,
+        option['residual_value'],
+        option['money_factor'],
+        new_lease_cash,
+        trade_value,
+        money_down,
+        tax_rate
+    )
+    st.markdown(
+        f'<div class="payment-highlight">${monthly_payment:,.2f}/mo</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
