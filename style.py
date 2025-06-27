@@ -1,17 +1,5 @@
 BASE_CSS = """
 <style>
-/* DEBUG MODE: Outline all Streamlit elements for layout diagnosis */
-div[data-testid] { outline: 1px dashed red !important; }
-div[data-testid="stSidebar"] { outline: 2px solid blue !important; }
-div[data-testid="column"] { outline: 1px solid green !important; }
-div[data-testid="stExpander"] { outline: 2px dashed orange !important; }
-div[data-testid="stSelectbox"],
-div[data-testid="stTextInput"],
-div[data-testid="stNumberInput"],
-div[data-testid="stButton"] {
-    outline: 1px dashed purple !important;
-}
-
 /* Input Styling Fixes */
 div[data-testid="stSelectbox"] > div {
     background-color: white !important;
