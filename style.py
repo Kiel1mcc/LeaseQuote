@@ -9,7 +9,7 @@ div[data-testid="stSelectbox"] > div {
 }
 div[data-testid="stNumberInput"] {
     background-color: white !important;
-    border: none !important; /* Remove individual input borders */
+    border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
 }
@@ -42,62 +42,47 @@ div[data-testid="stMultiSelect"] div[data-baseweb="tag"] {
     border-radius: 0.5rem !important;
     border: 1px solid #e1e5e9 !important;
 }
-
-/* Keep expanders transparent with gray background */
 .right-sidebar div[data-testid="stExpander"] {
     background-color: transparent !important;
     border: none !important;
     margin-bottom: 0.5rem !important;
 }
-
-/* White backgrounds for all input fields */
 .right-sidebar input {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
-
-/* White backgrounds for selectbox */
 .right-sidebar div[data-testid="stSelectbox"] > div {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
-
-/* White backgrounds for multiselect fields */
 .right-sidebar div[data-testid="stMultiSelect"] div[data-baseweb="select"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
-
 .right-sidebar div[data-testid="stMultiSelect"] [role="combobox"] {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
 }
-
-/* Transparent checkbox (no white box) */
 .right-sidebar div[data-testid="stCheckbox"] {
     background-color: transparent !important;
     padding: 0 !important;
     border: none !important;
     margin: 0.25rem 0 !important;
 }
-
-/* White backgrounds for buttons */
 .right-sidebar button {
     background-color: white !important;
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
-
-/* Far right column styling to match sidebar */
+/* Far right column styling */
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) {
     background-color: #f0f2f6 !important;
     padding: 1rem !important;
     border-radius: 0.5rem !important;
     border: 1px solid #e1e5e9 !important;
 }
-
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) input,
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stSelectbox"] > div,
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stMultiSelect"] div[data-baseweb="select"],
@@ -107,7 +92,6 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     border: 1px solid #d1d5db !important;
     border-radius: 0.375rem !important;
 }
-
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"]:first-of-type > div[data-testid="column"]:nth-of-type(3) div[data-testid="stCheckbox"] {
     background-color: transparent !important;
     padding: 0 !important;
@@ -115,34 +99,30 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     margin: 0.25rem 0 !important;
 }
 
-/* Quote card styling */
+/* Quote card styling - updated */
 .quote-card,
 .selected-quote {
     background: white;
-    border: 2px solid #1e3a8a; /* Single box border */
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    margin: 0 0 1rem 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border: 2px solid #1e3a8a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
 }
-
-/* Ensure all content is contained within the card */
 .quote-card div[data-testid="stNumberInput"],
 .quote-card div[data-testid="stMarkdownContainer"] {
     margin: 0 !important;
     padding: 0 !important;
-    border: none !important; /* Remove individual input borders */
+    border: none !important;
 }
-
 .term-mileage {
     font-weight: 600;
     color: #374151;
     margin: 0;
 }
-
 .payment-highlight {
     font-size: 1.5rem;
     font-weight: 700;
@@ -153,14 +133,12 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     padding: 0.25rem;
     border-radius: 0.375rem;
 }
-
 .caption-text {
     font-size: 0.875rem;
     color: #6b7280;
     text-align: center;
     margin: 0;
 }
-
 /* Remove extra column padding and gaps */
 section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
     padding: 0 !important;
