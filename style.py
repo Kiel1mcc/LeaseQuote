@@ -119,17 +119,20 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 .quote-card,
 .selected-quote {
     background: white;
-    border: 1px solid #e6e9ef;
+    border: 2px solid #1e3a8a; /* Stronger border color for visibility */
     border-radius: 0.5rem;
-    padding: 1rem;
+    padding: 1rem; /* Reduced padding for tighter fit */
     margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Tighter gap between elements */
 }
 
 .term-mileage {
     font-weight: 600;
     color: #374151;
-    margin-bottom: 0.5rem;
+    margin: 0;
 }
 
 .payment-highlight {
@@ -137,14 +140,21 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     font-weight: 700;
     color: #059669;
     text-align: center;
-    margin: 0.5rem 0;
+    margin: 0;
+    background-color: #f0fff4;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
 }
 
 .caption-text {
     font-size: 0.875rem;
     color: #6b7280;
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin: 0;
+}
+
+/* Ensure no extra padding in columns */
+section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+    padding: 0 !important;
 }
 </style>
-"""
