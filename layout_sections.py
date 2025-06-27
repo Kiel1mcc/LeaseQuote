@@ -27,20 +27,23 @@ def render_right_sidebar(quote_options):
     st.header("Financial Settings")
 
     with st.expander("Trade & Down Payment", expanded=True):
-        st.number_input("Trade Value ($)", min_value=0, key="trade_value")
-        st.number_input("Money Down ($)", min_value=0, key="default_money_down")
+        trade_value = st.number_input("Trade Value ($)", min_value=0, key="trade_value")
+        default_money_down = st.number_input("Money Down ($)", min_value=0, key="default_money_down")
 
     with st.expander("Filters"):
-        st.multiselect(
+        term_filter = st.multiselect(
             "Select Lease Terms",
             options=sorted({opt["term"] for opt in quote_options}),
             key="term_filter",
         )
-        st.multiselect(
+        mileage_filter = st.multiselect(
             "Select Mileages",
             options=sorted({opt["mileage"] for opt in quote_options}),
             key="mileage_filter",
         )
+
+    sort_by = "payment"  # Default sort logic placeholder
+    return trade_value, default_money_down, sort_by, term_filter, mileage_filter
 
 def render_quote_card(option, option_key, trade_value, default_money_down, tax_rate):
     """Display a single quote card."""
