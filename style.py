@@ -119,11 +119,14 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 .quote-card,
 .selected-quote {
     background: white;
-    border: 1px solid #e6e9ef;
+    border: 2px solid #e6e9ef;
     border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .term-mileage {
@@ -138,6 +141,9 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     color: #059669;
     text-align: center;
     margin: 0.5rem 0;
+    background-color: #f0fff4;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
 }
 
 .caption-text {
@@ -147,4 +153,3 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     margin-bottom: 0.5rem;
 }
 </style>
-"""
