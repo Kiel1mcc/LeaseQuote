@@ -121,11 +121,10 @@ def main() -> None:
         st.write("Debug: Options filtered and sorted", len(filtered_options))
 
         st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-        cols = st.columns(3, gap="medium")
+        cols = st.columns(3, gap="small")  # Reduced gap to minimize white space
         for i, option in enumerate(filtered_options):
             with cols[i % 3]:
                 option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
-                st.write(f"Debug: Rendering card for {option_key}")
                 render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
         st.write("Debug: Quote cards rendered")
 
