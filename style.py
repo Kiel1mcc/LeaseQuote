@@ -93,7 +93,7 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     border-radius: 0.75rem;
     padding: 1rem;
     margin-bottom: 1rem;
-    background-color: #f9fafb;
+    background-color: #ffffff;
 }
 
 /* Quote card styling */
@@ -102,12 +102,12 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     background: white;
     border: 2px solid #1e3a8a;
     border-radius: 0.5rem;
-    padding: 0.5rem;
+    padding: 1rem;
     margin: 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
 }
 
 .quote-card div[data-testid="stNumberInput"],
