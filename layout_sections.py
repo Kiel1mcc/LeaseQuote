@@ -11,12 +11,7 @@ DEFAULT_SORT_BY = "Lowest Payment"
 
 
 def render_header(
-    model_year: str,
-    make: str,
-    model: str,
-    trim: str,
-    msrp: float,
-    vin: str
+    model_year: str, make: str, model: str, trim: str, msrp: float, vin: str
 ) -> None:
     """Display the header with vehicle info and logo."""
     col1, col2 = st.columns([1, 3])
@@ -41,11 +36,15 @@ def render_header(
 def render_trade_down_section() -> Tuple[float, float]:
     """Render trade value and money down input section."""
     trade_value = st.number_input("Trade Value ($)", min_value=0.0, key="trade_value")
-    money_down = st.number_input("Money Down ($)", min_value=0.0, key="default_money_down")
+    money_down = st.number_input(
+        "Money Down ($)", min_value=0.0, key="default_money_down"
+    )
     return trade_value, money_down
 
 
-def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[int], List[int]]:
+def render_filters_section(
+    quote_options: List[Dict[str, Any]],
+) -> Tuple[List[int], List[int]]:
     """Render filters for lease terms and mileages."""
     terms = sorted({opt["term"] for opt in quote_options})
     mileages = sorted({opt["mileage"] for opt in quote_options})
@@ -64,7 +63,9 @@ def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[in
     return term_filter, mileage_filter
 
 
-def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, float, str, List[int], List[int]]:
+def render_right_sidebar(
+    quote_options: List[Dict[str, Any]],
+) -> Tuple[float, float, str, List[int], List[int]]:
     """Render sidebar with trade value, filters, and summary."""
     st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
     st.header("Financial Settings")
@@ -72,7 +73,7 @@ def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, fl
         trade_value, money_down = render_trade_down_section()
     with st.expander("Filters"):
         term_filter, mileage_filter = render_filters_section(quote_options)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
     sort_by = DEFAULT_SORT_BY  # This could be made user-configurable in the future
     return trade_value, money_down, sort_by, term_filter, mileage_filter
 
@@ -82,7 +83,7 @@ def render_quote_card(
     option_key: str,
     trade_value: float,
     money_down: float,
-    tax_rate: float
+    tax_rate: float,
 ) -> None:
     """Display a single quote card with all elements enclosed in one box."""
     if "selected_quotes" not in st.session_state:
@@ -91,32 +92,31 @@ def render_quote_card(
     css_class = "selected-quote" if is_selected else "quote-card"
 
     # Start the outer container and quote card
-    st.markdown('<div class="quote-card-retainer">', unsafe_allow_html=True)
-    st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
-
-    # Group all elements within the box
     with st.container():
+        st.markdown('<div class="quote-card-retainer">', unsafe_allow_html=True)
+        st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
+
         # Term and mileage
         st.markdown(
             f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>',
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         # Selling Price input
         new_selling_price = st.number_input(
             "Selling Price ($)",
-            value=float(option['selling_price']),
+            value=float(option["selling_price"]),
             key=f"sp_{option_key}",
             step=100.0,
-            min_value=0.0
+            min_value=0.0,
         )
 
         # Lease Cash Used input
         new_lease_cash = st.number_input(
             f"Lease Cash Used (Max: ${option['available_lease_cash']:.2f})",
             min_value=0.0,
-            max_value=float(option['available_lease_cash']),
-            value=float(option['lease_cash_used']),
+            max_value=float(option["available_lease_cash"]),
+            value=float(option["lease_cash_used"]),
             key=f"lc_{option_key}",
             step=100.0,
         )
@@ -126,19 +126,22 @@ def render_quote_card(
             payment_data = calculate_option_payment(
                 selling_price=new_selling_price,
                 lease_cash_used=new_lease_cash,
-                residual_value=option['residual_value'],
-                money_factor=option['money_factor'],
-                term=option['term'],
+                residual_value=option["residual_value"],
+                money_factor=option["money_factor"],
+                term=option["term"],
                 trade_val=trade_value,
                 cash_down=money_down,
-                tax_rt=tax_rate
+                tax_rt=tax_rate,
             )
             st.markdown(
                 f'<div class="payment-highlight">${payment_data["payment"]:,.2f}/mo</div>',
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
         except Exception as e:
-            st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="payment-highlight">Monthly Payment: N/A</div>',
+                unsafe_allow_html=True,
+            )
 
-    # Close both containers
-    st.markdown("</div></div>", unsafe_allow_html=True)
+        # Close quote card markup
+        st.markdown("</div></div>", unsafe_allow_html=True)
