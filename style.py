@@ -87,54 +87,50 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
     margin: 0.25rem 0 !important;
 }
 
-/* DEBUG STYLING FOR QUOTE CARDS */
-.quote-card, .selected-quote {
-    border: 3px dashed red !important;
-    position: relative;
+/* Quote card retainer wraps each quote for spacing */
+.quote-card-retainer {
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
     padding: 1rem;
     margin-bottom: 1rem;
+    background-color: #f9fafb;
 }
-.quote-card::before, .selected-quote::before {
-    content: "QUOTE CARD CONTAINER";
-    position: absolute;
-    top: -1.25rem;
-    left: 0;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: red;
+
+/* Quote card styling */
+.quote-card,
+.selected-quote {
+    background: white;
+    border: 2px solid #1e3a8a;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    margin: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
-.quote-card .term-mileage {
-    border: 2px dotted orange;
+
+.quote-card div[data-testid="stNumberInput"],
+.quote-card div[data-testid="stMarkdownContainer"] {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.term-mileage {
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+
+.payment-highlight {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #059669;
+    text-align: center;
+    margin: 0;
+    background-color: #f0fff4;
     padding: 0.25rem;
-}
-.quote-card .term-mileage::before {
-    content: "TERM LABEL";
-    font-size: 0.65rem;
-    color: orange;
-    display: block;
-}
-.quote-card div[data-testid="stNumberInput"] {
-    border: 2px solid green;
-    padding: 0.25rem;
-}
-.quote-card div[data-testid="stNumberInput"]::before {
-    content: "NUMBER INPUT";
-    font-size: 0.65rem;
-    color: green;
-    display: block;
-}
-.quote-card .payment-highlight {
-    border: 2px solid blue;
-    background-color: #e0f7ff !important;
-    position: relative;
-}
-.quote-card .payment-highlight::before {
-    content: "PAYMENT HIGHLIGHT";
-    position: absolute;
-    top: -1.25rem;
-    left: 0;
-    font-size: 0.65rem;
-    color: blue;
+    border-radius: 0.375rem;
 }
 
 /* Caption and inner spacing */

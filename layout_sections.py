@@ -90,7 +90,8 @@ def render_quote_card(
     is_selected = option_key in st.session_state.selected_quotes
     css_class = "selected-quote" if is_selected else "quote-card"
 
-    # Start the boxed container
+    # Start the outer container and quote card
+    st.markdown('<div class="quote-card-retainer">', unsafe_allow_html=True)
     st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
 
     # Group all elements within the box
@@ -139,5 +140,5 @@ def render_quote_card(
         except Exception as e:
             st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
 
-    # Close the boxed container
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Close both containers
+    st.markdown("</div></div>", unsafe_allow_html=True)
