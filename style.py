@@ -146,5 +146,20 @@ section.main div[data-testid="block-container"] > div[data-testid="stHorizontalB
 div[data-testid="stHorizontalBlock"] {
     margin: 0 !important;
 }
+
+/* Responsive layout for narrow screens */
+@media (max-width: 768px) {
+    section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+    }
+    section.main div[data-testid="block-container"] > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    .quote-card,
+    .selected-quote {
+        margin-bottom: 1rem;
+    }
+}
 </style>
 """
