@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <div id="reader" style="width:100%; max-width: 400px;"></div>
+  <script>
+    const html5QrCode = new Html5Qrcode("reader");
+    function onScanSuccess(decodedText) {
+      window.parent.postMessage({ type: "vin", data: decodedText }, "*");
+      html5QrCode.stop();
+    }
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+  </script>
+</body>
+</html>
