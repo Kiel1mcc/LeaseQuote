@@ -27,3 +27,7 @@ money factor, MSRP, residual value and payment formula components.
 The app now uses a centered layout and includes responsive CSS rules. On narrow
 screens, sidebars and quote cards stack vertically, allowing the tool to be used
 comfortably on phones and tablets.
+
+**Tip:** If you want to use the VIN scanning feature on a phone or tablet, be
+sure to access the app over **HTTPS**. Most browsers require a secure context to
+allow camera access.
