@@ -1,3 +1,4 @@
+import streamlit.components.v1 as components
 import streamlit as st
 from data_loader import load_data
 from layout_sections import render_header, render_right_sidebar, render_quote_card
