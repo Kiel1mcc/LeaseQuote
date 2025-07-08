@@ -112,7 +112,20 @@ def render_quote_card(
 def render_vin_scanner_button() -> None:
     """Display a VIN scanning button and embed the camera interface."""
     if st.button("📷 Scan VIN"):
-        components.iframe("vin_scanner.html", height=350, scrolling=False)
+        try:
+            with open("vin_scanner.html", "r", encoding="utf-8") as f:
+                scanner_html = f.read()
+            with open("html5-qrcode.min.js", "r", encoding="utf-8") as js_file:
+                qr_script = js_file.read()
+            scanner_html = scanner_html.replace(
+                '<script src="html5-qrcode.min.js" defer></script>',
+                f"<script>{qr_script}</script>",
+            )
+            components.html(scanner_html, height=350, scrolling=False)
+        except FileNotFoundError:
+            st.error("Camera scanner files not found.")
+            return
+
         st.markdown("_(Scan the barcode on the door or windshield label)_")
         st.markdown(
             """
