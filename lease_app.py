@@ -1,8 +1,12 @@
-import streamlit.components.v1 as components
 import streamlit as st
 import pandas as pd
 from data_loader import load_data
-from layout_sections import render_header, render_right_sidebar, render_quote_card
+from layout_sections import (
+    render_header,
+    render_right_sidebar,
+    render_quote_card,
+    render_vin_scanner_button,
+)
 from utils import sort_quote_options
 from style import BASE_CSS
 
@@ -32,7 +36,12 @@ def main() -> None:
             st.text_input("Email Address", "")
 
         with st.expander("Lease Parameters", expanded=True):
-            vin_input = st.text_input("Enter VIN:", "", help="Enter the Vehicle Identification Number to begin.")
+            vin_input = st.text_input(
+                "Enter VIN:",
+                "",
+                help="Enter the Vehicle Identification Number to begin.",
+            )
+            render_vin_scanner_button()
             if vin_input:
                 vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
                 if not vin_data.empty:

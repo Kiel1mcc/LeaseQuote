@@ -108,21 +108,26 @@ def render_quote_card(
         st.markdown("</div></div>", unsafe_allow_html=True)
 
 
-# VIN SCANNER: Embedded camera scanner
-if st.button("📷 Scan VIN"):
-    components.iframe("vin_scanner.html", height=350, scrolling=False)
-    st.markdown("_(Scan the barcode on the door or windshield label)_")
-    st.markdown("""
-    <script>
-    window.addEventListener("message", (event) => {
-        if (event.data.type === "vin") {
-            const vin = event.data.data;
-            const input = window.parent.document.querySelector('input[data-baseweb="input"]');
-            if (input) {
-                input.value = vin;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
+
+def render_vin_scanner_button() -> None:
+    """Display a VIN scanning button and embed the camera interface."""
+    if st.button("📷 Scan VIN"):
+        components.iframe("vin_scanner.html", height=350, scrolling=False)
+        st.markdown("_(Scan the barcode on the door or windshield label)_")
+        st.markdown(
+            """
+            <script>
+            window.addEventListener("message", (event) => {
+                if (event.data.type === "vin") {
+                    const vin = event.data.data;
+                    const input = window.parent.document.querySelector('input[data-baseweb="input"]');
+                    if (input) {
+                        input.value = vin;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            });
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
