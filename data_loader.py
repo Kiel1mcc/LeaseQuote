@@ -9,6 +9,14 @@ def load_data():
 
     vehicle_data = pd.read_excel("Locator_Detail_Updated.xlsx")
     vehicle_data.columns = vehicle_data.columns.str.strip()
+    if "MSRP" in vehicle_data.columns:
+        vehicle_data["MSRP"] = (
+            vehicle_data["MSRP"]
+            .astype(str)
+            .str.replace("$", "", regex=False)
+            .str.replace(",", "", regex=False)
+        )
+        vehicle_data["MSRP"] = pd.to_numeric(vehicle_data["MSRP"], errors="coerce")
 
     county_tax_rates = pd.read_csv("County_Tax_Rates.csv")
     county_tax_rates.columns = county_tax_rates.columns.str.strip()
