@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Load html5-qrcode from CDN to avoid bundling the library locally -->
-  <script src="https://raw.githubusercontent.com/mebjas/html5-qrcode/master/minified/html5-qrcode.min.js" async></script>
+  <!-- Use local html5-qrcode copy to avoid network issues -->
+  <script src="html5-qrcode.min.js" defer></script>
 </head>
 <body>
   <div id="reader" style="width:100%; max-width: 400px;"></div>
