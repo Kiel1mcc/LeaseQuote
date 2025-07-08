@@ -12,7 +12,7 @@ from style import BASE_CSS
 
 
 def main() -> None:
-    st.set_page_config(page_title="Lease Quote Tool", layout="centered", initial_sidebar_state="auto")
+    st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="auto")
     st.markdown(BASE_CSS, unsafe_allow_html=True)
 
     if 'selected_quotes' not in st.session_state:
