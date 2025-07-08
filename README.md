@@ -24,7 +24,7 @@ money factor, MSRP, residual value and payment formula components.
 
 ## Mobile Support
 
-The app now uses a centered layout and includes responsive CSS rules. On narrow
+The app now uses a wide layout and includes responsive CSS rules. On narrow
 screens, sidebars and quote cards stack vertically, allowing the tool to be used
 comfortably on phones and tablets.
 
