@@ -1,5 +1,6 @@
 import streamlit.components.v1 as components
 import streamlit as st
+import pandas as pd
 from data_loader import load_data
 from layout_sections import render_header, render_right_sidebar, render_quote_card
 from utils import sort_quote_options
@@ -78,8 +79,13 @@ def main() -> None:
     lease_info = lease_matches.iloc[0]
     model_year = lease_info.get("Year", "N/A")
     make = lease_info.get("Make", "Hyundai")
-    model = lease_info.get("Model", "N/A")
-    trim = lease_info.get("Trim", "N/A")
+    model = lease_info.get("Model")
+    trim = lease_info.get("Trim")
+
+    if pd.isna(model):
+        model = vehicle.get("Model", "N/A")
+    if pd.isna(trim):
+        trim = vehicle.get("Trim", "N/A")
 
     # Build quote options
     tier_num = int(selected_tier.split(" ")[1])
