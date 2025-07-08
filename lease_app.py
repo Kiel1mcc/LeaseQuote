@@ -36,9 +36,14 @@ def main() -> None:
                 vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
                 if not vin_data.empty:
                     vehicle = vin_data.iloc[0]
+                    msrp_value = vehicle.get("MSRP", 0)
+                    try:
+                        msrp_display = float(str(msrp_value).replace("$", "").replace(",", ""))
+                    except (TypeError, ValueError):
+                        msrp_display = 0.0
                     st.success("✅ Vehicle Found!")
                     st.write(f"**Model:** {vehicle.get('ModelNumber', 'N/A')}")
-                    st.write(f"**MSRP:** ${vehicle.get('MSRP', 0):,.2f}")
+                    st.write(f"**MSRP:** ${msrp_display:,.2f}")
                 else:
                     st.warning("❌ Vehicle not found in inventory")
 
@@ -59,7 +64,11 @@ def main() -> None:
 
     vehicle = vin_data.iloc[0]
     model_number = vehicle["ModelNumber"]
-    msrp = float(vehicle["MSRP"])
+    msrp_raw = vehicle.get("MSRP", 0)
+    try:
+        msrp = float(str(msrp_raw).replace("$", "").replace(",", ""))
+    except (TypeError, ValueError):
+        msrp = 0.0
 
     lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
     if lease_matches.empty:
