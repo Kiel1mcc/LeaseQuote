@@ -22,7 +22,6 @@ def main() -> None:
 
     try:
         lease_programs, vehicle_data, county_tax_rates = load_data()
-        st.write("Debug: Data loaded successfully")
     except FileNotFoundError:
         st.error("⚠️ Data files not found. Please ensure required files are present.")
         st.stop()
@@ -128,22 +127,18 @@ def main() -> None:
             })
 
     st.session_state.quote_options = quote_options
-    st.write("Debug: Quote options generated", len(quote_options))
 
     # Layout columns
     main_col, right_col = st.columns([2.5, 1], gap="large")
 
     with right_col:
         trade_value, default_money_down, sort_by, term_filter, mileage_filter = render_right_sidebar(quote_options)
-        st.write("Debug: Right sidebar rendered")
 
     with main_col:
         render_header(model_year, make, model, trim, msrp, vin_input)
-        st.write("Debug: Header rendered")
 
         filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
         filtered_options = sort_quote_options(filtered_options, sort_by, trade_value, default_money_down, tax_rate)
-        st.write("Debug: Options filtered and sorted", len(filtered_options))
 
         st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
         cols = st.columns(3, gap="small")  # Reduced gap to minimize white space
@@ -151,7 +146,6 @@ def main() -> None:
             with cols[i % 3]:
                 option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
                 render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
-        st.write("Debug: Quote cards rendered")
 
     st.markdown('<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>', unsafe_allow_html=True)
 
