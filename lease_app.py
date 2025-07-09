@@ -138,7 +138,11 @@ def main() -> None:
             opt for opt in st.session_state.quote_options
             if f"{opt['term']}_{opt['mileage']}_{opt['index']}" in st.session_state.selected_quotes
         ]
-        render_customer_quote_page(selected[:4], st.session_state.get('tax_rate', 0.0))
+        render_customer_quote_page(
+            selected[:4],
+            st.session_state.get('tax_rate', 0.0),
+            st.session_state.get('default_money_down', 0.0),
+        )
         return
 
     # Layout columns
@@ -147,6 +151,7 @@ def main() -> None:
     with right_col:
         trade_value, default_money_down, sort_by, term_filter, mileage_filter, create_quote_clicked = render_right_sidebar(quote_options)
         if create_quote_clicked:
+            st.session_state.default_money_down = default_money_down
             st.session_state.page = 'print'
 
     with main_col:

@@ -147,7 +147,11 @@ def render_vin_scanner_button() -> None:
             st.warning("\u26A0\uFE0F Couldn't detect a VIN in the image. Try again.")
 
 
-def render_customer_quote_page(selected_options: List[Dict[str, Any]], tax_rate: float) -> None:
+def render_customer_quote_page(
+    selected_options: List[Dict[str, Any]],
+    tax_rate: float,
+    base_down: float,
+) -> None:
     """Display a print-friendly customer quote screen."""
     col1, col2 = st.columns([1, 1])
     if col1.button("\u2190 Back"):
@@ -162,32 +166,28 @@ def render_customer_quote_page(selected_options: List[Dict[str, Any]], tax_rate:
         st.info("No quotes selected")
         return
 
-    cols = st.columns(len(selected_options))
-    for col, opt in zip(cols, selected_options[:4]):
-        with col:
-            st.markdown(f"### {opt['term']} Mo | {opt['mileage']:,} mi/yr")
-            for down in [0, 1500, 2500]:
-                payment = calculate_option_payment(
-                    selling_price=opt['selling_price'],
-                    lease_cash_used=opt['lease_cash_used'],
-                    residual_value=opt['residual_value'],
-                    money_factor=opt['money_factor'],
-                    term=opt['term'],
-                    trade_val=0.0,
-                    cash_down=down,
-                    tax_rt=tax_rate,
-                )["payment"]
-                st.write(f"${down:,.0f} Down: ${payment:,.2f}/mo")
-            custom_key = f"custom_down_{opt['index']}"
-            custom_down = st.number_input("Custom Down", value=0.0, key=custom_key, step=100.0)
-            custom_payment = calculate_option_payment(
+    # Header row showing each selected term/mileage
+    header_cols = st.columns(len(selected_options) + 1)
+    header_cols[0].markdown("**Down Payment**")
+    for col, opt in zip(header_cols[1:], selected_options[:4]):
+        col.markdown(f"**{opt['term']} Mo | {opt['mileage']:,} mi/yr**")
+
+    # Generate three editable down-payment rows
+    default_rows = [base_down + 1500 * i for i in range(3)]
+    for row_idx, default_val in enumerate(default_rows):
+        row_cols = st.columns(len(selected_options) + 1)
+        down_val = row_cols[0].number_input(
+            f"Down {row_idx + 1} ($)", value=float(default_val), key=f"row_down_{row_idx}", step=100.0
+        )
+        for col, opt in zip(row_cols[1:], selected_options[:4]):
+            payment = calculate_option_payment(
                 selling_price=opt['selling_price'],
                 lease_cash_used=opt['lease_cash_used'],
                 residual_value=opt['residual_value'],
                 money_factor=opt['money_factor'],
                 term=opt['term'],
                 trade_val=0.0,
-                cash_down=custom_down,
+                cash_down=down_val,
                 tax_rt=tax_rate,
             )["payment"]
-            st.write(f"Custom: ${custom_payment:,.2f}/mo")
+            col.write(f"${payment:,.2f}/mo")
