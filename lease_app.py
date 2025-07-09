@@ -22,6 +22,8 @@ def main() -> None:
         st.session_state.quote_options = []
     if 'page' not in st.session_state:
         st.session_state.page = 'quote'
+    if 'selected_down_payment' not in st.session_state:
+        st.session_state.selected_down_payment = 0.0
 
     try:
         lease_programs, vehicle_data, county_tax_rates = load_data()
@@ -141,7 +143,8 @@ def main() -> None:
         render_customer_quote_page(
             selected[:4],
             st.session_state.get('tax_rate', 0.0),
-            st.session_state.get('default_money_down', 0.0),
+            st.session_state.get('selected_down_payment',
+                                st.session_state.get('default_money_down', 0.0)),
         )
         return
 
@@ -151,7 +154,7 @@ def main() -> None:
     with right_col:
         trade_value, default_money_down, sort_by, term_filter, mileage_filter, create_quote_clicked = render_right_sidebar(quote_options)
         if create_quote_clicked:
-            st.session_state.default_money_down = default_money_down
+            st.session_state.selected_down_payment = default_money_down
             st.session_state.page = 'print'
 
     with main_col:
