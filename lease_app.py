@@ -40,13 +40,15 @@ def main() -> None:
             st.text_input("Email Address", "")
 
         with st.expander("Lease Parameters", expanded=True):
+            scanned_vin = render_vin_scanner_button()
+            if scanned_vin:
+                st.session_state.vin_input = scanned_vin
             vin_input = st.text_input(
                 "Enter VIN:",
                 value=st.session_state.get("vin_input", ""),
                 key="vin_input",
                 help="Enter the Vehicle Identification Number to begin.",
             )
-            render_vin_scanner_button()
             if vin_input:
                 vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
                 if not vin_data.empty:
