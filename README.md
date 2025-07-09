@@ -11,6 +11,9 @@ pip install -r requirements.txt
 streamlit run lease_app.py
 ```
 
+Do **not** run the file directly with `python lease_app.py`. Session state and
+other features only work when launching the app through the `streamlit` command.
+
 ## Adjusting settings
 
 Financial parameters are configured directly from the sidebar. Available options
