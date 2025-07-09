@@ -1,6 +1,7 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from PIL import Image, UnidentifiedImageError
+import pytesseract
+import re
 from utils import calculate_option_payment
 from typing import List, Dict, Tuple, Any
 
@@ -109,38 +110,27 @@ def render_quote_card(
 
 
 
-def render_vin_scanner_button() -> None:
-    """Display a VIN scanning button and embed the camera interface."""
-    if st.button("📷 Scan VIN"):
-        try:
-            with open("vin_scanner.html", "r", encoding="utf-8") as f:
-                scanner_html = f.read()
-            with open("html5-qrcode.min.js", "r", encoding="utf-8") as js_file:
-                qr_script = js_file.read()
-            scanner_html = scanner_html.replace(
-                '<script src="html5-qrcode.min.js" defer></script>',
-                f"<script>{qr_script}</script>",
-            )
-            components.html(scanner_html, height=350, scrolling=False)
-        except FileNotFoundError:
-            st.error("Camera scanner files not found.")
-            return
+def extract_vin_from_image(image_file):
+    """Return a VIN string from an uploaded image if detected."""
+    image = Image.open(image_file)
+    text = pytesseract.image_to_string(image)
+    vin_match = re.search(r"\b[A-HJ-NPR-Z0-9]{17}\b", text)
+    if vin_match:
+        return vin_match.group(0)
+    return None
 
-        st.markdown("_(Scan the barcode on the door or windshield label)_")
-        st.markdown(
-            """
-            <script>
-            window.addEventListener("message", (event) => {
-                if (event.data.type === "vin") {
-                    const vin = event.data.data;
-                    const input = window.parent.document.querySelector('input[data-baseweb="input"]');
-                    if (input) {
-                        input.value = vin;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                }
-            });
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
+
+def render_vin_scanner_button() -> None:
+    """Allow user to upload a VIN photo and autofill the text input."""
+    uploaded_file = st.file_uploader(
+        "\U0001F4F7 Take or upload a photo of the VIN label",
+        type=["jpg", "jpeg", "png"],
+        key="vin_photo_uploader",
+    )
+    if uploaded_file:
+        vin = extract_vin_from_image(uploaded_file)
+        if vin:
+            st.success(f"\u2705 VIN Detected: {vin}")
+            st.session_state.vin_input = vin
+        else:
+            st.warning("\u26A0\uFE0F Couldn't detect a VIN in the image. Try again.")

@@ -37,7 +37,8 @@ def main() -> None:
         with st.expander("Lease Parameters", expanded=True):
             vin_input = st.text_input(
                 "Enter VIN:",
-                "",
+                value=st.session_state.get("vin_input", ""),
+                key="vin_input",
                 help="Enter the Vehicle Identification Number to begin.",
             )
             render_vin_scanner_button()
