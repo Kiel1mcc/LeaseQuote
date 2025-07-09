@@ -131,8 +131,8 @@ def extract_vin_from_image(image_file):
     return None
 
 
-def render_vin_scanner_button() -> None:
-    """Allow user to upload a VIN photo and autofill the text input."""
+def render_vin_scanner_button() -> str | None:
+    """Allow user to upload a VIN photo and return the detected text."""
     uploaded_file = st.file_uploader(
         "\U0001F4F7 Take or upload a photo of the VIN label",
         type=["jpg", "jpeg", "png"],
@@ -142,9 +142,9 @@ def render_vin_scanner_button() -> None:
         vin = extract_vin_from_image(uploaded_file)
         if vin:
             st.success(f"\u2705 VIN Detected: {vin}")
-            st.session_state.vin_input = vin
-        else:
-            st.warning("\u26A0\uFE0F Couldn't detect a VIN in the image. Try again.")
+            return vin
+        st.warning("\u26A0\uFE0F Couldn't detect a VIN in the image. Try again.")
+    return None
 
 
 def render_customer_quote_page(
