@@ -6,6 +6,7 @@ from layout_sections import (
     render_right_sidebar,
     render_quote_card,
     render_vin_scanner_button,
+    render_customer_quote_page,
 )
 from utils import sort_quote_options
 from style import BASE_CSS
@@ -16,9 +17,11 @@ def main() -> None:
     st.markdown(BASE_CSS, unsafe_allow_html=True)
 
     if 'selected_quotes' not in st.session_state:
-        st.session_state.selected_quotes = []
+        st.session_state.selected_quotes = set()
     if 'quote_options' not in st.session_state:
         st.session_state.quote_options = []
+    if 'page' not in st.session_state:
+        st.session_state.page = 'quote'
 
     try:
         lease_programs, vehicle_data, county_tax_rates = load_data()
@@ -61,6 +64,7 @@ def main() -> None:
             counties = sorted(county_tax_rates["County"].tolist())
             selected_county = st.selectbox("County:", counties, index=counties.index("Marion"))
             tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
+            st.session_state.tax_rate = tax_rate
 
     if not vin_input:
         st.title("Lease Quote Generator")
@@ -129,11 +133,21 @@ def main() -> None:
 
     st.session_state.quote_options = quote_options
 
+    if st.session_state.page == 'print':
+        selected = [
+            opt for opt in st.session_state.quote_options
+            if f"{opt['term']}_{opt['mileage']}_{opt['index']}" in st.session_state.selected_quotes
+        ]
+        render_customer_quote_page(selected[:4], st.session_state.get('tax_rate', 0.0))
+        return
+
     # Layout columns
     main_col, right_col = st.columns([2.5, 1], gap="large")
 
     with right_col:
-        trade_value, default_money_down, sort_by, term_filter, mileage_filter = render_right_sidebar(quote_options)
+        trade_value, default_money_down, sort_by, term_filter, mileage_filter, create_quote_clicked = render_right_sidebar(quote_options)
+        if create_quote_clicked:
+            st.session_state.page = 'print'
 
     with main_col:
         render_header(model_year, make, model, trim, msrp, vin_input)

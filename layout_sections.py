@@ -44,16 +44,19 @@ def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[in
     return term_filter, mileage_filter
 
 
-def render_right_sidebar(quote_options: List[Dict[str, Any]]) -> Tuple[float, float, str, List[int], List[int]]:
+def render_right_sidebar(
+    quote_options: List[Dict[str, Any]]
+) -> Tuple[float, float, str, List[int], List[int], bool]:
     st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
     st.header("Financial Settings")
     with st.expander("Trade & Down Payment", expanded=True):
         trade_value, money_down = render_trade_down_section()
+        create_quote_clicked = st.button("Create Customer Quote")
     with st.expander("Filters"):
         term_filter, mileage_filter = render_filters_section(quote_options)
     st.markdown("</div>", unsafe_allow_html=True)
     sort_by = DEFAULT_SORT_BY
-    return trade_value, money_down, sort_by, term_filter, mileage_filter
+    return trade_value, money_down, sort_by, term_filter, mileage_filter, create_quote_clicked
 
 
 def render_quote_card(
@@ -106,6 +109,14 @@ def render_quote_card(
         except Exception:
             st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
 
+        selected = st.checkbox(
+            "Include", value=is_selected, key=f"sel_{option_key}"
+        )
+        if selected:
+            st.session_state.selected_quotes.add(option_key)
+        else:
+            st.session_state.selected_quotes.discard(option_key)
+
         st.markdown("</div></div>", unsafe_allow_html=True)
 
 
@@ -134,3 +145,49 @@ def render_vin_scanner_button() -> None:
             st.session_state.vin_input = vin
         else:
             st.warning("\u26A0\uFE0F Couldn't detect a VIN in the image. Try again.")
+
+
+def render_customer_quote_page(selected_options: List[Dict[str, Any]], tax_rate: float) -> None:
+    """Display a print-friendly customer quote screen."""
+    col1, col2 = st.columns([1, 1])
+    if col1.button("\u2190 Back"):
+        st.session_state.page = "quote"
+    if col2.button("Print"):
+        st.session_state.trigger_print = True
+    if st.session_state.get("trigger_print"):
+        st.markdown("<script>window.print()</script>", unsafe_allow_html=True)
+        st.session_state.trigger_print = False
+
+    if not selected_options:
+        st.info("No quotes selected")
+        return
+
+    cols = st.columns(len(selected_options))
+    for col, opt in zip(cols, selected_options[:4]):
+        with col:
+            st.markdown(f"### {opt['term']} Mo | {opt['mileage']:,} mi/yr")
+            for down in [0, 1500, 2500]:
+                payment = calculate_option_payment(
+                    selling_price=opt['selling_price'],
+                    lease_cash_used=opt['lease_cash_used'],
+                    residual_value=opt['residual_value'],
+                    money_factor=opt['money_factor'],
+                    term=opt['term'],
+                    trade_val=0.0,
+                    cash_down=down,
+                    tax_rt=tax_rate,
+                )["payment"]
+                st.write(f"${down:,.0f} Down: ${payment:,.2f}/mo")
+            custom_key = f"custom_down_{opt['index']}"
+            custom_down = st.number_input("Custom Down", value=0.0, key=custom_key, step=100.0)
+            custom_payment = calculate_option_payment(
+                selling_price=opt['selling_price'],
+                lease_cash_used=opt['lease_cash_used'],
+                residual_value=opt['residual_value'],
+                money_factor=opt['money_factor'],
+                term=opt['term'],
+                trade_val=0.0,
+                cash_down=custom_down,
+                tax_rt=tax_rate,
+            )["payment"]
+            st.write(f"Custom: ${custom_payment:,.2f}/mo")
