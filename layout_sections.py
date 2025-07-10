@@ -225,17 +225,24 @@ def render_customer_quote_page(
         ])
     )
 
-    option_labels = [
-        f"Option {i + 1}: {opt['term']} Mo | {opt['mileage']:,} mi/yr"
-        for i, opt in enumerate(selected_options)
-    ]
-    selected = st.radio(
-        "\u2705 Select the lease option that works for you:",
-        options=option_labels,
-        key="customer_selected_option",
-    )
-    selection_value = st.session_state.get("customer_selected_option", option_labels[0] if option_labels else "")
-    st.markdown(f"**Customer Selected:** {selection_value}")
+    st.markdown("### Lease Options", unsafe_allow_html=True)
+    for opt in selected_options:
+        payment_data = calculate_option_payment(
+            opt['selling_price'],
+            opt['lease_cash_used'],
+            opt['residual_value'],
+            opt['money_factor'],
+            opt['term'],
+            0.0,
+            base_down,
+            tax_rate,
+        )
+        payment = payment_data["payment"]
+        total_cost = payment * opt['term'] + base_down
+        st.markdown(
+            f"<div style='font-size:16px;padding:4px 0;'>&#x2610; <strong>${base_down:,.2f} Down</strong> — {opt['term']} Mo | {opt['mileage']:,} mi/yr — <strong>${payment:,.2f}/mo</strong> (Total: ${total_cost:,.2f})</div>",
+            unsafe_allow_html=True,
+        )
 
     # Signature Line (printable)
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
