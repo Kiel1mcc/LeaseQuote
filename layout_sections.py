@@ -6,7 +6,6 @@ from utils import calculate_option_payment
 from pdf_utils import generate_quote_pdf
 from typing import List, Dict, Tuple, Any
 from datetime import datetime
-import pandas as pd
 
 LOGO_PATH = "drivepath_logo.png"
 LOGO_WIDTH = 300
@@ -200,49 +199,35 @@ def render_customer_quote_page(
         f"**Dealership:** Mathew's Hyundai | **Date:** {datetime.today().strftime('%B %d, %Y')}"
     )
 
-    # Table
-    data = {"Down Payment": []}
-    for opt in selected_options:
-        data[f"{opt['term']} Mo | {opt['mileage']:,} mi/yr"] = []
+    st.markdown("### Please select the term and mileage limit you would like us to submit to the bank.\n")
 
+    header_html = "<table style=\"width:100%; font-size:16px; border-collapse:collapse;\"><tr><th align='left'>Down Payment</th>"
+    for opt in selected_options:
+        header_html += f"<th align='left'>{opt['term']} Mo | {opt['mileage']:,} mi/yr</th>"
+    header_html += "</tr>"
+
+    body_html = ""
     default_rows = [base_down + 1500 * i for i in range(3)]
-    for row_idx, default_val in enumerate(default_rows):
-        down_val = default_val
-        data["Down Payment"].append(f"${down_val:,.2f}")
+    for down_val in default_rows:
+        body_html += "<tr>"
+        body_html += f"<td>&#x2610; ${down_val:,.2f} Down</td>"
         for opt in selected_options:
             payment_data = calculate_option_payment(
-                opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
-                opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
+                opt['selling_price'],
+                opt['lease_cash_used'],
+                opt['residual_value'],
+                opt['money_factor'],
+                opt['term'],
+                0.0,
+                down_val,
+                tax_rate,
             )
-            payment = payment_data["payment"]
-            total_cost = payment * opt['term'] + down_val
-            data[f"{opt['term']} Mo | {opt['mileage']:,} mi/yr"].append(f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
+            payment = payment_data['payment']
+            body_html += f"<td>${payment:,.2f}/mo</td>"
+        body_html += "</tr>"
 
-    df = pd.DataFrame(data)
-    st.dataframe(
-        df.style.set_properties(**{'text-align': 'right'}).set_table_styles([
-            {'selector': 'th', 'props': [('text-align', 'center'), ('background-color', '#f2f2f2'), ('font-weight', 'bold')]}
-        ])
-    )
-
-    st.markdown("### Lease Options", unsafe_allow_html=True)
-    for opt in selected_options:
-        payment_data = calculate_option_payment(
-            opt['selling_price'],
-            opt['lease_cash_used'],
-            opt['residual_value'],
-            opt['money_factor'],
-            opt['term'],
-            0.0,
-            base_down,
-            tax_rate,
-        )
-        payment = payment_data["payment"]
-        total_cost = payment * opt['term'] + base_down
-        st.markdown(
-            f"<div style='font-size:16px;padding:4px 0;'>&#x2610; <strong>${base_down:,.2f} Down</strong> — {opt['term']} Mo | {opt['mileage']:,} mi/yr — <strong>${payment:,.2f}/mo</strong> (Total: ${total_cost:,.2f})</div>",
-            unsafe_allow_html=True,
-        )
+    footer_html = "</table>"
+    st.markdown(header_html + body_html + footer_html, unsafe_allow_html=True)
 
     # Signature Line (printable)
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)

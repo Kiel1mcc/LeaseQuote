@@ -63,11 +63,10 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
                 tax_rate,
             )
             payment = payment_data["payment"]
-            total_cost = payment * opt['term'] + down_val
             c.drawRightString(
                 1 * inch + col_widths[0] + (i + 1) * col_widths[1] - 0.1 * inch,
                 y,
-                f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})",
+                f"${payment:,.2f}/mo",
             )
         y -= 0.3 * inch
 
@@ -84,11 +83,10 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
             tax_rate,
         )
         payment = payment_data["payment"]
-        total_cost = payment * opt['term'] + base_down
         c.drawString(
             1 * inch,
             y,
-            f"\u2610 ${base_down:,.2f} Down \u2014 {opt['term']} Mo | {opt['mileage']:,} mi/yr \u2014 ${payment:,.2f}/mo (Total: ${total_cost:,.2f})",
+            f"\u2610 ${base_down:,.2f} Down \u2014 {opt['term']} Mo | {opt['mileage']:,} mi/yr \u2014 ${payment:,.2f}/mo",
         )
         y -= 0.25 * inch
 
