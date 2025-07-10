@@ -165,6 +165,45 @@ def render_customer_quote_page(
     base_down: float,
 ) -> None:
     """Display a print-friendly customer quote screen."""
+    st.markdown(
+        """
+        <style>
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                font-size: 14px;
+            }
+
+            th, td {
+                border: 1px solid #000;
+                padding: 6px 10px;
+                text-align: left;
+            }
+
+            td::before {
+                content: '';
+            }
+
+            td.checkbox::before {
+                content: '☐ ';
+                font-size: 16px;
+            }
+
+            /* Hide sidebar, buttons, unnecessary Streamlit UI */
+            header, footer, .stSidebar, .st-emotion-cache-1dtefog {
+                display: none !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     col1, col2, col3 = st.columns([1, 1, 2])
     if col1.button("\u2190 Back"):
         st.session_state.page = "quote"
@@ -223,7 +262,7 @@ def render_customer_quote_page(
                 tax_rate,
             )
             payment = payment_data['payment']
-            body_html += f"<td>&#x2610; ${payment:,.2f}/mo</td>"
+            body_html += f"<td class=\"checkbox\">${payment:,.2f}/mo</td>"
         body_html += "</tr>"
 
     footer_html = "</table>"
