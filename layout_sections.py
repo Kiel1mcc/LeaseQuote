@@ -210,7 +210,7 @@ def render_customer_quote_page(
     default_rows = [base_down + 1500 * i for i in range(3)]
     for down_val in default_rows:
         body_html += "<tr>"
-        body_html += f"<td>&#x2610; ${down_val:,.2f} Down</td>"
+        body_html += f"<td><strong>${down_val:,.2f} Down</strong></td>"
         for opt in selected_options:
             payment_data = calculate_option_payment(
                 opt['selling_price'],
@@ -223,7 +223,7 @@ def render_customer_quote_page(
                 tax_rate,
             )
             payment = payment_data['payment']
-            body_html += f"<td>${payment:,.2f}/mo</td>"
+            body_html += f"<td>&#x2610; ${payment:,.2f}/mo</td>"
         body_html += "</tr>"
 
     footer_html = "</table>"
