@@ -3,6 +3,7 @@ from PIL import Image, UnidentifiedImageError
 import pytesseract
 import re
 from utils import calculate_option_payment
+from pdf_utils import generate_quote_pdf
 from typing import List, Dict, Tuple, Any
 from datetime import datetime
 import pandas as pd
@@ -250,8 +251,24 @@ def render_customer_quote_page(
 
     # PDF Export Button (updated below)
     if st.button("Export PDF"):
-        pdf_buffer = generate_pdf_quote(selected_options, tax_rate, base_down, customer_name)
-        st.download_button("Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf")
+        vehicle_info = {
+            "year": st.session_state.get("model_year", "N/A"),
+            "make": st.session_state.get("make", "N/A"),
+            "model": st.session_state.get("model", "N/A"),
+            "trim": st.session_state.get("trim", "N/A"),
+            "msrp": st.session_state.get("msrp", 0.0),
+            "vin": st.session_state.get("vin", "N/A"),
+        }
+        pdf_buffer = generate_quote_pdf(
+            selected_options,
+            tax_rate,
+            base_down,
+            customer_name,
+            vehicle_info,
+        )
+        st.download_button(
+            "Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf"
+        )
     
     st.markdown("---")
     st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")

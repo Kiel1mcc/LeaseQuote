@@ -11,9 +11,7 @@ from layout_sections import (
 )
 from utils import sort_quote_options
 from style import BASE_CSS
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from io import BytesIO
+from pdf_utils import generate_quote_pdf
 
 def main() -> None:
     st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="auto")
@@ -109,6 +107,8 @@ def main() -> None:
         msrp = float(str(msrp_raw).replace("$", "").replace(",", ""))
     except (TypeError, ValueError):
         msrp = 0.0
+    st.session_state.msrp = msrp
+    st.session_state.vin = vin_input
 
     lease_matches = lease_programs[lease_programs["ModelNumber"] == model_number]
     if lease_matches.empty:
@@ -125,6 +125,10 @@ def main() -> None:
         model = vehicle.get("Model", "N/A")
     if pd.isna(trim):
         trim = vehicle.get("Trim", "N/A")
+    st.session_state.model_year = model_year
+    st.session_state.make = make
+    st.session_state.model = model
+    st.session_state.trim = trim
 
     # Build quote options (with spinner)
     with st.spinner("Generating quote options..."):
@@ -174,8 +178,27 @@ def main() -> None:
         )
         # New: PDF Export
         if st.button("Export PDF"):
-            pdf_buffer = generate_pdf_quote(selected, tax_rate, st.session_state.selected_down_payment, customer_name)
-            st.download_button("Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf")
+            vehicle_info = {
+                "year": st.session_state.get("model_year", "N/A"),
+                "make": st.session_state.get("make", "N/A"),
+                "model": st.session_state.get("model", "N/A"),
+                "trim": st.session_state.get("trim", "N/A"),
+                "msrp": st.session_state.get("msrp", 0.0),
+                "vin": st.session_state.get("vin", "N/A"),
+            }
+            pdf_buffer = generate_quote_pdf(
+                selected,
+                tax_rate,
+                st.session_state.selected_down_payment,
+                customer_name,
+                vehicle_info,
+            )
+            st.download_button(
+                "Download Quote PDF",
+                pdf_buffer,
+                "lease_quote.pdf",
+                "application/pdf",
+            )
         return
 
     # Layout columns
@@ -213,58 +236,10 @@ def main() -> None:
                 option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
                 render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
 
-    st.markdown('<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>', unsafe_allow_html=True)
-
-
-def generate_pdf_quote(selected_options, tax_rate, base_down, customer_name):
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    # Header
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(1*inch, height - 1*inch, "Lease Quote Summary")
-    c.setFont("Helvetica", 10)
-    c.drawString(1*inch, height - 1.3*inch, f"Customer: {customer_name}")
-    c.drawString(1*inch, height - 1.5*inch, f"Vehicle: {model_year} {make} {model} {trim} | MSRP: ${msrp:,.2f} | VIN: {vin}")
-    c.drawString(1*inch, height - 1.7*inch, f"Dealership: Mathew's Hyundai | Date: {datetime.today().strftime('%B %d, %Y')}")
-
-    # Table
-    y = height - 2.2*inch
-    default_rows = [base_down + 1500 * i for i in range(3)]
-    col_widths = [1.5*inch] + [2*inch] * len(selected_options)
-
-    # Headers
-    c.drawString(1*inch, y, "Down Payment")
-    for i, opt in enumerate(selected_options):
-        c.drawCentredString(1*inch + col_widths[0] + i*col_widths[1] + col_widths[1]/2, y, f"{opt['term']} Mo | {opt['mileage']:,} mi/yr")
-    y -= 0.3*inch
-
-    for row_idx, default_val in enumerate(default_rows):
-        down_val = default_val
-        c.drawString(1*inch, y, f"${down_val:,.2f}")
-        for i, opt in enumerate(selected_options):
-            payment_data = calculate_option_payment(
-                opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
-                opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
-            )
-            payment = payment_data["payment"]
-            total_cost = payment * opt['term'] + down_val
-            c.drawRightString(1*inch + col_widths[0] + (i+1)*col_widths[1] - 0.1*inch, y, f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
-        y -= 0.3*inch
-
-    # Signature Line
-    y -= 1*inch
-    c.drawString(1*inch, y, "Customer Signature: _______________________________ Date: _______________")
-
-    # Disclaimers
-    y -= 0.5*inch
-    c.setFont("Helvetica-Oblique", 8)
-    c.drawString(1*inch, y, "Disclaimers: Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
-
-    c.save()
-    buffer.seek(0)
-    return buffer.getvalue()
+    st.markdown(
+        '<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>',
+        unsafe_allow_html=True,
+    )
 
 if __name__ == "__main__":
     main()
