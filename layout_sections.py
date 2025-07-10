@@ -250,7 +250,7 @@ def render_customer_quote_page(
     st.markdown('</div>', unsafe_allow_html=True)
 
     # PDF Export Button (updated below)
-    if st.button("Export PDF"):
+    if st.button("Export PDF", key="export_pdf_main"):
         vehicle_info = {
             "year": st.session_state.get("model_year", "N/A"),
             "make": st.session_state.get("make", "N/A"),
