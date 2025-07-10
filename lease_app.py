@@ -39,9 +39,21 @@ def main() -> None:
     with st.sidebar:
         st.header("Vehicle & Customer Info")
         with st.expander("Customer Information", expanded=True):
-            customer_name = st.text_input("Customer Name", help="Enter full name for quotes")
-            st.text_input("Phone Number", help="For follow-up contact")
-            st.text_input("Email Address", help="To send quotes")
+            customer_name = st.text_input(
+                "Customer Name",
+                key="customer_name",
+                help="Enter full name for quotes",
+            )
+            st.text_input(
+                "Phone Number",
+                key="phone_number",
+                help="For follow-up contact",
+            )
+            st.text_input(
+                "Email Address",
+                key="email",
+                help="To send quotes",
+            )
 
         with st.expander("Lease Parameters", expanded=True):
             # Updated VIN scanner with camera input
