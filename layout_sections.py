@@ -4,6 +4,8 @@ import pytesseract
 import re
 from utils import calculate_option_payment
 from typing import List, Dict, Tuple, Any
+from datetime import datetime
+import pandas as pd
 
 LOGO_PATH = "drivepath_logo.png"
 LOGO_WIDTH = 300
@@ -163,42 +165,71 @@ def render_customer_quote_page(
     base_down: float,
 ) -> None:
     """Display a print-friendly customer quote screen."""
-    col1, col2 = st.columns([1, 1])
+    col1, col2, col3 = st.columns([1, 1, 2])
     if col1.button("\u2190 Back"):
         st.session_state.page = "quote"
     if col2.button("Print"):
-        st.session_state.trigger_print = True
-    if st.session_state.get("trigger_print"):
-        st.markdown("<script>window.print()</script>", unsafe_allow_html=True)
-        st.session_state.trigger_print = False
+        st.markdown("""
+            <script>
+            window.print();
+            </script>
+        """, unsafe_allow_html=True)
+    col3.info("If print dialog doesn't open, use Ctrl+P (Windows) or Cmd+P (Mac).")
 
     if not selected_options:
         st.info("No quotes selected")
         return
 
-    st.markdown("### Lease Quote Summary")
-    st.write("**Dealership:** Mathew's Hyundai | **Date:** July 10, 2025")  # Hardcoded; make dynamic if needed
+    # Professional Header
+    st.markdown('<div class="quote-summary">', unsafe_allow_html=True)
+    st.subheader("Lease Quote Summary")
+    customer_name = st.session_state.get('customer_name', 'N/A')  # Assume stored in session from sidebar input
+    vehicle_details = f"{st.session_state.get('model_year', 'N/A')} {st.session_state.get('make', 'N/A')} {st.session_state.get('model', 'N/A')} {st.session_state.get('trim', 'N/A')} | MSRP: ${st.session_state.get('msrp', 0):,.2f} | VIN: {st.session_state.get('vin', 'N/A')}"
+    st.write(f"**Customer:** {customer_name}")
+    st.write(f"**Vehicle:** {vehicle_details}")
+    st.write(f"**Dealership:** Mathew's Hyundai | **Date:** {datetime.today().strftime('%B %d, %Y')}")
 
-    # Header row
-    header_cols = st.columns(len(selected_options) + 1)
-    header_cols[0].markdown("**Down Payment**")
-    for col, opt in zip(header_cols[1:], selected_options[:4]):
-        col.markdown(f"**{opt['term']} Mo | {opt['mileage']:,} mi/yr**")
+    # Table
+    data = {"Down Payment": []}
+    for opt in selected_options:
+        data[f"{opt['term']} Mo | {opt['mileage']:,} mi/yr"] = []
 
-    # Rows with totals
     default_rows = [base_down + 1500 * i for i in range(3)]
     for row_idx, default_val in enumerate(default_rows):
-        row_cols = st.columns(len(selected_options) + 1)
-        down_val = row_cols[0].number_input(
-            f"Down {row_idx + 1} ($)", value=float(default_val), key=f"row_down_{row_idx}", step=100.0
-        )
-        for col, opt in zip(row_cols[1:], selected_options[:4]):
-            payment = calculate_option_payment(
+        down_val = default_val
+        data["Down Payment"].append(f"${down_val:,.2f}")
+        for opt in selected_options:
+            payment_data = calculate_option_payment(
                 opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
                 opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
-            )["payment"]
-            total_cost = payment * opt['term'] + down_val  # New: Total over term
-            col.write(f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
+            )
+            payment = payment_data["payment"]
+            total_cost = payment * opt['term'] + down_val
+            data[f"{opt['term']} Mo | {opt['mileage']:,} mi/yr"].append(f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
 
+    df = pd.DataFrame(data)
+    st.dataframe(
+        df.style.set_properties(**{'text-align': 'right'}).set_table_styles([
+            {'selector': 'th', 'props': [('text-align', 'center'), ('background-color', '#f2f2f2'), ('font-weight', 'bold')]}
+        ])
+    )
+
+    # Signature Line (printable)
+    st.markdown('<div class="signature-section">', unsafe_allow_html=True)
+    st.write("Customer Signature: _______________________________ Date: _______________")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Disclaimers
+    st.markdown('<div class="disclaimers">', unsafe_allow_html=True)
+    st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # PDF Export Button (updated below)
+    if st.button("Export PDF"):
+        pdf_buffer = generate_pdf_quote(selected_options, tax_rate, base_down, customer_name)
+        st.download_button("Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf")
+    
     st.markdown("---")
     st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
