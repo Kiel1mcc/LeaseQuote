@@ -10,7 +10,9 @@ from layout_sections import (
 )
 from utils import sort_quote_options
 from style import BASE_CSS
-
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
 
 def main() -> None:
     st.set_page_config(page_title="Lease Quote Tool", layout="wide", initial_sidebar_state="auto")
@@ -25,30 +27,37 @@ def main() -> None:
     if 'selected_down_payment' not in st.session_state:
         st.session_state.selected_down_payment = 0.0
 
-    try:
-        lease_programs, vehicle_data, county_tax_rates = load_data()
-    except FileNotFoundError:
-        st.error("⚠️ Data files not found. Please ensure required files are present.")
-        st.stop()
+    with st.spinner("Loading data..."):
+        try:
+            lease_programs, vehicle_data, county_tax_rates = load_data()
+        except FileNotFoundError:
+            st.error("⚠️ Data files not found. Please ensure required files are present.")
+            st.stop()
 
     # Left Sidebar
     with st.sidebar:
         st.header("Vehicle & Customer Info")
         with st.expander("Customer Information", expanded=True):
-            st.text_input("Customer Name", "")
-            st.text_input("Phone Number", "")
-            st.text_input("Email Address", "")
+            customer_name = st.text_input("Customer Name", help="Enter full name for quotes")
+            st.text_input("Phone Number", help="For follow-up contact")
+            st.text_input("Email Address", help="To send quotes")
 
         with st.expander("Lease Parameters", expanded=True):
-            scanned_vin = render_vin_scanner_button()
-            if scanned_vin:
-                st.session_state.vin_input = scanned_vin
+            # Updated VIN scanner with camera input
+            vin_photo = st.camera_input("Scan VIN (or upload)", help="Use camera for quick VIN capture")
+            if vin_photo:
+                vin = extract_vin_from_image(vin_photo)
+                if vin:
+                    st.success(f"✅ VIN Detected: {vin}")
+                    st.session_state.vin_input = vin
             vin_input = st.text_input(
                 "Enter VIN:",
                 value=st.session_state.get("vin_input", ""),
                 key="vin_input",
-                help="Enter the Vehicle Identification Number to begin.",
+                help="17-character VIN; scan above or type manually.",
             )
+            if vin_input and len(vin_input) != 17:
+                st.warning("⚠️ VIN should be 17 characters.")
             if vin_input:
                 vin_data = vehicle_data[vehicle_data["VIN"] == vin_input]
                 if not vin_data.empty:
@@ -64,9 +73,9 @@ def main() -> None:
                 else:
                     st.warning("❌ Vehicle not found in inventory")
 
-            selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)])
+            selected_tier = st.selectbox("Credit Tier:", [f"Tier {i}" for i in range(1, 9)], help="Higher tiers may get better rates")
             counties = sorted(county_tax_rates["County"].tolist())
-            selected_county = st.selectbox("County:", counties, index=counties.index("Marion"))
+            selected_county = st.selectbox("County:", counties, index=counties.index("Marion"), help="For accurate tax calculation")
             tax_rate = county_tax_rates[county_tax_rates["County"] == selected_county]["Tax Rate"].iloc[0] / 100.0
             st.session_state.tax_rate = tax_rate
 
@@ -104,36 +113,38 @@ def main() -> None:
     if pd.isna(trim):
         trim = vehicle.get("Trim", "N/A")
 
-    # Build quote options
-    tier_num = int(selected_tier.split(" ")[1])
-    mileage_options = [10000, 12000, 15000]
-    lease_terms = sorted(lease_matches["Term"].dropna().unique())
+    # Build quote options (with spinner)
+    with st.spinner("Generating quote options..."):
+        tier_num = int(selected_tier.split(" ")[1])
+        mileage_options = [10000, 12000, 15000]
+        lease_terms = sorted(lease_matches["Term"].dropna().unique())
 
-    quote_options = []
-    for term in lease_terms:
-        term_group = lease_matches[lease_matches["Term"] == term]
-        for mileage in mileage_options:
-            row = term_group.iloc[0]
-            base_residual = float(row["Residual"])
-            adjusted_residual = (
-                base_residual + 0.01 if mileage == 10000 else
-                base_residual - 0.02 if mileage == 15000 else
-                base_residual
-            )
-            residual_value = round(msrp * adjusted_residual, 2)
-            mf_col = f"Tier {tier_num}"
-            money_factor = float(row[mf_col])
-            available_lease_cash = float(row.get("LeaseCash", 0.0))
-            quote_options.append({
-                'term': int(term),
-                'mileage': mileage,
-                'residual_value': residual_value,
-                'money_factor': money_factor + (0.0004 if st.session_state.get('apply_markup') else 0),
-                'available_lease_cash': available_lease_cash,
-                'selling_price': float(msrp),
-                'lease_cash_used': 0.0,
-                'index': len(quote_options)
-            })
+        quote_options = []
+        for term in lease_terms:
+            term_group = lease_matches[lease_matches["Term"] == term]
+            for mileage in mileage_options:
+                row = term_group.iloc[0]
+                base_residual = float(row["Residual"])
+                adjusted_residual = (
+                    base_residual + 0.01 if mileage == 10000 else
+                    base_residual - 0.02 if mileage == 15000 else
+                    base_residual
+                )
+                residual_value = round(msrp * adjusted_residual, 2)
+                mf_col = f"Tier {tier_num}"
+                money_factor = float(row[mf_col])
+                available_lease_cash = float(row.get("LeaseCash", 0.0))
+                quote_options.append({
+                    'term': int(term),
+                    'mileage': mileage,
+                    'residual_value': residual_value,
+                    'residual_pct': adjusted_residual * 100,  # New: For display
+                    'money_factor': money_factor + (0.0004 if st.session_state.get('apply_markup') else 0),
+                    'available_lease_cash': available_lease_cash,
+                    'selling_price': float(msrp),
+                    'lease_cash_used': 0.0,
+                    'index': len(quote_options)
+                })
 
     st.session_state.quote_options = quote_options
 
@@ -148,6 +159,10 @@ def main() -> None:
             st.session_state.get('selected_down_payment',
                                 st.session_state.get('default_money_down', 0.0)),
         )
+        # New: PDF Export
+        if st.button("Export PDF"):
+            pdf_buffer = generate_pdf_quote(selected, tax_rate, st.session_state.selected_down_payment, customer_name)
+            st.download_button("Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf")
         return
 
     # Layout columns
@@ -165,14 +180,68 @@ def main() -> None:
         filtered_options = [opt for opt in quote_options if opt['term'] in term_filter and opt['mileage'] in mileage_filter]
         filtered_options = sort_quote_options(filtered_options, sort_by, trade_value, default_money_down, tax_rate)
 
+        # Highlight lowest payment
+        if filtered_options:
+            min_payment = min(opt['payment'] for opt in [calculate_option_payment(
+                o['selling_price'], o['lease_cash_used'], o['residual_value'],
+                o['money_factor'], o['term'], trade_value, default_money_down, tax_rate
+            ) for o in filtered_options])
+            for opt in filtered_options:
+                payment_data = calculate_option_payment(
+                    opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
+                    opt['money_factor'], opt['term'], trade_value, default_money_down, tax_rate
+                )
+                opt['is_lowest'] = payment_data['payment'] == min_payment
+
         st.subheader(f"Available Lease Options ({len(filtered_options)} options)")
-        cols = st.columns(3, gap="small")  # Reduced gap to minimize white space
+        cols = st.columns(3 if st.session_state.get('screen_width', 1024) > 1023 else 2 if st.session_state.get('screen_width', 1024) > 767 else 1)
         for i, option in enumerate(filtered_options):
-            with cols[i % 3]:
+            with cols[i % len(cols)]:
                 option_key = f"{option['term']}_{option['mileage']}_{option['index']}"
                 render_quote_card(option, option_key, trade_value, default_money_down, tax_rate)
 
     st.markdown('<style>.st-emotion-cache-13ejsyy { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; }</style>', unsafe_allow_html=True)
+
+
+def generate_pdf_quote(selected_options, tax_rate, base_down, customer_name):
+    """Generate PDF buffer for quote."""
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Header
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(72, height - 72, "Lease Quote - Mathew's Hyundai")
+    c.setFont("Helvetica", 10)
+    c.drawString(72, height - 90, f"Customer: {customer_name} | Date: {datetime.today().strftime('%Y-%m-%d')}")
+
+    # Table
+    y = height - 120
+    c.drawString(72, y, "Down Payment")
+    for opt in selected_options:
+        c.drawString(150 + 100 * selected_options.index(opt), y, f"{opt['term']} Mo | {opt['mileage']:,} mi/yr")
+    y -= 20
+
+    default_rows = [base_down + 1500 * i for i in range(3)]
+    for row_idx, default_val in enumerate(default_rows):
+        down_val = default_val  # Simplified; in app, use inputs
+        c.drawString(72, y, f"${down_val:,.2f}")
+        for opt in selected_options:
+            payment_data = calculate_option_payment(
+                opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
+                opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
+            )
+            total_cost = payment_data['payment'] * opt['term'] + down_val  # New: Total over term
+            c.drawString(150 + 100 * selected_options.index(opt), y, f"${payment_data['payment']:,.2f}/mo (Total: ${total_cost:,.2f})")
+        y -= 20
+
+    # Footer/Disclaimers
+    c.setFont("Helvetica-Oblique", 8)
+    c.drawString(72, 72, "All quotes are estimates. Subject to credit approval and final terms. Contact dealer for details.")
+
+    c.save()
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 if __name__ == "__main__":
