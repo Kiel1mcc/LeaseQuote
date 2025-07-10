@@ -184,11 +184,20 @@ def render_customer_quote_page(
     # Professional Header
     st.markdown('<div class="quote-summary">', unsafe_allow_html=True)
     st.subheader("Lease Quote Summary")
-    customer_name = st.session_state.get('customer_name', 'N/A')  # Assume stored in session from sidebar input
-    vehicle_details = f"{st.session_state.get('model_year', 'N/A')} {st.session_state.get('make', 'N/A')} {st.session_state.get('model', 'N/A')} {st.session_state.get('trim', 'N/A')} | MSRP: ${st.session_state.get('msrp', 0):,.2f} | VIN: {st.session_state.get('vin', 'N/A')}"
+    customer_name = st.session_state.get('customer_name', 'N/A')
+    phone = st.session_state.get('phone_number', 'N/A')
+    email = st.session_state.get('email', 'N/A')
+    vehicle_details = (
+        f"{st.session_state.get('model_year', 'N/A')} {st.session_state.get('make', 'N/A')} "
+        f"{st.session_state.get('model', 'N/A')} {st.session_state.get('trim', 'N/A')} | "
+        f"MSRP: ${st.session_state.get('msrp', 0):,.2f} | VIN: {st.session_state.get('vin', 'N/A')}"
+    )
     st.write(f"**Customer:** {customer_name}")
+    st.write(f"**Phone:** {phone}  |  **Email:** {email}")
     st.write(f"**Vehicle:** {vehicle_details}")
-    st.write(f"**Dealership:** Mathew's Hyundai | **Date:** {datetime.today().strftime('%B %d, %Y')}")
+    st.write(
+        f"**Dealership:** Mathew's Hyundai | **Date:** {datetime.today().strftime('%B %d, %Y')}"
+    )
 
     # Table
     data = {"Down Payment": []}
@@ -214,6 +223,18 @@ def render_customer_quote_page(
             {'selector': 'th', 'props': [('text-align', 'center'), ('background-color', '#f2f2f2'), ('font-weight', 'bold')]}
         ])
     )
+
+    option_labels = [
+        f"Option {i + 1}: {opt['term']} Mo | {opt['mileage']:,} mi/yr"
+        for i, opt in enumerate(selected_options)
+    ]
+    selected = st.radio(
+        "\u2705 Select the lease option that works for you:",
+        options=option_labels,
+        key="customer_selected_option",
+    )
+    st.session_state['customer_selected_option'] = selected
+    st.markdown(f"**Customer Selected:** {selected}")
 
     # Signature Line (printable)
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
