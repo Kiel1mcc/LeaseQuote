@@ -168,31 +168,28 @@ def render_customer_quote_page(
     st.markdown(
         """
         <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        .checkbox-cell::before {
+            content: "☐ ";
+            font-size: 16px;
+            vertical-align: middle;
+        }
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-            }
-
-            table {
-                border-collapse: collapse;
-                width: 100%;
-                font-size: 14px;
-            }
-
-            th, td {
-                border: 1px solid #000;
-                padding: 6px 10px;
-                text-align: left;
-            }
-
-            td::before {
-                content: '';
-            }
-
-            td.checkbox::before {
-                content: '☐ ';
-                font-size: 16px;
             }
 
             /* Hide sidebar, buttons, unnecessary Streamlit UI */
@@ -262,7 +259,7 @@ def render_customer_quote_page(
                 tax_rate,
             )
             payment = payment_data['payment']
-            body_html += f"<td class=\"checkbox\">${payment:,.2f}/mo</td>"
+            body_html += f"<td class=\"checkbox-cell\">${payment:,.2f}/mo</td>"
         body_html += "</tr>"
 
     footer_html = "</table>"
