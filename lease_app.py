@@ -177,7 +177,7 @@ def main() -> None:
                                 st.session_state.get('default_money_down', 0.0)),
         )
         # New: PDF Export
-        if st.button("Export PDF"):
+        if st.button("Export PDF", key="export_pdf_button"):
             vehicle_info = {
                 "year": st.session_state.get("model_year", "N/A"),
                 "make": st.session_state.get("make", "N/A"),
