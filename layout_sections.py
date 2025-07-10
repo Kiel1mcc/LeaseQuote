@@ -234,8 +234,8 @@ def render_customer_quote_page(
         options=option_labels,
         key="customer_selected_option",
     )
-    st.session_state['customer_selected_option'] = selected
-    st.markdown(f"**Customer Selected:** {selected}")
+    selection_value = st.session_state.get("customer_selected_option", option_labels[0] if option_labels else "")
+    st.markdown(f"**Customer Selected:** {selection_value}")
 
     # Signature Line (printable)
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
