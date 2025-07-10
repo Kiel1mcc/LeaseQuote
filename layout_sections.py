@@ -168,13 +168,14 @@ def render_customer_quote_page(
     col1, col2, col3 = st.columns([1, 1, 2])
     if col1.button("\u2190 Back"):
         st.session_state.page = "quote"
-    if col2.button("Print"):
-        st.markdown("""
-            <script>
-            window.print();
-            </script>
-        """, unsafe_allow_html=True)
-    col3.info("If print dialog doesn't open, use Ctrl+P (Windows) or Cmd+P (Mac).")
+    with col2:
+        st.markdown(
+            """
+            <button onclick="window.print()">\U0001F5A8\ufe0f Print This Page</button>
+            """,
+            unsafe_allow_html=True,
+        )
+    col3.info("\U0001F4F1 On mobile, please use your browser's menu and choose 'Print' manually.")
 
     if not selected_options:
         st.info("No quotes selected")
