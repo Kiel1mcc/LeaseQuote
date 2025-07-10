@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from utils import sort_quote_options, calculate_option_payment
 from data_loader import load_data
 from layout_sections import (
     render_header,
