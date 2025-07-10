@@ -69,7 +69,8 @@ def render_quote_card(
     if "selected_quotes" not in st.session_state:
         st.session_state.selected_quotes = set()
     is_selected = option_key in st.session_state.selected_quotes
-    css_class = "selected-quote" if is_selected else "quote-card"
+    is_lowest = option.get('is_lowest', False)
+    css_class = "selected-quote" if is_selected else "lowest-payment" if is_lowest else "quote-card"
 
     with st.container():
         st.markdown('<div class="quote-card-retainer">', unsafe_allow_html=True)
@@ -83,6 +84,7 @@ def render_quote_card(
             key=f"sp_{option_key}",
             step=100.0,
             min_value=0.0,
+            help="Adjust based on negotiations; must be positive."
         )
 
         new_lease_cash = st.number_input(
@@ -92,22 +94,30 @@ def render_quote_card(
             value=float(option["lease_cash_used"]),
             key=f"lc_{option_key}",
             step=100.0,
+            help="Incentives applied; can't exceed available."
         )
 
-        try:
-            payment_data = calculate_option_payment(
-                selling_price=new_selling_price,
-                lease_cash_used=new_lease_cash,
-                residual_value=option["residual_value"],
-                money_factor=option["money_factor"],
-                term=option["term"],
-                trade_val=trade_value,
-                cash_down=money_down,
-                tax_rt=tax_rate,
-            )
-            st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:,.2f}/mo</div>', unsafe_allow_html=True)
-        except Exception:
-            st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
+        with st.spinner("Calculating..."):
+            try:
+                payment_data = calculate_option_payment(
+                    selling_price=new_selling_price,
+                    lease_cash_used=new_lease_cash,
+                    residual_value=option["residual_value"],
+                    money_factor=option["money_factor"],
+                    term=option["term"],
+                    trade_val=trade_value,
+                    cash_down=money_down,
+                    tax_rt=tax_rate,
+                )
+                st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:,.2f}/mo</div>', unsafe_allow_html=True)
+            except Exception:
+                st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
+
+        with st.expander("Details"):
+            st.write(f"Residual: {option['residual_pct']:.1f}% (${option['residual_value']:,.2f})")
+            st.write(f"Money Factor: {option['money_factor']:.6f}")
+            st.write(f"Base Payment: ${payment_data['base_payment']:,.2f}")
+            st.write(f"Tax: ${payment_data['tax_payment']:,.2f}")
 
         selected = st.checkbox(
             "Include", value=is_selected, key=f"sel_{option_key}"
@@ -166,13 +176,16 @@ def render_customer_quote_page(
         st.info("No quotes selected")
         return
 
-    # Header row showing each selected term/mileage
+    st.markdown("### Lease Quote Summary")
+    st.write("**Dealership:** Mathew's Hyundai | **Date:** July 10, 2025")  # Hardcoded; make dynamic if needed
+
+    # Header row
     header_cols = st.columns(len(selected_options) + 1)
     header_cols[0].markdown("**Down Payment**")
     for col, opt in zip(header_cols[1:], selected_options[:4]):
         col.markdown(f"**{opt['term']} Mo | {opt['mileage']:,} mi/yr**")
 
-    # Generate three editable down-payment rows
+    # Rows with totals
     default_rows = [base_down + 1500 * i for i in range(3)]
     for row_idx, default_val in enumerate(default_rows):
         row_cols = st.columns(len(selected_options) + 1)
@@ -181,13 +194,11 @@ def render_customer_quote_page(
         )
         for col, opt in zip(row_cols[1:], selected_options[:4]):
             payment = calculate_option_payment(
-                selling_price=opt['selling_price'],
-                lease_cash_used=opt['lease_cash_used'],
-                residual_value=opt['residual_value'],
-                money_factor=opt['money_factor'],
-                term=opt['term'],
-                trade_val=0.0,
-                cash_down=down_val,
-                tax_rt=tax_rate,
+                opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
+                opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
             )["payment"]
-            col.write(f"${payment:,.2f}/mo")
+            total_cost = payment * opt['term'] + down_val  # New: Total over term
+            col.write(f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
+
+    st.markdown("---")
+    st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
