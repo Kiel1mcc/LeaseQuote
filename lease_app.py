@@ -205,45 +205,54 @@ def main() -> None:
 
 
 def generate_pdf_quote(selected_options, tax_rate, base_down, customer_name):
-    """Generate PDF buffer for quote."""
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
     # Header
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(72, height - 72, "Lease Quote - Mathew's Hyundai")
+    c.drawString(1*inch, height - 1*inch, "Lease Quote Summary")
     c.setFont("Helvetica", 10)
-    c.drawString(72, height - 90, f"Customer: {customer_name} | Date: {datetime.today().strftime('%Y-%m-%d')}")
+    c.drawString(1*inch, height - 1.3*inch, f"Customer: {customer_name}")
+    c.drawString(1*inch, height - 1.5*inch, f"Vehicle: {model_year} {make} {model} {trim} | MSRP: ${msrp:,.2f} | VIN: {vin}")
+    c.drawString(1*inch, height - 1.7*inch, f"Dealership: Mathew's Hyundai | Date: {datetime.today().strftime('%B %d, %Y')}")
 
     # Table
-    y = height - 120
-    c.drawString(72, y, "Down Payment")
-    for opt in selected_options:
-        c.drawString(150 + 100 * selected_options.index(opt), y, f"{opt['term']} Mo | {opt['mileage']:,} mi/yr")
-    y -= 20
-
+    y = height - 2.2*inch
     default_rows = [base_down + 1500 * i for i in range(3)]
+    col_widths = [1.5*inch] + [2*inch] * len(selected_options)
+
+    # Headers
+    c.drawString(1*inch, y, "Down Payment")
+    for i, opt in enumerate(selected_options):
+        c.drawCentredString(1*inch + col_widths[0] + i*col_widths[1] + col_widths[1]/2, y, f"{opt['term']} Mo | {opt['mileage']:,} mi/yr")
+    y -= 0.3*inch
+
     for row_idx, default_val in enumerate(default_rows):
-        down_val = default_val  # Simplified; in app, use inputs
-        c.drawString(72, y, f"${down_val:,.2f}")
-        for opt in selected_options:
+        down_val = default_val
+        c.drawString(1*inch, y, f"${down_val:,.2f}")
+        for i, opt in enumerate(selected_options):
             payment_data = calculate_option_payment(
                 opt['selling_price'], opt['lease_cash_used'], opt['residual_value'],
                 opt['money_factor'], opt['term'], 0.0, down_val, tax_rate
             )
-            total_cost = payment_data['payment'] * opt['term'] + down_val  # New: Total over term
-            c.drawString(150 + 100 * selected_options.index(opt), y, f"${payment_data['payment']:,.2f}/mo (Total: ${total_cost:,.2f})")
-        y -= 20
+            payment = payment_data["payment"]
+            total_cost = payment * opt['term'] + down_val
+            c.drawRightString(1*inch + col_widths[0] + (i+1)*col_widths[1] - 0.1*inch, y, f"${payment:,.2f}/mo (Total: ${total_cost:,.2f})")
+        y -= 0.3*inch
 
-    # Footer/Disclaimers
+    # Signature Line
+    y -= 1*inch
+    c.drawString(1*inch, y, "Customer Signature: _______________________________ Date: _______________")
+
+    # Disclaimers
+    y -= 0.5*inch
     c.setFont("Helvetica-Oblique", 8)
-    c.drawString(72, 72, "All quotes are estimates. Subject to credit approval and final terms. Contact dealer for details.")
+    c.drawString(1*inch, y, "Disclaimers: Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
 
     c.save()
     buffer.seek(0)
     return buffer.getvalue()
-
 
 if __name__ == "__main__":
     main()
