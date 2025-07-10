@@ -168,33 +168,51 @@ def render_customer_quote_page(
     st.markdown(
         """
         <style>
-        table {
-            border-collapse: collapse;
+        /* Base font and layout consistency */
+        body, table, th, td {
+            font-family: 'Arial', sans-serif;
+            font-size: 15px;
+            color: #000;
+        }
+
+        /* Style your main quote table like the on-screen version */
+        table.lease-table {
             width: 100%;
-            font-size: 14px;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 15px;
         }
-
-        th, td {
-            border: 1px solid #000;
-            padding: 6px 10px;
+        .lease-table th {
             text-align: left;
+            background-color: #f5f5f5;
+            font-weight: 600;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
         }
-
-        .checkbox-cell::before {
-            content: "☐ ";
-            font-size: 16px;
+        .lease-table td {
+            padding: 10px;
             vertical-align: middle;
         }
 
+        /* Add checkboxes using pseudo-elements */
+        .checkbox-cell::before {
+            content: "☐ ";
+            font-size: 16px;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        /* Print-friendly rules */
         @media print {
+            header, footer, .stSidebar, .st-emotion-cache-1dtefog, .element-container:has(button) {
+                display: none !important;
+            }
+            .stButton {
+                display: none !important;
+            }
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-            }
-
-            /* Hide sidebar, buttons, unnecessary Streamlit UI */
-            header, footer, .stSidebar, .st-emotion-cache-1dtefog {
-                display: none !important;
             }
         }
         </style>
@@ -235,11 +253,14 @@ def render_customer_quote_page(
         f"**Dealership:** Mathew's Hyundai | **Date:** {datetime.today().strftime('%B %d, %Y')}"
     )
 
-    st.markdown("### Please select the term and mileage limit you would like us to submit to the bank.\n")
+    st.markdown(
+        "<h4>Please select the term and mileage limit you would like us to submit to the bank.</h4>",
+        unsafe_allow_html=True,
+    )
 
-    header_html = "<table style=\"width:100%; font-size:16px; border-collapse:collapse;\"><tr><th align='left'>Down Payment</th>"
+    header_html = "<table class='lease-table'><tr><th>Down Payment</th>"
     for opt in selected_options:
-        header_html += f"<th align='left'>{opt['term']} Mo | {opt['mileage']:,} mi/yr</th>"
+        header_html += f"<th>{opt['term']} Mo | {opt['mileage']:,} mi/yr</th>"
     header_html += "</tr>"
 
     body_html = ""
@@ -297,6 +318,3 @@ def render_customer_quote_page(
         st.download_button(
             "Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf"
         )
-    
-    st.markdown("---")
-    st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
