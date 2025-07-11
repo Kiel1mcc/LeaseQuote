@@ -23,6 +23,9 @@ sudo apt-get install -y libcairo2 libpango-1.0-0 libpangocairo-1.0-0 \
     libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
 ```
 
+If you open the project in the included **devcontainer**, these packages are
+installed automatically when the container is created.
+
 Do **not** run the file directly with `python lease_app.py`. Session state and
 other features only work when launching the app through the `streamlit` command.
 
