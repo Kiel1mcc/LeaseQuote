@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-import pdfkit
+from weasyprint import HTML
 from utils import calculate_option_payment
 
 
@@ -85,5 +85,4 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
     </html>
     """
 
-    config = pdfkit.configuration(wkhtmltopdf=os.getenv("WKHTMLTOPDF_BINARY", "/usr/bin/wkhtmltopdf"))
-    return pdfkit.from_string(html_content, False, configuration=config, options={"enable-local-file-access": ""})
+    return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
