@@ -1,5 +1,8 @@
 import os
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 try:
     from weasyprint import HTML
     _WEASYPRINT_AVAILABLE = True
@@ -95,4 +98,9 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
             f"Original error: {_WEASYPRINT_ERROR}"
         )
 
-    return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
+    try:
+        return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
+    except Exception as e:
+        logger.error("Failed to generate PDF: %s", e)
+        logger.debug("------ BEGIN QUOTE HTML ------\n%s\n------ END QUOTE HTML ------", html_content)
+        raise RuntimeError("Failed to generate PDF") from e
