@@ -1,6 +1,11 @@
 import os
 from datetime import datetime
-from weasyprint import HTML
+try:
+    from weasyprint import HTML
+    _WEASYPRINT_AVAILABLE = True
+except Exception as exc:  # ImportError or OSError when native libs are missing
+    _WEASYPRINT_AVAILABLE = False
+    _WEASYPRINT_ERROR = exc
 from utils import calculate_option_payment
 
 
@@ -84,5 +89,10 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
     </body>
     </html>
     """
+    if not _WEASYPRINT_AVAILABLE:
+        raise RuntimeError(
+            "WeasyPrint is not available. Install cairo, pango and gdk-pixbuf system packages to enable PDF generation. "
+            f"Original error: {_WEASYPRINT_ERROR}"
+        )
 
     return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
