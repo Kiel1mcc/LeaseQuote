@@ -6,3 +6,6 @@ pytesseract
 reportlab
 streamlit-drawable-canvas  # New: For e-signature pad
 weasyprint==65.1
+pyzbar
+easyocr
+streamlit-camera-input-live
