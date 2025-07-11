@@ -34,3 +34,16 @@ comfortably on phones and tablets.
 **Tip:** If you want to use the VIN scanning feature on a phone or tablet, be
 sure to access the app over **HTTPS**. Most browsers require a secure context to
 allow camera access.
+## VIN Scanner App
+
+A standalone Streamlit app (`app.py`) lets you scan a Vehicle Identification Number using your phone camera. It supports barcode scanning with `pyzbar` and OCR via `easyocr`. If `streamlit-camera-input-live` is installed, you can also enable continuous scanning.
+
+Install the extra packages and run the app:
+
+```bash
+pip install streamlit pyzbar pillow easyocr streamlit-camera-input-live
+streamlit run app.py
+```
+
+When running on mobile, ensure the page loads over **HTTPS** and grant camera permissions. Tap the camera icon to switch to the back camera when available.
+
