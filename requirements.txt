@@ -5,3 +5,4 @@ pillow
 pytesseract
 reportlab
 streamlit-drawable-canvas  # New: For e-signature pad
+pdfkit
