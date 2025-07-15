@@ -1,6 +1,8 @@
 import os
 import logging
 from datetime import datetime
+from io import BytesIO
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -9,6 +11,10 @@ try:
 except Exception as exc:  # ImportError or OSError when native libs are missing
     _WEASYPRINT_AVAILABLE = False
     _WEASYPRINT_ERROR = exc
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from utils import calculate_option_payment
 
 
@@ -92,19 +98,83 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
     </body>
     </html>
     """
-    if not _WEASYPRINT_AVAILABLE:
-        raise RuntimeError(
-            "WeasyPrint is not available. Install the `weasyprint` Python package "
-            "and the cairo, pango and gdk-pixbuf system libraries to enable PDF generation. "
-            "On Debian/Ubuntu run: `sudo apt-get update && sudo apt-get install -y "
-            "libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 "
-            "libffi-dev shared-mime-info`. "
-            f"Original error: {_WEASYPRINT_ERROR}"
-        )
+    if _WEASYPRINT_AVAILABLE:
+        try:
+            return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
+        except Exception as e:
+            logger.error("Failed to generate PDF using WeasyPrint: %s", e)
+            logger.debug(
+                "------ BEGIN QUOTE HTML ------\n%s\n------ END QUOTE HTML ------",
+                html_content,
+            )
+            raise RuntimeError("Failed to generate PDF") from e
 
-    try:
-        return HTML(string=html_content, base_url=os.getcwd()).write_pdf()
-    except Exception as e:
-        logger.error("Failed to generate PDF: %s", e)
-        logger.debug("------ BEGIN QUOTE HTML ------\n%s\n------ END QUOTE HTML ------", html_content)
-        raise RuntimeError("Failed to generate PDF") from e
+    # Fallback implementation using ReportLab when WeasyPrint is unavailable
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+
+    elements = [
+        Paragraph("Lease Quote Summary", styles["Title"]),
+        Paragraph(f"Customer: {customer_name}", styles["Normal"]),
+        Paragraph(
+            f"Vehicle: {year} {make} {model} {trim} | MSRP: ${msrp:,.2f} | VIN: {vin}",
+            styles["Normal"],
+        ),
+        Paragraph(
+            f"Dealership: Mathew's Hyundai | Date: {datetime.today().strftime('%B %d, %Y')}",
+            styles["Normal"],
+        ),
+    ]
+
+    header_row = ["Down Payment"] + [
+        f"{opt['term']} Mo | {opt['mileage']:,} mi/yr" for opt in selected_options
+    ]
+    table_data = [header_row]
+
+    for down_val in default_rows:
+        row = [f"${down_val:,.2f} Down"]
+        for opt in selected_options:
+            payment_data = calculate_option_payment(
+                opt['selling_price'],
+                opt['lease_cash_used'],
+                opt['residual_value'],
+                opt['money_factor'],
+                opt['term'],
+                0.0,
+                down_val,
+                tax_rate,
+            )
+            payment = payment_data['payment']
+            row.append(f"${payment:,.2f}/mo")
+        table_data.append(row)
+
+    table = Table(table_data, hAlign="LEFT")
+    table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ]
+        )
+    )
+
+    elements.append(table)
+    elements.append(Spacer(1, 12))
+    elements.append(
+        Paragraph(
+            "Customer Signature: _______________________________ Date: ____________",
+            styles["Normal"],
+        )
+    )
+    elements.append(
+        Paragraph(
+            "Disclaimers: Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.",
+            styles["Normal"],
+        )
+    )
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
