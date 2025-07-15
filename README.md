@@ -13,15 +13,21 @@ streamlit run lease_app.py
 
 ### System packages for PDF generation
 
-`pdf_utils.py` uses [WeasyPrint](https://weasyprint.org/) which depends on
-native libraries like cairo and pango. First install the Python package, then the
-system libraries on Debian/Ubuntu systems:
+`pdf_utils.py` uses [WeasyPrint](https://weasyprint.org/) to produce PDF
+documents. The Python package is already listed in `requirements.txt`, so make
+sure you've installed all dependencies:
 
 ```bash
-pip install weasyprint
+pip install -r requirements.txt
+```
+
+WeasyPrint also requires native libraries like cairo and pango. Install these
+on Debian/Ubuntu systems:
+
+```bash
 sudo apt-get update
 sudo apt-get install -y libcairo2 libpango-1.0-0 libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
+    libgdk-pixbuf-2.0-0 libffi-dev shared-mime-info
 ```
 
 If you open the project in the included **devcontainer**, these packages are
