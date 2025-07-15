@@ -94,7 +94,8 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
     """
     if not _WEASYPRINT_AVAILABLE:
         raise RuntimeError(
-            "WeasyPrint is not available. Install cairo, pango and gdk-pixbuf system packages to enable PDF generation. "
+            "WeasyPrint is not available. Install the `weasyprint` Python package "
+            "and the cairo, pango and gdk-pixbuf system libraries to enable PDF generation. "
             f"Original error: {_WEASYPRINT_ERROR}"
         )
 
