@@ -96,6 +96,9 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
         raise RuntimeError(
             "WeasyPrint is not available. Install the `weasyprint` Python package "
             "and the cairo, pango and gdk-pixbuf system libraries to enable PDF generation. "
+            "On Debian/Ubuntu run: `sudo apt-get update && sudo apt-get install -y "
+            "libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 "
+            "libffi-dev shared-mime-info`. "
             f"Original error: {_WEASYPRINT_ERROR}"
         )
 
