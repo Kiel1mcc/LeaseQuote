@@ -30,6 +30,14 @@ sudo apt-get install -y libcairo2 libpango-1.0-0 libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 libffi-dev shared-mime-info
 ```
 
+On other Linux distributions, install the equivalent packages using your
+system's package manager. After installing the native libraries you can
+confirm WeasyPrint is working by running:
+
+```bash
+python -c "from weasyprint import HTML; print('WeasyPrint loaded')"
+```
+
 If you open the project in the included **devcontainer**, these packages are
 installed automatically when the container is created.
 
