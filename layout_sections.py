@@ -12,7 +12,9 @@ LOGO_WIDTH = 300
 DEFAULT_SORT_BY = "Lowest Payment"
 
 
-def render_header(model_year: str, make: str, model: str, trim: str, msrp: float, vin: str) -> None:
+def render_header(
+    model_year: str, make: str, model: str, trim: str, msrp: float, vin: str
+) -> None:
     col1, col2 = st.columns([1, 3])
     with col1:
         try:
@@ -34,15 +36,23 @@ def render_header(model_year: str, make: str, model: str, trim: str, msrp: float
 
 def render_trade_down_section() -> Tuple[float, float]:
     trade_value = st.number_input("Trade Value ($)", min_value=0.0, key="trade_value")
-    money_down = st.number_input("Money Down ($)", min_value=0.0, key="default_money_down")
+    money_down = st.number_input(
+        "Money Down ($)", min_value=0.0, key="default_money_down"
+    )
     return trade_value, money_down
 
 
-def render_filters_section(quote_options: List[Dict[str, Any]]) -> Tuple[List[int], List[int]]:
+def render_filters_section(
+    quote_options: List[Dict[str, Any]]
+) -> Tuple[List[int], List[int]]:
     terms = sorted({opt["term"] for opt in quote_options})
     mileages = sorted({opt["mileage"] for opt in quote_options})
-    term_filter = st.multiselect("Select Lease Terms", options=terms, default=terms, key="term_filter")
-    mileage_filter = st.multiselect("Select Mileages", options=mileages, default=mileages, key="mileage_filter")
+    term_filter = st.multiselect(
+        "Select Lease Terms", options=terms, default=terms, key="term_filter"
+    )
+    mileage_filter = st.multiselect(
+        "Select Mileages", options=mileages, default=mileages, key="mileage_filter"
+    )
     return term_filter, mileage_filter
 
 
@@ -58,7 +68,14 @@ def render_right_sidebar(
         term_filter, mileage_filter = render_filters_section(quote_options)
     st.markdown("</div>", unsafe_allow_html=True)
     sort_by = DEFAULT_SORT_BY
-    return trade_value, money_down, sort_by, term_filter, mileage_filter, create_quote_clicked
+    return (
+        trade_value,
+        money_down,
+        sort_by,
+        term_filter,
+        mileage_filter,
+        create_quote_clicked,
+    )
 
 
 def render_quote_card(
@@ -71,14 +88,23 @@ def render_quote_card(
     if "selected_quotes" not in st.session_state:
         st.session_state.selected_quotes = set()
     is_selected = option_key in st.session_state.selected_quotes
-    is_lowest = option.get('is_lowest', False)
-    css_class = "selected-quote" if is_selected else "lowest-payment" if is_lowest else "quote-card"
+    is_lowest = option.get("is_lowest", False)
+    css_class = (
+        "selected-quote"
+        if is_selected
+        else "lowest-payment"
+        if is_lowest
+        else "quote-card"
+    )
 
     with st.container():
         st.markdown('<div class="quote-card-retainer">', unsafe_allow_html=True)
         st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
 
-        st.markdown(f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>', unsafe_allow_html=True)
+        st.markdown(
+            f'<p class="term-mileage">{option["term"]} Months | {option["mileage"]:,} mi/yr</p>',
+            unsafe_allow_html=True,
+        )
 
         new_selling_price = st.number_input(
             "Selling Price ($)",
@@ -86,7 +112,7 @@ def render_quote_card(
             key=f"sp_{option_key}",
             step=100.0,
             min_value=0.0,
-            help="Adjust based on negotiations; must be positive."
+            help="Adjust based on negotiations; must be positive.",
         )
 
         new_lease_cash = st.number_input(
@@ -96,7 +122,7 @@ def render_quote_card(
             value=float(option["lease_cash_used"]),
             key=f"lc_{option_key}",
             step=100.0,
-            help="Incentives applied; can't exceed available."
+            help="Incentives applied; can't exceed available.",
         )
 
         with st.spinner("Calculating..."):
@@ -111,26 +137,31 @@ def render_quote_card(
                     cash_down=money_down,
                     tax_rt=tax_rate,
                 )
-                st.markdown(f'<div class="payment-highlight">${payment_data["payment"]:,.2f}/mo</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="payment-highlight">${payment_data["payment"]:,.2f}/mo</div>',
+                    unsafe_allow_html=True,
+                )
             except Exception:
-                st.markdown('<div class="payment-highlight">Monthly Payment: N/A</div>', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="payment-highlight">Monthly Payment: N/A</div>',
+                    unsafe_allow_html=True,
+                )
 
         with st.expander("Details"):
-            st.write(f"Residual: {option['residual_pct']:.1f}% (${option['residual_value']:,.2f})")
+            st.write(
+                f"Residual: {option['residual_pct']:.1f}% (${option['residual_value']:,.2f})"
+            )
             st.write(f"Money Factor: {option['money_factor']:.6f}")
             st.write(f"Base Payment: ${payment_data['base_payment']:,.2f}")
             st.write(f"Tax: ${payment_data['tax_payment']:,.2f}")
 
-        selected = st.checkbox(
-            "Include", value=is_selected, key=f"sel_{option_key}"
-        )
+        selected = st.checkbox("Include", value=is_selected, key=f"sel_{option_key}")
         if selected:
             st.session_state.selected_quotes.add(option_key)
         else:
             st.session_state.selected_quotes.discard(option_key)
 
         st.markdown("</div></div>", unsafe_allow_html=True)
-
 
 
 def extract_vin_from_image(image_file):
@@ -229,7 +260,9 @@ def render_customer_quote_page(
             """,
             unsafe_allow_html=True,
         )
-    col3.info("\U0001F4F1 On mobile, please use your browser's menu and choose 'Print' manually.")
+    col3.info(
+        "\U0001F4F1 On mobile, please use your browser's menu and choose 'Print' manually."
+    )
 
     if not selected_options:
         st.info("No quotes selected")
@@ -238,9 +271,9 @@ def render_customer_quote_page(
     # Professional Header
     st.markdown('<div class="quote-summary">', unsafe_allow_html=True)
     st.subheader("Lease Quote Summary")
-    customer_name = st.session_state.get('customer_name', 'N/A')
-    phone = st.session_state.get('phone_number', 'N/A')
-    email = st.session_state.get('email', 'N/A')
+    customer_name = st.session_state.get("customer_name", "N/A")
+    phone = st.session_state.get("phone_number", "N/A")
+    email = st.session_state.get("email", "N/A")
     vehicle_details = (
         f"{st.session_state.get('model_year', 'N/A')} {st.session_state.get('make', 'N/A')} "
         f"{st.session_state.get('model', 'N/A')} {st.session_state.get('trim', 'N/A')} | "
@@ -270,17 +303,17 @@ def render_customer_quote_page(
         body_html += f"<td><strong>${down_val:,.2f} Down</strong></td>"
         for opt in selected_options:
             payment_data = calculate_option_payment(
-                opt['selling_price'],
-                opt['lease_cash_used'],
-                opt['residual_value'],
-                opt['money_factor'],
-                opt['term'],
+                opt["selling_price"],
+                opt["lease_cash_used"],
+                opt["residual_value"],
+                opt["money_factor"],
+                opt["term"],
                 0.0,
                 down_val,
                 tax_rate,
             )
-            payment = payment_data['payment']
-            body_html += f"<td class=\"checkbox-cell\">${payment:,.2f}/mo</td>"
+            payment = payment_data["payment"]
+            body_html += f'<td class="checkbox-cell">${payment:,.2f}/mo</td>'
         body_html += "</tr>"
 
     footer_html = "</table>"
@@ -288,15 +321,19 @@ def render_customer_quote_page(
 
     # Signature Line (printable)
     st.markdown('<div class="signature-section">', unsafe_allow_html=True)
-    st.write("Customer Signature: _______________________________ Date: _______________")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.write(
+        "Customer Signature: _______________________________ Date: _______________"
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Disclaimers
     st.markdown('<div class="disclaimers">', unsafe_allow_html=True)
-    st.write("**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.write(
+        "**Disclaimers:** Estimates only. Subject to credit approval, taxes, fees, and final dealer terms. Contact for details."
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # PDF Export Button (updated below)
     if st.button("Export PDF", key="export_pdf_main"):
@@ -308,13 +345,20 @@ def render_customer_quote_page(
             "msrp": st.session_state.get("msrp", 0.0),
             "vin": st.session_state.get("vin", "N/A"),
         }
-        pdf_buffer = generate_quote_pdf(
-            selected_options,
-            tax_rate,
-            base_down,
-            customer_name,
-            vehicle_info,
-        )
-        st.download_button(
-            "Download Quote PDF", pdf_buffer, "lease_quote.pdf", "application/pdf"
-        )
+        try:
+            pdf_buffer = generate_quote_pdf(
+                selected_options,
+                tax_rate,
+                base_down,
+                customer_name,
+                vehicle_info,
+            )
+        except RuntimeError as e:
+            st.error(str(e))
+        else:
+            st.download_button(
+                "Download Quote PDF",
+                pdf_buffer,
+                "lease_quote.pdf",
+                "application/pdf",
+            )
