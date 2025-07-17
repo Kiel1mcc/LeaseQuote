@@ -58,7 +58,7 @@ def render_filters_section(
 
 def render_right_sidebar(
     quote_options: List[Dict[str, Any]]
-) -> Tuple[float, float, str, List[int], List[int], bool]:
+) -> Tuple[float, float, str, List[int], List[int], bool, bool]:
     st.markdown('<div class="right-sidebar">', unsafe_allow_html=True)
     st.header("Financial Settings")
     with st.expander("Trade & Down Payment", expanded=True):
@@ -66,6 +66,12 @@ def render_right_sidebar(
         create_quote_clicked = st.button("Create Customer Quote")
     with st.expander("Filters"):
         term_filter, mileage_filter = render_filters_section(quote_options)
+    with st.expander("Markup", expanded=True):
+        apply_markup = st.checkbox(
+            "Add 0.0004 Money Factor Markup",
+            value=st.session_state.get("apply_markup", True),
+        )
+    st.session_state.apply_markup = apply_markup
     st.markdown("</div>", unsafe_allow_html=True)
     sort_by = DEFAULT_SORT_BY
     return (
@@ -75,6 +81,7 @@ def render_right_sidebar(
         term_filter,
         mileage_filter,
         create_quote_clicked,
+        apply_markup,
     )
 
 

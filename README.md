@@ -47,9 +47,9 @@ other features only work when launching the app through the `streamlit` command.
 ## Adjusting settings
 
 Financial parameters are configured directly from the sidebar. Available options
-include entering a trade‑in value, specifying customer cash down and toggling a
-money factor markup. Sorting and filtering controls allow you to refine quote
-options by term or mileage.
+include entering a trade‑in value, specifying customer cash down and toggling
+the 0.0004 money factor markup. Sorting and filtering controls allow you to
+refine quote options by term or mileage.
 
 Each lease term and mileage combination provides an **Incentives** expander
 for lease cash input (defaults to zero). A **Details** expander displays the
