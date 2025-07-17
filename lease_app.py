@@ -25,6 +25,8 @@ def main() -> None:
         st.session_state.page = 'quote'
     if 'selected_down_payment' not in st.session_state:
         st.session_state.selected_down_payment = 0.0
+    if 'apply_markup' not in st.session_state:
+        st.session_state.apply_markup = True
 
     with st.spinner("Loading data..."):
         try:
@@ -205,7 +207,16 @@ def main() -> None:
     main_col, right_col = st.columns([2.5, 1], gap="large")
 
     with right_col:
-        trade_value, default_money_down, sort_by, term_filter, mileage_filter, create_quote_clicked = render_right_sidebar(quote_options)
+        (
+            trade_value,
+            default_money_down,
+            sort_by,
+            term_filter,
+            mileage_filter,
+            create_quote_clicked,
+            apply_markup,
+        ) = render_right_sidebar(quote_options)
+        st.session_state.apply_markup = apply_markup
         if create_quote_clicked:
             st.session_state.selected_down_payment = default_money_down
             st.session_state.page = 'print'
