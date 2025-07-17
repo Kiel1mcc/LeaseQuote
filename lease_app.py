@@ -178,29 +178,28 @@ def main() -> None:
             st.session_state.get('selected_down_payment',
                                 st.session_state.get('default_money_down', 0.0)),
         )
-        # New: PDF Export
-        if st.button("Export PDF", key="export_pdf_button"):
-            vehicle_info = {
-                "year": st.session_state.get("model_year", "N/A"),
-                "make": st.session_state.get("make", "N/A"),
-                "model": st.session_state.get("model", "N/A"),
-                "trim": st.session_state.get("trim", "N/A"),
-                "msrp": st.session_state.get("msrp", 0.0),
-                "vin": st.session_state.get("vin", "N/A"),
-            }
-            pdf_buffer = generate_quote_pdf(
-                selected,
-                tax_rate,
-                st.session_state.selected_down_payment,
-                customer_name,
-                vehicle_info,
-            )
-            st.download_button(
-                "Download Quote PDF",
-                pdf_buffer,
-                "lease_quote.pdf",
-                "application/pdf",
-            )
+        vehicle_info = {
+            "year": st.session_state.get("model_year", "N/A"),
+            "make": st.session_state.get("make", "N/A"),
+            "model": st.session_state.get("model", "N/A"),
+            "trim": st.session_state.get("trim", "N/A"),
+            "msrp": st.session_state.get("msrp", 0.0),
+            "vin": st.session_state.get("vin", "N/A"),
+        }
+        pdf_buffer = generate_quote_pdf(
+            selected,
+            tax_rate,
+            st.session_state.selected_down_payment,
+            customer_name,
+            vehicle_info,
+        )
+        st.download_button(
+            "Download Quote PDF",
+            pdf_buffer,
+            "lease_quote.pdf",
+            "application/pdf",
+            key="export_pdf_button",
+        )
         return
 
     # Layout columns

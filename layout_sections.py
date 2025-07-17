@@ -342,30 +342,29 @@ def render_customer_quote_page(
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # PDF Export Button (updated below)
-    if st.button("Export PDF", key="export_pdf_main"):
-        vehicle_info = {
-            "year": st.session_state.get("model_year", "N/A"),
-            "make": st.session_state.get("make", "N/A"),
-            "model": st.session_state.get("model", "N/A"),
-            "trim": st.session_state.get("trim", "N/A"),
-            "msrp": st.session_state.get("msrp", 0.0),
-            "vin": st.session_state.get("vin", "N/A"),
-        }
-        try:
-            pdf_buffer = generate_quote_pdf(
-                selected_options,
-                tax_rate,
-                base_down,
-                customer_name,
-                vehicle_info,
-            )
-        except RuntimeError as e:
-            st.error(str(e))
-        else:
-            st.download_button(
-                "Download Quote PDF",
-                pdf_buffer,
-                "lease_quote.pdf",
-                "application/pdf",
-            )
+    vehicle_info = {
+        "year": st.session_state.get("model_year", "N/A"),
+        "make": st.session_state.get("make", "N/A"),
+        "model": st.session_state.get("model", "N/A"),
+        "trim": st.session_state.get("trim", "N/A"),
+        "msrp": st.session_state.get("msrp", 0.0),
+        "vin": st.session_state.get("vin", "N/A"),
+    }
+    try:
+        pdf_buffer = generate_quote_pdf(
+            selected_options,
+            tax_rate,
+            base_down,
+            customer_name,
+            vehicle_info,
+        )
+    except RuntimeError as e:
+        st.error(str(e))
+    else:
+        st.download_button(
+            "Download Quote PDF",
+            pdf_buffer,
+            "lease_quote.pdf",
+            "application/pdf",
+            key="export_pdf_main",
+        )
