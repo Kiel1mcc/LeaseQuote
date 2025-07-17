@@ -232,13 +232,6 @@ def render_customer_quote_page(
             vertical-align: middle;
         }
 
-        /* Add checkboxes using pseudo-elements */
-        .checkbox-cell::before {
-            content: "☐ ";
-            font-size: 16px;
-            margin-right: 4px;
-            vertical-align: middle;
-        }
 
         /* Print-friendly rules */
         @media print {
@@ -320,7 +313,7 @@ def render_customer_quote_page(
                 tax_rate,
             )
             payment = payment_data["payment"]
-            body_html += f'<td class="checkbox-cell">${payment:,.2f}/mo</td>'
+            body_html += f'<td>☐ ${payment:,.2f}/mo</td>'
         body_html += "</tr>"
 
     footer_html = "</table>"
