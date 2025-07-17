@@ -49,7 +49,7 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
                 tax_rate,
             )
             payment = payment_data['payment']
-            body_html += f"<td class=\"checkbox-cell\">${payment:,.2f}/mo</td>"
+            body_html += f"<td>☐ ${payment:,.2f}/mo</td>"
         body_html += "</tr>"
 
     footer_html = "</table>"
@@ -77,12 +77,6 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
         }}
         .lease-table td {{
             padding: 10px;
-            vertical-align: middle;
-        }}
-        .checkbox-cell::before {{
-            content: '☐ ';
-            font-size: 16px;
-            margin-right: 4px;
             vertical-align: middle;
         }}
         </style>
@@ -146,7 +140,7 @@ def generate_quote_pdf(selected_options, tax_rate, base_down, customer_name, veh
                 tax_rate,
             )
             payment = payment_data['payment']
-            row.append(f"${payment:,.2f}/mo")
+            row.append(f"☐ ${payment:,.2f}/mo")
         table_data.append(row)
 
     table = Table(table_data, hAlign="LEFT")
